@@ -1,0 +1,83 @@
+{
+  "_comment": "Crisis-language patterns for lib/crisisDetector.ts, checked before any LLM call. Kept as data (not code) so a moderator can extend this list without a deploy. English patterns are reasonably well-tested phrasing; Kinyarwanda patterns are a best-effort draft and MUST be reviewed by a native Kinyarwanda speaker with safety/clinical training before production launch — false negatives here mean a real crisis message reaches the LLM instead of the safety response.",
+  "SUICIDAL_IDEATION": {
+    "en": [
+      "kill myself",
+      "killing myself",
+      "want to die",
+      "wish i was dead",
+      "wish i were dead",
+      "end my life",
+      "ending my life",
+      "no reason to live",
+      "better off dead",
+      "suicide",
+      "suicidal",
+      "take my own life",
+      "don't want to live anymore",
+      "do not want to live anymore",
+      "can't go on living",
+      "cannot go on living"
+    ],
+    "rw": [
+      "kwiyahura",
+      "kwiyicira",
+      "niyahura",
+      "nishe",
+      "ndashaka gupfa",
+      "sinshaka kubaho",
+      "sinkibona impamvu yo kubaho",
+      "nifuza gupfa",
+      "byaba byiza mpfuye"
+    ]
+  },
+  "SELF_HARM": {
+    "en": [
+      "hurt myself",
+      "hurting myself",
+      "cut myself",
+      "cutting myself",
+      "self harm",
+      "self-harm",
+      "harm myself",
+      "starve myself",
+      "burn myself"
+    ],
+    "rw": [
+      "kwikomeretsa",
+      "kwiciriza",
+      "kwica umubiri wanjye",
+      "kwikaza"
+    ]
+  },
+  "ABUSE_DISCLOSURE": {
+    "en": [
+      "he raped me",
+      "she raped me",
+      "raped me",
+      "being raped",
+      "was raped",
+      "he's abusing me",
+      "she's abusing me",
+      "being abused",
+      "forced me to have sex",
+      "forced to have sex",
+      "he hits me",
+      "she hits me",
+      "beats me",
+      "molested me",
+      "touched me without",
+      "sexually assaulted"
+    ],
+    "rw": [
+      "yanyambuye ku ngufu",
+      "bansambanya ku ngufu",
+      "barandenga",
+      "arandenga",
+      "arankubita",
+      "ankubita buri munsi",
+      "yanshimuse",
+      "yankoresheje ku ngufu"
+    ]
+  }
+}

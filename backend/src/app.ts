@@ -1,9 +1,15 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import express from "express";
+import express, { type ErrorRequestHandler } from "express";
 
 import { env } from "./lib/env.js";
+import chatRouter from "./routes/chat.js";
 import healthRouter from "./routes/health.js";
+
+const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+  console.error(err);
+  res.status(500).json({ error: "Internal server error" });
+};
 
 export function createApp() {
   const app = express();
@@ -18,6 +24,9 @@ export function createApp() {
   app.use(cookieParser());
 
   app.use("/api/health", healthRouter);
+  app.use("/api/chat", chatRouter);
+
+  app.use(errorHandler);
 
   return app;
 }

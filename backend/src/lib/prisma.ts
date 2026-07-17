@@ -1,13 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
-declare global {
-  var __prisma: PrismaClient | undefined;
-}
-
-// Reuse the client across tsx's module reloads in dev to avoid exhausting
-// the database connection pool.
-export const prisma = globalThis.__prisma ?? new PrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalThis.__prisma = prisma;
-}
+// A plain singleton is enough here: unlike Next.js dev (in-process HMR that
+// re-evaluates modules and would otherwise create a new PrismaClient per
+// edit), `tsx watch` restarts the whole Node process on file change, so this
+// module only ever runs once per process regardless.
+export const prisma = new PrismaClient();

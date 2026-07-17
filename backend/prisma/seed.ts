@@ -7,8 +7,12 @@
 import bcrypt from "bcryptjs";
 import { createInterface } from "node:readline/promises";
 
+import { adminRoleSchema, articleStatusSchema } from "../src/lib/constants.js";
 import { encodeJsonColumn } from "../src/lib/jsonColumn.js";
 import { prisma } from "../src/lib/prisma.js";
+
+const SUPER_ADMIN = adminRoleSchema.enum.SUPER_ADMIN;
+const REVIEWED = articleStatusSchema.enum.REVIEWED;
 
 // icon/colorToken match the SVG symbol ids and CSS color tokens already used
 // in the design prototype ( test-g/index.html topic cards), so Phase 3 can
@@ -257,9 +261,6 @@ async function upsertTopicsAndArticles() {
     });
 
     for (const article of articles) {
-      const existing = await prisma.article.findFirst({
-        where: { topicId: savedTopic.id, titleEn: article.titleEn },
-      });
       const data = {
         topicId: savedTopic.id,
         titleEn: article.titleEn,
@@ -271,15 +272,15 @@ async function upsertTopicsAndArticles() {
         // ground chat answers in from day one, per the seed requirements —
         // but reviewedBy is honestly flagged, not a real clinician's name.
         // Re-review and re-approve every article here before production.
-        status: "REVIEWED",
+        status: REVIEWED,
         reviewedBy: "seed-script (AI-drafted placeholder — NOT reviewed by a licensed professional)",
         reviewedAt: new Date(),
       };
-      if (existing) {
-        await prisma.article.update({ where: { id: existing.id }, data });
-      } else {
-        await prisma.article.create({ data });
-      }
+      await prisma.article.upsert({
+        where: { topicId_titleEn: { topicId: savedTopic.id, titleEn: article.titleEn } },
+        update: data,
+        create: data,
+      });
     }
   }
   console.log(`Seeded ${TOPICS.length} topics with their articles.`);
@@ -296,10 +297,16 @@ async function upsertCrisisResources() {
 }
 
 async function upsertAppSettings() {
-  await prisma.appSettings.upsert({
-    where: { id: "singleton" },
-    update: {},
-    create: {
+  const existing = await prisma.appSettings.findUnique({ where: { id: "singleton" } });
+  if (existing) {
+    // Deliberately not overwritten: AppSettings is admin-editable at runtime
+    // (Phase 4 settings screen), so reseeding must never clobber a live
+    // admin's configuration back to these defaults.
+    console.log("AppSettings singleton already present, leaving admin-configured values as-is.");
+    return;
+  }
+  await prisma.appSettings.create({
+    data: {
       id: "singleton",
       aiProvider: "openai",
       aiModel: "gpt-4o-mini",
@@ -312,23 +319,70 @@ async function upsertAppSettings() {
   console.log("Seeded AppSettings singleton.");
 }
 
-async function promptHidden(question: string): Promise<string> {
+async function prompt(question: string): Promise<string> {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   const answer = await rl.question(question);
   rl.close();
   return answer.trim();
 }
 
+// Masks keystrokes with `*` instead of echoing them, so the super-admin
+// password doesn't land in terminal scrollback or a screen share. Falls
+// back to the plain (visible) prompt when stdin isn't an interactive TTY
+// (piped input, CI) since raw mode isn't available there.
+function promptMasked(question: string): Promise<string> {
+  if (!process.stdin.isTTY) {
+    return prompt(question);
+  }
+  return new Promise((resolve) => {
+    process.stdout.write(question);
+    const stdin = process.stdin;
+    stdin.resume();
+    stdin.setRawMode(true);
+    stdin.setEncoding("utf8");
+
+    let value = "";
+    const onData = (char: string) => {
+      switch (char) {
+        case "\n":
+        case "\r":
+        case "": // Ctrl-D
+          stdin.setRawMode(false);
+          stdin.pause();
+          stdin.removeListener("data", onData);
+          process.stdout.write("\n");
+          resolve(value.trim());
+          break;
+        case "": // Ctrl-C
+          process.stdout.write("\n");
+          process.exit(130);
+          break;
+        case "": // backspace
+          if (value.length > 0) {
+            value = value.slice(0, -1);
+            process.stdout.write("\b \b");
+          }
+          break;
+        default:
+          value += char;
+          process.stdout.write("*");
+          break;
+      }
+    };
+    stdin.on("data", onData);
+  });
+}
+
 async function upsertSuperAdmin() {
-  const existing = await prisma.adminUser.findFirst({ where: { role: "SUPER_ADMIN" } });
+  const existing = await prisma.adminUser.findFirst({ where: { role: SUPER_ADMIN } });
   if (existing) {
     console.log(`Super admin already exists (${existing.email}), skipping.`);
     return;
   }
 
-  const email = process.env.SEED_SUPER_ADMIN_EMAIL ?? (await promptHidden("Super admin email: "));
+  const email = process.env.SEED_SUPER_ADMIN_EMAIL ?? (await prompt("Super admin email: "));
   const password =
-    process.env.SEED_SUPER_ADMIN_PASSWORD ?? (await promptHidden("Super admin password (min 12 chars): "));
+    process.env.SEED_SUPER_ADMIN_PASSWORD ?? (await promptMasked("Super admin password (min 12 chars): "));
   const name = process.env.SEED_SUPER_ADMIN_NAME ?? "Super Admin";
 
   if (!email || !email.includes("@")) {
@@ -340,7 +394,7 @@ async function upsertSuperAdmin() {
 
   const passwordHash = await bcrypt.hash(password, 12);
   await prisma.adminUser.create({
-    data: { email, passwordHash, name, role: "SUPER_ADMIN" },
+    data: { email, passwordHash, name, role: SUPER_ADMIN },
   });
   console.log(`Seeded super admin: ${email}`);
 }

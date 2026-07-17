@@ -7,6 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.typecheck.json",
     "lint": "eslint .",
     "format": "prettier --write .",
     "db:generate": "prisma generate",
@@ -14,7 +15,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "dev:db:sync": "node scripts/sync-sqlite-schema.mjs",
     "dev:db:generate": "npm run dev:db:sync && prisma generate --schema=./prisma/schema.sqlite.prisma",
-    "dev:db:migrate": "npm run dev:db:sync && prisma migrate dev --schema=./prisma/schema.sqlite.prisma",
+    "dev:db:push": "npm run dev:db:sync && prisma db push --schema=./prisma/schema.sqlite.prisma",
     "dev:db:seed": "tsx prisma/seed.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -23,16 +24,17 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@prisma/client": "^7.8.0",
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "prisma": "^7.8.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -40,6 +42,7 @@
     "eslint": "^10.7.0",
     "globals": "^17.7.0",
     "prettier": "^3.9.5",
+    "prisma": "^5.22.0",
     "tsx": "^4.23.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.64.0"

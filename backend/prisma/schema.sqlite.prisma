@@ -1,12 +1,107 @@
 // Local-dev-only schema — SQLite, no Postgres instance required.
-// Must be kept in sync with schema.prisma model-for-model (only the
-// `datasource` block differs). Run via the "dev:db:*" npm scripts.
+// AUTO-GENERATED below the datasource block by scripts/sync-sqlite-schema.mjs
+// from schema.prisma. Do not hand-edit models here — edit schema.prisma and
+// re-run `npm run dev:db:sync` (or dev:db:generate / dev:db:migrate, which
+// call it automatically).
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
+}
+
+model Topic {
+  id         String    @id @default(cuid())
+  slug       String    @unique
+  nameEn     String
+  nameRw     String
+  icon       String
+  colorToken String
+  articles   Article[]
+  messages   Message[]
+}
+
+model Article {
+  id         String    @id @default(cuid())
+  topicId    String
+  topic      Topic     @relation(fields: [topicId], references: [id])
+  titleEn    String
+  titleRw    String
+  bodyEn     String
+  bodyRw     String
+  tags       String    @default("[]")
+  status     String    @default("NEEDS_REVIEW")
+  reviewedBy String?
+  reviewedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([topicId])
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  sessionId String
+  language  String
+  createdAt DateTime  @default(now())
+  messages  Message[]
+
+  @@index([sessionId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  role           String
+  content        String
+  topicId        String?
+  topic          Topic?       @relation(fields: [topicId], references: [id])
+  sourcesUsed    String       @default("[]")
+  confidence     Float?
+  flaggedItem    FlaggedItem?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+model FlaggedItem {
+  id            String    @id @default(cuid())
+  messageId     String    @unique
+  message       Message   @relation(fields: [messageId], references: [id])
+  reason        String
+  status        String    @default("FLAGGED")
+  reviewerNotes String?
+  resolvedBy    String?
+  resolvedAt    DateTime?
+  createdAt     DateTime  @default(now())
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String
+  createdAt    DateTime @default(now())
+}
+
+model CrisisResource {
+  id      String @id @default(cuid())
+  name    String
+  contact String
+  region  String
+  order   Int
+}
+
+model AppSettings {
+  id                      String  @id @default("singleton")
+  aiProvider              String
+  aiModel                 String
+  responseStyleNote       String
+  restrictToKnowledgeBase Boolean
+  autoFlagCrisisLanguage  Boolean
+  autoDetectLanguage      Boolean
 }

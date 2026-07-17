@@ -1,0 +1,11 @@
+// Typechecks src/ plus standalone scripts (prisma/seed.ts) that tsx runs
+// directly and that the production `build`/tsconfig.json (scoped to src/,
+// so its dist/ output stays clean) doesn't cover.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true
+  },
+  "include": ["src", "prisma/seed.ts"]
+}

@@ -35,15 +35,24 @@ cp frontend/.env.example frontend/.env.local
 ```
 
 For local dev without a real Postgres instance, set `DATABASE_URL` in
-`backend/.env` to `file:./prisma/dev.db` and use the `dev:db:*` scripts below.
+`backend/.env` to `file:./dev.db` (resolved relative to `prisma/`, so this
+creates `backend/prisma/dev.db`) and use the `dev:db:*` scripts below.
 
 Set up the local database (SQLite, no Postgres install required):
 
 ```bash
 cd backend
-npm run dev:db:migrate   # generates prisma/schema.sqlite.prisma from schema.prisma and migrates
-npm run dev:db:seed      # once Phase 1 seed data exists
+npm run dev:db:push   # generates prisma/schema.sqlite.prisma from schema.prisma and syncs it to prisma/dev.db
+npm run dev:db:seed   # seeds topics, articles, crisis resources, app settings, and a super admin
 ```
+
+The seed script prompts interactively for the super admin's email and password
+(never hardcoded); set `SEED_SUPER_ADMIN_EMAIL` / `SEED_SUPER_ADMIN_PASSWORD`
+(and optionally `SEED_SUPER_ADMIN_NAME`) to skip the prompt, e.g. in CI. Seed
+articles are AI-drafted and left as `NEEDS_REVIEW` — they must be approved by
+a real reviewer in the admin panel (Phase 4) before they're fit to cite in
+chat responses. The two seeded `CrisisResource` rows are placeholders too —
+replace the contact numbers with real, verified crisis lines before launch.
 
 Run both apps together from the repo root:
 
@@ -59,8 +68,18 @@ npm run dev
 `backend/prisma/schema.prisma` is the source of truth (PostgreSQL). For local
 dev, `backend/prisma/schema.sqlite.prisma` is auto-generated from it by
 `backend/scripts/sync-sqlite-schema.mjs` — never hand-edit that file, edit
-`schema.prisma` and rerun `npm run dev:db:sync` (or `dev:db:migrate` /
-`dev:db:generate`, which call it automatically).
+`schema.prisma` and rerun `npm run dev:db:sync` (or `dev:db:push` /
+`dev:db:generate`, which call it automatically). Local dev uses
+`prisma db push` (no migration history) rather than `prisma migrate dev`,
+since SQLite-generated migration SQL isn't valid for Postgres and both
+schema files would otherwise fight over the same `prisma/migrations/` folder.
+
+SQLite also has no native `enum` or `Json` column types, so fields that
+would otherwise be Prisma enums or Json arrays are plain `String` columns
+here, validated at the application boundary — see
+`backend/src/lib/constants.ts` (enums) and `backend/src/lib/jsonColumn.ts`
+(JSON-encoded arrays). Never assign those columns a raw string/array; always
+go through those helpers.
 
 Production migrations run against `schema.prisma` with a real
 `DATABASE_URL` via `npm run db:migrate:deploy`.

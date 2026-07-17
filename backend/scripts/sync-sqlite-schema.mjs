@@ -23,8 +23,7 @@ const header = `// Local-dev-only schema — SQLite, no Postgres instance requir
 // re-run \`npm run dev:db:sync\` (or dev:db:generate / dev:db:migrate, which
 // call it automatically).
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {

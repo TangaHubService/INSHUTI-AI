@@ -55,27 +55,32 @@ router.post("/", async (req, res) => {
 
   const crisisCheck = checkForCrisisLanguage(message);
   if (crisisCheck.isCrisis) {
-    const userMessage = await prisma.message.create({
-      data: { conversationId: conversation.id, role: USER, content: message },
-    });
-
     const crisisResources = await prisma.crisisResource.findMany({ orderBy: { order: "asc" } });
     const reply = buildCrisisSafetyResponse(language, crisisResources);
 
-    await prisma.message.create({
-      data: {
-        conversationId: conversation.id,
-        role: ASSISTANT,
-        content: reply,
-        confidence: 1,
-      },
-    });
-
-    if (settings?.autoFlagCrisisLanguage ?? true) {
-      await prisma.flaggedItem.create({
-        data: { messageId: userMessage.id, reason: CRISIS_LANGUAGE },
+    // A crash between the message and flag writes must never leave a
+    // crisis-language message unflagged for review, so this has to commit
+    // atomically rather than as three independent awaits.
+    await prisma.$transaction(async (tx) => {
+      const userMessage = await tx.message.create({
+        data: { conversationId: conversation.id, role: USER, content: message },
       });
-    }
+
+      await tx.message.create({
+        data: {
+          conversationId: conversation.id,
+          role: ASSISTANT,
+          content: reply,
+          confidence: 1,
+        },
+      });
+
+      if (settings?.autoFlagCrisisLanguage ?? true) {
+        await tx.flaggedItem.create({
+          data: { messageId: userMessage.id, reason: CRISIS_LANGUAGE },
+        });
+      }
+    });
 
     res.json({ reply, topic: null, sources: [], quickReplies: [] });
     return;
@@ -116,31 +121,35 @@ router.post("/", async (req, res) => {
       ? scoreToConfidence(groundingArticles[0].score)
       : 0;
 
-  await prisma.message.create({
-    data: {
-      conversationId: conversation.id,
-      role: USER,
-      content: message,
-      topicId: topTopic?.id,
-    },
-  });
-
-  const assistantMessage = await prisma.message.create({
-    data: {
-      conversationId: conversation.id,
-      role: ASSISTANT,
-      content: reply,
-      topicId: topTopic?.id,
-      sourcesUsed: encodeJsonColumn(groundingArticles.map((a) => a.id)),
-      confidence,
-    },
-  });
-
-  if (groundingArticles.length === 0) {
-    await prisma.flaggedItem.create({
-      data: { messageId: assistantMessage.id, reason: LOW_CONFIDENCE },
+  // Same atomicity requirement as the crisis path: a low-confidence answer
+  // must never end up unflagged because the process died between writes.
+  await prisma.$transaction(async (tx) => {
+    await tx.message.create({
+      data: {
+        conversationId: conversation.id,
+        role: USER,
+        content: message,
+        topicId: topTopic?.id,
+      },
     });
-  }
+
+    const assistantMessage = await tx.message.create({
+      data: {
+        conversationId: conversation.id,
+        role: ASSISTANT,
+        content: reply,
+        topicId: topTopic?.id,
+        sourcesUsed: encodeJsonColumn(groundingArticles.map((a) => a.id)),
+        confidence,
+      },
+    });
+
+    if (groundingArticles.length === 0) {
+      await tx.flaggedItem.create({
+        data: { messageId: assistantMessage.id, reason: LOW_CONFIDENCE },
+      });
+    }
+  });
 
   res.json({
     reply,

@@ -1,0 +1,12 @@
+// Local-dev-only schema — SQLite, no Postgres instance required.
+// Must be kept in sync with schema.prisma model-for-model (only the
+// `datasource` block differs). Run via the "dev:db:*" npm scripts.
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}

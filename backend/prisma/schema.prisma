@@ -1,0 +1,13 @@
+// Primary schema — PostgreSQL, used for CI/production.
+// For local dev without a Postgres instance, use prisma/schema.sqlite.prisma
+// (see package.json "dev:db:*" scripts). Both schemas generate the client to
+// the same output path, so application code always imports from one place.
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}

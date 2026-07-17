@@ -1,0 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Below this line: Phase 3 ports assets/style.css from the design prototype
+   (../ test-g/assets/style.css) in almost as-is, alongside Tailwind. */

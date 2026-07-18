@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { AdminShell } from "@/components/AdminShell";
+import { ConfirmModal } from "@/components/Modal";
 import {
   createCrisisResource,
   deleteCrisisResource,
@@ -14,6 +15,7 @@ import {
   type CrisisResource,
 } from "@/lib/adminApiClient";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
+import { useToast } from "@/lib/useToast";
 
 function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
   return (
@@ -31,11 +33,13 @@ function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
 
 export default function AdminSettingsPage() {
   const { admin, loading: authLoading } = useRequireAdmin("SUPER_ADMIN");
+  const { toast } = useToast();
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [resources, setResources] = useState<CrisisResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [newResource, setNewResource] = useState({ name: "", contact: "", region: "" });
+  const [deleteTarget, setDeleteTarget] = useState<CrisisResource | null>(null);
 
   useEffect(() => {
     if (!admin) return;
@@ -52,26 +56,47 @@ export default function AdminSettingsPage() {
     try {
       const updated = await updateSettings(patch);
       setSettings(updated);
+      toast("Settings saved", "success");
+    } catch {
+      toast("Failed to save settings", "error");
     } finally {
       setSaving(false);
     }
   }
 
   async function handleAddResource() {
-    if (!newResource.name || !newResource.contact || !newResource.region) return;
-    const resource = await createCrisisResource({ ...newResource, order: resources.length + 1 });
-    setResources((prev) => [...prev, resource]);
-    setNewResource({ name: "", contact: "", region: "" });
+    if (!newResource.name || !newResource.contact || !newResource.region) {
+      toast("Fill in all fields", "error");
+      return;
+    }
+    try {
+      const resource = await createCrisisResource({ ...newResource, order: resources.length + 1 });
+      setResources((prev) => [...prev, resource]);
+      setNewResource({ name: "", contact: "", region: "" });
+      toast("Resource added", "success");
+    } catch {
+      toast("Failed to add resource", "error");
+    }
   }
 
   async function handleUpdateResource(id: string, field: "name" | "contact" | "region", value: string) {
     setResources((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
-    await updateCrisisResource(id, { [field]: value });
+    try {
+      await updateCrisisResource(id, { [field]: value });
+    } catch {
+      toast("Failed to update resource", "error");
+    }
   }
 
   async function handleDeleteResource(id: string) {
-    await deleteCrisisResource(id);
-    setResources((prev) => prev.filter((r) => r.id !== id));
+    setDeleteTarget(null);
+    try {
+      await deleteCrisisResource(id);
+      setResources((prev) => prev.filter((r) => r.id !== id));
+      toast("Resource deleted", "success");
+    } catch {
+      toast("Failed to delete resource", "error");
+    }
   }
 
   if (authLoading || !admin) return null;
@@ -181,7 +206,7 @@ export default function AdminSettingsPage() {
                   value={resource.region}
                   onChange={(e) => void handleUpdateResource(resource.id, "region", e.target.value)}
                 />
-                <button onClick={() => void handleDeleteResource(resource.id)} title="Delete">
+                <button onClick={() => setDeleteTarget(resource)} title="Delete">
                   <svg width="16" height="16" className="cursor-pointer text-coral-dark">
                     <use href="#i-trash" />
                   </svg>
@@ -218,6 +243,15 @@ export default function AdminSettingsPage() {
           </div>
         </div>
       )}
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Delete resource"
+        message={`Remove "${deleteTarget?.name ?? ""}" from crisis resources?`}
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={() => deleteTarget && void handleDeleteResource(deleteTarget.id)}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </AdminShell>
   );
 }

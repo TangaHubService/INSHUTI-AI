@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { sendChatMessage, type ChatSource, type Language } from "@/lib/apiClient";
+import { useToast } from "@/lib/useToast";
 
 interface DisplayMessage {
   role: "user" | "bot";
@@ -72,6 +73,7 @@ const GREETING: Record<Language, string> = {
 };
 
 export default function ChatPage() {
+  const { toast } = useToast();
   const [language, setLanguage] = useState<Language>("EN");
   const [messages, setMessages] = useState<DisplayMessage[]>([
     { role: "bot", content: GREETING.EN, time: nowLabel() },
@@ -103,17 +105,12 @@ export default function ChatPage() {
       setQuickReplies(response.quickReplies);
       setActiveTopicName(response.topic ? (language === "RW" ? response.topic.nameRw : response.topic.nameEn) : null);
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "bot",
-          content:
-            language === "RW"
-              ? "Habaye ikibazo. Wagerageza kohereza ubutumwa bwawe nanone?"
-              : "Something went wrong. Could you try sending your message again?",
-          time: nowLabel(),
-        },
-      ]);
+      toast(
+        language === "RW"
+          ? "Habaye ikibazo. Ongera ugerageze."
+          : "Something went wrong. Please try again.",
+        "error",
+      );
     } finally {
       setSending(false);
     }

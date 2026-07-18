@@ -49,6 +49,9 @@
   button{font-family:var(--font-body); cursor:pointer;}
   ::selection{background:var(--coral-100); color:var(--coral-dark);}
 
+  @keyframes slide-in{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+  .animate-slide-in{animation:slide-in .25s ease-out}
+
   /* ---------- Shared bits ---------- */
   .pill{
     display:inline-flex; align-items:center; gap:6px;

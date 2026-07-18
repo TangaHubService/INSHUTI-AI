@@ -1,30 +1,51 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { AdminShell } from "@/components/AdminShell";
-import { createKbArticle, getKbArticles, getKbTopics, type KbArticle, type KbTopic } from "@/lib/adminApiClient";
+import { Drawer } from "@/components/Drawer";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
+import { useToast } from "@/lib/useToast";
+import {
+  createKbArticle,
+  getKbArticle,
+  getKbArticles,
+  getKbTopics,
+  updateKbArticle,
+  type ArticleStatus,
+  type KbArticle,
+  type KbTopic,
+} from "@/lib/adminApiClient";
 
 export default function KnowledgeBasePage() {
   const { admin, loading: authLoading } = useRequireAdmin("CONTENT_REVIEWER");
-  const router = useRouter();
+  const { toast } = useToast();
   const [topics, setTopics] = useState<KbTopic[]>([]);
   const [articlesByTopic, setArticlesByTopic] = useState<Record<string, KbArticle[]>>({});
   const [loading, setLoading] = useState(true);
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerLoading, setDrawerLoading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [article, setArticle] = useState<KbArticle | null>(null);
+  const [lang, setLang] = useState<"EN" | "RW">("EN");
+  const [titleEn, setTitleEn] = useState("");
+  const [titleRw, setTitleRw] = useState("");
+  const [bodyEn, setBodyEn] = useState("");
+  const [bodyRw, setBodyRw] = useState("");
+  const [tagsInput, setTagsInput] = useState("");
+  const [saving, setSaving] = useState(false);
+
   const [creating, setCreating] = useState(false);
   const [newArticle, setNewArticle] = useState({ topicId: "", titleEn: "", titleRw: "" });
-  const [createError, setCreateError] = useState<string | null>(null);
 
   async function loadAll() {
     setLoading(true);
     const [topicList, articleList] = await Promise.all([getKbTopics(), getKbArticles()]);
     setTopics(topicList);
     const grouped: Record<string, KbArticle[]> = {};
-    for (const article of articleList) {
-      (grouped[article.topicId] ??= []).push(article);
+    for (const a of articleList) {
+      (grouped[a.topicId] ??= []).push(a);
     }
     setArticlesByTopic(grouped);
     setLoading(false);
@@ -36,20 +57,65 @@ export default function KnowledgeBasePage() {
   useEffect(() => {
     if (!admin) return;
     void loadAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [admin]);
+
+  const openEditor = useCallback(async (id: string) => {
+    setEditingId(id);
+    setDrawerOpen(true);
+    setDrawerLoading(true);
+    try {
+      const a = await getKbArticle(id);
+      setArticle(a);
+      setTitleEn(a.titleEn);
+      setTitleRw(a.titleRw);
+      setBodyEn(a.bodyEn);
+      setBodyRw(a.bodyRw);
+      setTagsInput(a.tags.join(", "));
+    } catch {
+      toast("Failed to load article", "error");
+    } finally {
+      setDrawerLoading(false);
+    }
+  }, [toast]);
+
+  function closeDrawer() {
+    setDrawerOpen(false);
+    setEditingId(null);
+    setArticle(null);
+  }
+
+  async function save(status?: ArticleStatus) {
+    if (!editingId) return;
+    setSaving(true);
+    try {
+      const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
+      const updated = await updateKbArticle(editingId, {
+        titleEn, titleRw, bodyEn, bodyRw, tags, ...(status ? { status } : {}),
+      });
+      setArticle(updated);
+      toast(status === "REVIEWED" ? "Article reviewed and published" : "Draft saved", "success");
+      void loadAll();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to save", "error");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function handleCreate() {
     if (!newArticle.topicId || !newArticle.titleEn.trim() || !newArticle.titleRw.trim()) {
-      setCreateError("Pick a topic and fill in both titles.");
+      toast("Pick a topic and fill in both titles.", "error");
       return;
     }
-    setCreateError(null);
     try {
-      const article = await createKbArticle(newArticle);
-      router.push(`/admin/knowledge-base/${article.id}`);
+      const a = await createKbArticle(newArticle);
+      setCreating(false);
+      setNewArticle({ topicId: topics[0]?.id ?? "", titleEn: "", titleRw: "" });
+      toast("Article created", "success");
+      void loadAll();
+      void openEditor(a.id);
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : "Failed to create article");
+      toast(err instanceof Error ? err.message : "Failed to create article", "error");
     }
   }
 
@@ -61,17 +127,14 @@ export default function KnowledgeBasePage() {
         <div>
           <h1 className="font-display text-[26px] text-teal-900">Knowledge Base</h1>
           <p className="mt-1 text-sm text-ink-soft">
-            Articles grounding chat answers, grouped by topic. Both EN and RW bodies are required
-            before an article can be marked Reviewed.
+            Articles grounding chat answers, grouped by topic.
           </p>
         </div>
         <button
           onClick={() => setCreating((v) => !v)}
           className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)]"
         >
-          <svg width="15" height="15">
-            <use href="#i-plus" />
-          </svg>
+          <svg width="15" height="15"><use href="#i-plus" /></svg>
           New article
         </button>
       </div>
@@ -79,88 +142,98 @@ export default function KnowledgeBasePage() {
       {creating && (
         <div className="mb-4 rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <select
-              className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm"
-              value={newArticle.topicId}
-              onChange={(e) => setNewArticle({ ...newArticle, topicId: e.target.value })}
-            >
-              {topics.map((topic) => (
-                <option key={topic.id} value={topic.id}>
-                  {topic.nameEn}
-                </option>
-              ))}
+            <select className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" value={newArticle.topicId} onChange={(e) => setNewArticle({ ...newArticle, topicId: e.target.value })}>
+              {topics.map((t) => <option key={t.id} value={t.id}>{t.nameEn}</option>)}
             </select>
-            <input
-              className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm"
-              placeholder="Title (English)"
-              value={newArticle.titleEn}
-              onChange={(e) => setNewArticle({ ...newArticle, titleEn: e.target.value })}
-            />
-            <input
-              className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm"
-              placeholder="Title (Kinyarwanda)"
-              value={newArticle.titleRw}
-              onChange={(e) => setNewArticle({ ...newArticle, titleRw: e.target.value })}
-            />
+            <input className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" placeholder="Title (English)" value={newArticle.titleEn} onChange={(e) => setNewArticle({ ...newArticle, titleEn: e.target.value })} />
+            <input className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" placeholder="Title (Kinyarwanda)" value={newArticle.titleRw} onChange={(e) => setNewArticle({ ...newArticle, titleRw: e.target.value })} />
           </div>
-          {createError && <p className="mt-3 text-[13px] font-semibold text-danger">{createError}</p>}
           <div className="mt-4 flex gap-2.5">
-            <button
-              onClick={() => void handleCreate()}
-              className="rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)]"
-            >
-              Create &amp; edit
-            </button>
-            <button
-              onClick={() => setCreating(false)}
-              className="rounded-full px-4 py-[9px] text-[13px] font-semibold text-ink-soft"
-            >
-              Cancel
-            </button>
+            <button onClick={() => void handleCreate()} className="rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)]">Create &amp; edit</button>
+            <button onClick={() => setCreating(false)} className="rounded-full px-4 py-[9px] text-[13px] font-semibold text-ink-soft">Cancel</button>
           </div>
         </div>
       )}
 
       {loading && <p className="text-sm text-ink-soft">Loading…</p>}
 
-      {!loading &&
-        topics.map((topic) => (
-          <div key={topic.id} className="mb-4 rounded-md border border-[rgba(22,48,44,0.05)] bg-white shadow-card">
-            <div className="flex items-center justify-between border-b border-line px-5 py-[14px]">
-              <div className="flex items-center gap-3.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-[11px] bg-teal-100 text-teal-700">
-                  <svg width="18" height="18">
-                    <use href={`#${topic.icon}`} />
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-bold text-teal-900">{topic.nameEn}</div>
-                  <div className="mt-[3px] text-[12.5px] text-ink-soft">
-                    {topic.reviewedCount} / {topic.articleCount} reviewed
-                  </div>
-                </div>
+      {!loading && topics.map((topic) => (
+        <div key={topic.id} className="mb-4 rounded-md border border-[rgba(22,48,44,0.05)] bg-white shadow-card">
+          <div className="flex items-center justify-between border-b border-line px-5 py-[14px]">
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[11px] bg-teal-100 text-teal-700">
+                <svg width="18" height="18"><use href={`#${topic.icon}`} /></svg>
+              </div>
+              <div>
+                <div className="font-bold text-teal-900">{topic.nameEn}</div>
+                <div className="mt-[3px] text-[12.5px] text-ink-soft">{topic.reviewedCount} / {topic.articleCount} reviewed</div>
               </div>
             </div>
-            {(articlesByTopic[topic.id] ?? []).map((article) => (
-              <Link
-                key={article.id}
-                href={`/admin/knowledge-base/${article.id}`}
-                className="flex items-center justify-between border-b border-line px-5 py-[14px] last:border-b-0 hover:bg-paper-2"
-              >
-                <span className="text-sm font-semibold text-ink">{article.titleEn}</span>
-                <span
-                  className={`inline-flex items-center gap-1.5 text-[12.5px] font-semibold before:h-2 before:w-2 before:rounded-full before:content-[''] ${
-                    article.status === "REVIEWED"
-                      ? "text-[#1E7A5A] before:bg-[#2E9E76]"
-                      : "text-[#8A5E1E] before:bg-gold"
-                  }`}
-                >
-                  {article.status === "REVIEWED" ? "Reviewed" : "Needs review"}
-                </span>
-              </Link>
-            ))}
           </div>
-        ))}
+          {(articlesByTopic[topic.id] ?? []).map((article) => (
+            <div
+              key={article.id}
+              onClick={() => void openEditor(article.id)}
+              className="flex cursor-pointer items-center justify-between border-b border-line px-5 py-[14px] last:border-b-0 hover:bg-paper-2"
+            >
+              <span className="text-sm font-semibold text-ink">{article.titleEn}</span>
+              <span className={`inline-flex items-center gap-1.5 text-[12.5px] font-semibold before:h-2 before:w-2 before:rounded-full before:content-[''] ${article.status === "REVIEWED" ? "text-[#1E7A5A] before:bg-[#2E9E76]" : "text-[#8A5E1E] before:bg-gold"}`}>
+                {article.status === "REVIEWED" ? "Reviewed" : "Needs review"}
+              </span>
+            </div>
+          ))}
+        </div>
+      ))}
+
+      <Drawer open={drawerOpen} onClose={closeDrawer} title={article?.titleEn ?? "Article Editor"}>
+        {drawerLoading && <p className="text-sm text-ink-soft">Loading…</p>}
+        {!drawerLoading && article && (
+          <div className="flex flex-col gap-4">
+            <div className="mb-1 flex gap-1.5">
+              <button onClick={() => setLang("EN")} className={`rounded-[9px] border px-4 py-2 text-[13px] font-bold ${lang === "EN" ? "border-teal-700 bg-teal-700 text-white" : "border-line text-ink-soft"}`}>English</button>
+              <button onClick={() => setLang("RW")} className={`rounded-[9px] border px-4 py-2 text-[13px] font-bold ${lang === "RW" ? "border-teal-700 bg-teal-700 text-white" : "border-line text-ink-soft"}`}>Kinyarwanda</button>
+            </div>
+
+            {lang === "EN" ? (
+              <>
+                <label className="text-[12.5px] font-bold text-ink-soft">Title (English)</label>
+                <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={titleEn} onChange={(e) => setTitleEn(e.target.value)} />
+                <label className="text-[12.5px] font-bold text-ink-soft">Body (English)</label>
+                <textarea className="w-full resize-y rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" rows={8} value={bodyEn} onChange={(e) => setBodyEn(e.target.value)} />
+              </>
+            ) : (
+              <>
+                <label className="text-[12.5px] font-bold text-ink-soft">Title (Kinyarwanda)</label>
+                <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={titleRw} onChange={(e) => setTitleRw(e.target.value)} />
+                <label className="text-[12.5px] font-bold text-ink-soft">Body (Kinyarwanda)</label>
+                <textarea className="w-full resize-y rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" rows={8} value={bodyRw} onChange={(e) => setBodyRw(e.target.value)} />
+              </>
+            )}
+
+            <label className="text-[12.5px] font-bold text-ink-soft">Tags (comma-separated)</label>
+            <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} />
+
+            <div className="rounded-xl border border-[rgba(22,48,44,0.05)] bg-white p-4 shadow-card">
+              <div className="mb-2 text-[12.5px] font-bold text-ink-soft">Status</div>
+              <span className={`inline-flex items-center gap-1.5 text-[12.5px] font-semibold before:h-2 before:w-2 before:rounded-full before:content-[''] ${article.status === "REVIEWED" ? "text-[#1E7A5A] before:bg-[#2E9E76]" : "text-[#8A5E1E] before:bg-gold"}`}>
+                {article.status === "REVIEWED" ? "Reviewed" : "Needs review"}
+              </span>
+              {article.reviewedBy && (
+                <p className="mt-2 text-[12.5px] text-ink-soft">Reviewed by <span className="font-semibold">{article.reviewedBy}</span>{article.reviewedAt && ` on ${new Date(article.reviewedAt).toLocaleDateString()}`}</p>
+              )}
+            </div>
+
+            <div className="flex gap-2.5">
+              <button onClick={() => void save()} disabled={saving} className="rounded-full border-[1.5px] border-teal-700 px-4 py-[9px] text-[13px] font-semibold text-teal-700 disabled:opacity-50">
+                {saving ? "Saving…" : "Save draft"}
+              </button>
+              <button onClick={() => void save("REVIEWED")} disabled={saving} className="rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] disabled:opacity-50">
+                {article.status === "REVIEWED" ? "Reviewed ✓" : "Mark as Reviewed"}
+              </button>
+            </div>
+          </div>
+        )}
+      </Drawer>
     </AdminShell>
   );
 }

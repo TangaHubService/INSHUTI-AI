@@ -12,6 +12,8 @@ import {
   type Suggestion,
   type TopicCount,
 } from "@/lib/apiClient";
+import { useToast } from "@/lib/useToast";
+import { ConfirmModal } from "@/components/Modal";
 
 const COLOR_TOKENS: Record<string, { bg: string; fg: string; pillBg: string; pillFg: string }> = {
   coral: { bg: "bg-coral-100", fg: "text-coral-dark", pillBg: "bg-coral-100", pillFg: "text-coral-dark" },
@@ -37,6 +39,7 @@ function relativeTime(iso: string): string {
 }
 
 export default function MySpacePage() {
+  const { toast } = useToast();
   const [language, setLanguage] = useState<Language>("EN");
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [topicCounts, setTopicCounts] = useState<TopicCount[]>([]);
@@ -44,6 +47,7 @@ export default function MySpacePage() {
   const [loading, setLoading] = useState(true);
   const [clearing, setClearing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   async function loadAll() {
     setLoading(true);
@@ -70,22 +74,18 @@ export default function MySpacePage() {
   }, [language]);
 
   async function handleClearHistory() {
-    if (
-      !window.confirm(
-        language === "RW" ? "Wemeza ko ushaka gusiba amateka yawe yose?" : "Are you sure you want to clear all your history?",
-      )
-    ) {
-      return;
-    }
+    setShowClearConfirm(false);
     setClearing(true);
     try {
       await clearHistory();
       await loadAll();
+      toast(language === "RW" ? "Amateka yawe yasibwe" : "History cleared", "success");
     } catch {
-      setError(
+      toast(
         language === "RW"
           ? "Ntibyashobotse gusiba amateka yawe. Ongera ugerageze."
           : "Couldn't clear your history right now. Please try again.",
+        "error",
       );
     } finally {
       setClearing(false);
@@ -276,7 +276,7 @@ export default function MySpacePage() {
                   </p>
                   <button
                     className="mt-3 inline-flex items-center justify-center gap-2 rounded-full border-[1.5px] border-coral-dark px-4 py-[9px] text-[13px] font-semibold text-coral-dark transition hover:-translate-y-px hover:bg-teal-100 disabled:opacity-50"
-                    onClick={() => void handleClearHistory()}
+                    onClick={() => setShowClearConfirm(true)}
                     disabled={clearing}
                   >
                     <svg width="13" height="13">
@@ -290,6 +290,16 @@ export default function MySpacePage() {
           </div>
         </section>
 
+        <ConfirmModal
+          open={showClearConfirm}
+          title={language === "RW" ? "Gusiba amateka" : "Clear history"}
+          message={language === "RW" ? "Wemeza ko ushaka gusiba amateka yawe yose?" : "Are you sure you want to clear all your history?"}
+          confirmLabel={language === "RW" ? "Siba" : "Clear"}
+          cancelLabel={language === "RW" ? "Rekura" : "Cancel"}
+          variant="danger"
+          onConfirm={() => void handleClearHistory()}
+          onCancel={() => setShowClearConfirm(false)}
+        />
         <footer className="border-t border-line py-9">
           <div className="flex flex-wrap items-center justify-between gap-[14px]">
             <div className="flex items-center gap-2.5">

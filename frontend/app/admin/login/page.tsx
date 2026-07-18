@@ -4,23 +4,23 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { login } from "@/lib/adminApiClient";
+import { useToast } from "@/lib/useToast";
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
-    setError(null);
     try {
       await login(email, password);
       router.push("/admin/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      toast(err instanceof Error ? err.message : "Login failed", "error");
     } finally {
       setSubmitting(false);
     }
@@ -75,7 +75,6 @@ export default function AdminLoginPage() {
                 required
               />
             </div>
-            {error && <p className="mb-4 text-[13px] font-semibold text-danger">{error}</p>}
             <button
               type="submit"
               disabled={submitting}

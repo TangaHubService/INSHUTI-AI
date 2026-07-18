@@ -3,9 +3,14 @@ import cors from "cors";
 import express, { type ErrorRequestHandler } from "express";
 
 import { env } from "./lib/env.js";
+import authRouter from "./routes/auth.js";
 import chatRouter from "./routes/chat.js";
+import dashboardRouter from "./routes/dashboard.js";
+import flaggedRouter from "./routes/flagged.js";
 import healthRouter from "./routes/health.js";
 import historyRouter from "./routes/history.js";
+import kbRouter from "./routes/kb.js";
+import settingsRouter from "./routes/settings.js";
 import suggestionsRouter from "./routes/suggestions.js";
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
@@ -29,6 +34,11 @@ export function createApp() {
   app.use("/api/chat", chatRouter);
   app.use("/api/history", historyRouter);
   app.use("/api/suggestions", suggestionsRouter);
+  app.use("/api/auth", authRouter);
+  app.use("/api/dashboard", dashboardRouter);
+  app.use("/api/kb", kbRouter);
+  app.use("/api/flagged", flaggedRouter);
+  app.use("/api/settings", settingsRouter);
 
   app.use(errorHandler);
 

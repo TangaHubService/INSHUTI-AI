@@ -12,6 +12,8 @@ import historyRouter from "./routes/history.js";
 import kbRouter from "./routes/kb.js";
 import settingsRouter from "./routes/settings.js";
 import suggestionsRouter from "./routes/suggestions.js";
+import usersRouter from "./routes/users.js";
+import consultationsRouter from "./routes/consultations.js";
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   console.error(err);
@@ -39,6 +41,8 @@ export function createApp() {
   app.use("/api/kb", kbRouter);
   app.use("/api/flagged", flaggedRouter);
   app.use("/api/settings", settingsRouter);
+  app.use("/api/users", usersRouter);
+  app.use("/api/consultations", consultationsRouter);
 
   app.use(errorHandler);
 

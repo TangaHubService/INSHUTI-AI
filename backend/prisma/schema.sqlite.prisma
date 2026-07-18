@@ -17,6 +17,8 @@ model Topic {
   slug       String    @unique
   nameEn     String
   nameRw     String
+  nameFr     String @default("")
+  nameSw     String @default("")
   icon       String
   colorToken String
   articles   Article[]
@@ -29,8 +31,13 @@ model Article {
   topic      Topic     @relation(fields: [topicId], references: [id])
   titleEn    String
   titleRw    String
+  titleFr    String @default("")
+  titleSw    String @default("")
   bodyEn     String
   bodyRw     String
+  bodyFr     String @default("")
+  bodySw     String @default("")
+  externalUrl String?
   tags       String    @default("[]")
   status     String    @default("NEEDS_REVIEW")
   reviewedBy String?
@@ -43,29 +50,35 @@ model Article {
 }
 
 model Conversation {
-  id        String    @id @default(cuid())
-  sessionId String
-  language  String
-  createdAt DateTime  @default(now())
-  messages  Message[]
+  id            String         @id @default(cuid())
+  sessionId     String
+  language      String
+  userId        String?
+  user          User?          @relation(fields: [userId], references: [id])
+  consultation  Consultation?
+  createdAt     DateTime       @default(now())
+  messages      Message[]
 
   @@index([sessionId])
+  @@index([userId])
 }
 
 model Message {
-  id             String       @id @default(cuid())
+  id             String         @id @default(cuid())
   conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversation   Conversation   @relation(fields: [conversationId], references: [id])
+  consultationId String?
   role           String
   content        String
   topicId        String?
-  topic          Topic?       @relation(fields: [topicId], references: [id])
-  sourcesUsed    String       @default("[]")
+  topic          Topic?         @relation(fields: [topicId], references: [id])
+  sourcesUsed    String         @default("[]")
   confidence     Float?
   flaggedItem    FlaggedItem?
-  createdAt      DateTime     @default(now())
+  createdAt      DateTime       @default(now())
 
   @@index([conversationId])
+  @@index([consultationId])
 }
 
 model FlaggedItem {
@@ -97,6 +110,69 @@ model CrisisResource {
   order   Int
 }
 
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  phone             String?
+  passwordHash      String
+  name              String
+  role              String
+  preferredLanguage String   @default("EN")
+  loginAttempts     Int      @default(0)
+  lockedUntil       DateTime?
+  lastActivityAt    DateTime @default(now())
+  createdAt         DateTime @default(now())
+
+  healthcareProfessional HealthcareProfessional?
+  governmentUser        GovernmentUser?
+  consultations         Consultation[]
+  conversations         Conversation[]
+
+  @@index([email])
+}
+
+model HealthcareProfessional {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  user             User      @relation(fields: [userId], references: [id])
+  professionalType String
+  specialization   String?
+  availability     String?
+  approvalStatus   String    @default("PENDING")
+  approvedBy       String?
+  approvedAt       DateTime?
+  consultations    Consultation[]
+
+  @@index([professionalType])
+}
+
+model GovernmentUser {
+  id         String @id @default(cuid())
+  userId     String @unique
+  user       User   @relation(fields: [userId], references: [id])
+  level      String
+  regionName String
+}
+
+model Consultation {
+  id                 String    @id @default(cuid())
+  conversationId     String    @unique
+  conversation       Conversation @relation(fields: [conversationId], references: [id])
+  userId             String
+  user               User      @relation(fields: [userId], references: [id])
+  professionalId     String?
+  professional       HealthcareProfessional? @relation(fields: [professionalId], references: [id])
+  status             String    @default("PENDING")
+  priority           Int       @default(0)
+  assignedAt         DateTime?
+  resolvedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([professionalId])
+  @@index([status])
+}
+
 model AppSettings {
   id                      String  @id @default("singleton")
   aiProvider              String
@@ -105,4 +181,7 @@ model AppSettings {
   restrictToKnowledgeBase Boolean
   autoFlagCrisisLanguage  Boolean
   autoDetectLanguage      Boolean
+  sessionTimeoutMinutes   Int     @default(60)
+  maxLoginAttempts        Int     @default(5)
+  lockoutDurationMinutes  Int     @default(15)
 }

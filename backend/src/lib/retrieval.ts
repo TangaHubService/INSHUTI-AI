@@ -28,8 +28,13 @@ export interface RetrievedArticle {
   topicId: string;
   titleEn: string;
   titleRw: string;
+  titleFr: string;
+  titleSw: string;
   bodyEn: string;
   bodyRw: string;
+  bodyFr: string;
+  bodySw: string;
+  externalUrl: string | null;
   score: number;
   topic: { id: string; slug: string; nameEn: string; nameRw: string };
 }
@@ -75,8 +80,13 @@ export async function retrieveArticles(message: string): Promise<RetrievedArticl
       topicId: article.topicId,
       titleEn: article.titleEn,
       titleRw: article.titleRw,
+      titleFr: article.titleFr,
+      titleSw: article.titleSw,
       bodyEn: article.bodyEn,
       bodyRw: article.bodyRw,
+      bodyFr: article.bodyFr,
+      bodySw: article.bodySw,
+      externalUrl: (article as any).externalUrl ?? null,
       score,
       topic: article.topic,
     }));

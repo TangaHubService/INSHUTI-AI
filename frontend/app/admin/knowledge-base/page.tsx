@@ -28,16 +28,20 @@ export default function KnowledgeBasePage() {
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [article, setArticle] = useState<KbArticle | null>(null);
-  const [lang, setLang] = useState<"EN" | "RW">("EN");
+  const [lang, setLang] = useState<"EN" | "RW" | "FR" | "SW">("EN");
   const [titleEn, setTitleEn] = useState("");
   const [titleRw, setTitleRw] = useState("");
   const [bodyEn, setBodyEn] = useState("");
   const [bodyRw, setBodyRw] = useState("");
+  const [titleFr, setTitleFr] = useState("");
+  const [titleSw, setTitleSw] = useState("");
+  const [bodyFr, setBodyFr] = useState("");
+  const [bodySw, setBodySw] = useState("");
   const [tagsInput, setTagsInput] = useState("");
   const [saving, setSaving] = useState(false);
 
   const [creating, setCreating] = useState(false);
-  const [newArticle, setNewArticle] = useState({ topicId: "", titleEn: "", titleRw: "" });
+  const [newArticle, setNewArticle] = useState({ topicId: "", titleEn: "", titleRw: "", titleFr: "", titleSw: "" });
 
   async function loadAll() {
     setLoading(true);
@@ -70,6 +74,10 @@ export default function KnowledgeBasePage() {
       setTitleRw(a.titleRw);
       setBodyEn(a.bodyEn);
       setBodyRw(a.bodyRw);
+      setTitleFr(a.titleFr ?? "");
+      setTitleSw(a.titleSw ?? "");
+      setBodyFr(a.bodyFr ?? "");
+      setBodySw(a.bodySw ?? "");
       setTagsInput(a.tags.join(", "));
     } catch {
       toast("Failed to load article", "error");
@@ -82,6 +90,10 @@ export default function KnowledgeBasePage() {
     setDrawerOpen(false);
     setEditingId(null);
     setArticle(null);
+    setTitleFr("");
+    setTitleSw("");
+    setBodyFr("");
+    setBodySw("");
   }
 
   async function save(status?: ArticleStatus) {
@@ -90,7 +102,7 @@ export default function KnowledgeBasePage() {
     try {
       const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
       const updated = await updateKbArticle(editingId, {
-        titleEn, titleRw, bodyEn, bodyRw, tags, ...(status ? { status } : {}),
+        titleEn, titleRw, titleFr, titleSw, bodyEn, bodyRw, bodyFr, bodySw, tags, ...(status ? { status } : {}),
       });
       setArticle(updated);
       toast(status === "REVIEWED" ? "Article reviewed and published" : "Draft saved", "success");
@@ -110,7 +122,7 @@ export default function KnowledgeBasePage() {
     try {
       const a = await createKbArticle(newArticle);
       setCreating(false);
-      setNewArticle({ topicId: topics[0]?.id ?? "", titleEn: "", titleRw: "" });
+      setNewArticle({ topicId: topics[0]?.id ?? "", titleEn: "", titleRw: "", titleFr: "", titleSw: "" });
       toast("Article created", "success");
       void loadAll();
       void openEditor(a.id);
@@ -141,12 +153,14 @@ export default function KnowledgeBasePage() {
 
       {creating && (
         <div className="mb-4 rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-5">
             <select className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" value={newArticle.topicId} onChange={(e) => setNewArticle({ ...newArticle, topicId: e.target.value })}>
               {topics.map((t) => <option key={t.id} value={t.id}>{t.nameEn}</option>)}
             </select>
             <input className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" placeholder="Title (English)" value={newArticle.titleEn} onChange={(e) => setNewArticle({ ...newArticle, titleEn: e.target.value })} />
             <input className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" placeholder="Title (Kinyarwanda)" value={newArticle.titleRw} onChange={(e) => setNewArticle({ ...newArticle, titleRw: e.target.value })} />
+            <input className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" placeholder="Title (French)" value={newArticle.titleFr} onChange={(e) => setNewArticle({ ...newArticle, titleFr: e.target.value })} />
+            <input className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" placeholder="Title (Kiswahili)" value={newArticle.titleSw} onChange={(e) => setNewArticle({ ...newArticle, titleSw: e.target.value })} />
           </div>
           <div className="mt-4 flex gap-2.5">
             <button onClick={() => void handleCreate()} className="rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)]">Create &amp; edit</button>
@@ -190,23 +204,47 @@ export default function KnowledgeBasePage() {
         {!drawerLoading && article && (
           <div className="flex flex-col gap-4">
             <div className="mb-1 flex gap-1.5">
-              <button onClick={() => setLang("EN")} className={`rounded-[9px] border px-4 py-2 text-[13px] font-bold ${lang === "EN" ? "border-teal-700 bg-teal-700 text-white" : "border-line text-ink-soft"}`}>English</button>
-              <button onClick={() => setLang("RW")} className={`rounded-[9px] border px-4 py-2 text-[13px] font-bold ${lang === "RW" ? "border-teal-700 bg-teal-700 text-white" : "border-line text-ink-soft"}`}>Kinyarwanda</button>
+              {(["EN", "RW", "FR", "SW"] as const).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => setLang(l)}
+                  className={`rounded-[9px] border px-3 py-2 text-[12px] font-bold ${lang === l ? "border-teal-700 bg-teal-700 text-white" : "border-line text-ink-soft"}`}
+                >
+                  {l === "EN" ? "English" : l === "RW" ? "Kinyarwanda" : l === "FR" ? "French" : "Kiswahili"}
+                </button>
+              ))}
             </div>
 
-            {lang === "EN" ? (
+            {lang === "EN" && (
               <>
                 <label className="text-[12.5px] font-bold text-ink-soft">Title (English)</label>
                 <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={titleEn} onChange={(e) => setTitleEn(e.target.value)} />
                 <label className="text-[12.5px] font-bold text-ink-soft">Body (English)</label>
                 <textarea className="w-full resize-y rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" rows={8} value={bodyEn} onChange={(e) => setBodyEn(e.target.value)} />
               </>
-            ) : (
+            )}
+            {lang === "RW" && (
               <>
                 <label className="text-[12.5px] font-bold text-ink-soft">Title (Kinyarwanda)</label>
                 <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={titleRw} onChange={(e) => setTitleRw(e.target.value)} />
                 <label className="text-[12.5px] font-bold text-ink-soft">Body (Kinyarwanda)</label>
                 <textarea className="w-full resize-y rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" rows={8} value={bodyRw} onChange={(e) => setBodyRw(e.target.value)} />
+              </>
+            )}
+            {lang === "FR" && (
+              <>
+                <label className="text-[12.5px] font-bold text-ink-soft">Title (French)</label>
+                <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={titleFr} onChange={(e) => setTitleFr(e.target.value)} />
+                <label className="text-[12.5px] font-bold text-ink-soft">Body (French)</label>
+                <textarea className="w-full resize-y rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" rows={8} value={bodyFr} onChange={(e) => setBodyFr(e.target.value)} />
+              </>
+            )}
+            {lang === "SW" && (
+              <>
+                <label className="text-[12.5px] font-bold text-ink-soft">Title (Kiswahili)</label>
+                <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={titleSw} onChange={(e) => setTitleSw(e.target.value)} />
+                <label className="text-[12.5px] font-bold text-ink-soft">Body (Kiswahili)</label>
+                <textarea className="w-full resize-y rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" rows={8} value={bodySw} onChange={(e) => setBodySw(e.target.value)} />
               </>
             )}
 

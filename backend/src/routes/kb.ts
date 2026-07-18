@@ -16,8 +16,12 @@ function serializeArticle(article: {
   topicId: string;
   titleEn: string;
   titleRw: string;
+  titleFr: string;
+  titleSw: string;
   bodyEn: string;
   bodyRw: string;
+  bodyFr: string;
+  bodySw: string;
   tags: string;
   status: string;
   reviewedBy: string | null;
@@ -70,8 +74,12 @@ const createArticleSchema = z.object({
   topicId: z.string().min(1),
   titleEn: z.string().min(1),
   titleRw: z.string().min(1),
+  titleFr: z.string().default(""),
+  titleSw: z.string().default(""),
   bodyEn: z.string().default(""),
   bodyRw: z.string().default(""),
+  bodyFr: z.string().default(""),
+  bodySw: z.string().default(""),
   tags: z.array(z.string()).default([]),
 });
 
@@ -91,8 +99,12 @@ router.post("/articles", async (req, res) => {
 const updateArticleSchema = z.object({
   titleEn: z.string().min(1).optional(),
   titleRw: z.string().min(1).optional(),
+  titleFr: z.string().min(1).optional(),
+  titleSw: z.string().min(1).optional(),
   bodyEn: z.string().optional(),
   bodyRw: z.string().optional(),
+  bodyFr: z.string().optional(),
+  bodySw: z.string().optional(),
   tags: z.array(z.string()).optional(),
   status: articleStatusSchema.optional(),
 });
@@ -113,10 +125,12 @@ router.patch("/articles/:id", async (req, res) => {
   const { tags, status, ...rest } = parsed.data;
   const mergedBodyEn = rest.bodyEn ?? existing.bodyEn;
   const mergedBodyRw = rest.bodyRw ?? existing.bodyRw;
+  const mergedBodyFr = rest.bodyFr ?? existing.bodyFr;
+  const mergedBodySw = rest.bodySw ?? existing.bodySw;
 
-  if (status === REVIEWED && (!mergedBodyEn.trim() || !mergedBodyRw.trim())) {
+  if (status === REVIEWED && (!mergedBodyEn.trim() || !mergedBodyRw.trim() || !mergedBodyFr.trim() || !mergedBodySw.trim())) {
     res.status(400).json({
-      error: "Cannot mark REVIEWED: both bodyEn and bodyRw must be filled in first.",
+      error: "Cannot mark REVIEWED: body text must be filled in all 4 languages (EN, RW, FR, SW) first.",
     });
     return;
   }

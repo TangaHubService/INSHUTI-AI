@@ -53,6 +53,15 @@ router.post("/", async (req, res) => {
 
   const conversation = await getOrCreateConversation(sessionId, language);
 
+  const previousMessages = await prisma.message.findMany({
+    where: { conversationId: conversation.id },
+    orderBy: { createdAt: "asc" },
+    take: 20,
+  });
+  const history = previousMessages
+    .filter((m) => m.role === "USER" || m.role === "ASSISTANT")
+    .map((m) => ({ role: m.role === "USER" ? "user" as const : "assistant" as const, content: m.content }));
+
   const crisisCheck = checkForCrisisLanguage(message);
   if (crisisCheck.isCrisis) {
     const crisisResources = await prisma.crisisResource.findMany({ orderBy: { order: "asc" } });
@@ -82,7 +91,7 @@ router.post("/", async (req, res) => {
       }
     });
 
-    res.json({ reply, topic: null, sources: [], quickReplies: [] });
+    res.json({ reply, topic: null, sources: [], quickReplies: [], canRequestHumanFollowUp: true });
     return;
   }
 
@@ -101,6 +110,7 @@ router.post("/", async (req, res) => {
       systemPrompt,
       userMessage: message,
       model: settings?.aiModel ?? "gpt-4o-mini",
+      history,
     });
   } catch (error) {
     console.error("OpenAI chat completion failed:", error);
@@ -151,11 +161,23 @@ router.post("/", async (req, res) => {
     }
   });
 
+  function snippet(text: string, maxLen = 160): string {
+    if (text.length <= maxLen) return text;
+    return text.slice(0, text.lastIndexOf(" ", maxLen)) + "…";
+  }
+
   res.json({
     reply,
     topic: topTopic ? { id: topTopic.id, slug: topTopic.slug, nameEn: topTopic.nameEn, nameRw: topTopic.nameRw } : null,
-    sources: groundingArticles.map((a) => ({ id: a.id, titleEn: a.titleEn, titleRw: a.titleRw })),
+    sources: groundingArticles.map((a) => ({
+      id: a.id,
+      titleEn: a.titleEn,
+      titleRw: a.titleRw,
+      bodySnippet: snippet(a[`body${language}` as keyof typeof a] as string || a.bodyEn),
+      externalUrl: a.externalUrl,
+    })),
     quickReplies: getQuickReplies(topTopic?.slug ?? null, language),
+    canRequestHumanFollowUp: groundingArticles.length === 0 || (confidence !== null && confidence < 0.5),
   });
 });
 
@@ -164,20 +186,29 @@ function buildCrisisSafetyResponse(
   resources: Array<{ name: string; contact: string }>,
 ): string {
   const resourceLines = resources.map((r) => `${r.name}: ${r.contact}`).join("\n");
-  if (language === "RW") {
-    return (
+  const responses: Record<string, string> = {
+    RW:
       "Ndabona ushobora kuba ugezweho n'ikibazo gikomeye. Ntugomba kubihangana wenyine — " +
       "hari abantu biteguye kugufasha ubu.\n\n" +
       resourceLines +
-      "\n\nNiba uri mu kaga ako kanya, hamagara serivisi z'ubutabazi cyangwa ubwire umuntu mukuru wizeye uri hafi yawe."
-    );
-  }
-  return (
-    "It sounds like you might be going through something really difficult right now. You don't have " +
-    "to face this alone — there are people ready to help you today.\n\n" +
-    resourceLines +
-    "\n\nIf you're in immediate danger, please contact emergency services or a trusted adult near you right now."
-  );
+      "\n\nNiba uri mu kaga ako kanya, hamagara serivisi z'ubutabazi cyangwa ubwire umuntu mukuru wizeye uri hafi yawe.",
+    EN:
+      "It sounds like you might be going through something really difficult right now. You don't have " +
+      "to face this alone — there are people ready to help you today.\n\n" +
+      resourceLines +
+      "\n\nIf you're in immediate danger, please contact emergency services or a trusted adult near you right now.",
+    FR:
+      "Il semble que vous traversez peut-être quelque chose de très difficile en ce moment. Vous n'avez pas " +
+      "à faire face seul·e — des personnes sont prêtes à vous aider aujourd'hui.\n\n" +
+      resourceLines +
+      "\n\nSi vous êtes en danger immédiat, veuillez contacter les services d'urgence ou un adulte de confiance près de vous.",
+    SW:
+      "Inaonekana kama unapitia kitu kigumu sana sasa hivi. Huna haja ya kukabiliana na hili peke yako — " +
+      "kuna watu tayari kukusaidia leo.\n\n" +
+      resourceLines +
+      "\n\nIkiwa uko katika hatari ya mara moja, tafadhali wasiliana na huduma za dharura au mtu mzima unayemwamini karibu nawe.",
+  };
+  return responses[language] ?? responses.EN;
 }
 
 export default router;

@@ -1,0 +1,269 @@
+{
+  "nav": {
+    "chat": "Kuganira",
+    "mySpace": "My Space",
+    "findCare": "Shaka Ubuvuzi",
+    "portals": "Ibirometero",
+    "logIn": "Injira",
+    "register": "Iyandikishe",
+    "admin": "Ubuyobozi",
+    "home": "Ahabanza",
+    "startChatting": "Tangira kuganira",
+    "endChat": "Rangiza ikiganiro",
+    "assistantName": "Inshuti Assistant",
+    "sessionLabel": "Ibanga · Ikiganiro cy'ibanga"
+  },
+  "language": {
+    "en": "EN",
+    "rw": "RW",
+    "fr": "FR",
+    "sw": "SW"
+  },
+  "common": {
+    "loading": "Irarimo…",
+    "save": "Bika",
+    "saving": "Irarabika…",
+    "cancel": "Rekura",
+    "confirm": "Emeza",
+    "delete": "Siba",
+    "saveDraft": "Bika igikonjeso",
+    "markReviewed": "Shyira akamaro ko wasuzumye",
+    "reviewed": "Byasuzumwe",
+    "needsReview": "Gikeneye gusuzumwa",
+    "appName": "Inshuti",
+    "appDescription": "Umufasha w'ubuzima ushyashya, udaciye urubanza ku rubyiruko rw'i Rwanda.",
+    "today": "Uyu munsi",
+    "yesterday": "Ejo hashize",
+    "daysAgo": "Iminsi {days} ishize",
+    "weekAgo": "Icyumweru 1 gishize",
+    "weeksAgo": "Ibyumweru {weeks} bishize",
+    "reviewedBy": "Byasuzumwe na {name}",
+    "onDate": "ku {date}"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Ubuntu · Ibanga · Indimi ebyiri",
+      "title": "Kibaza ikintu cyose k'ubuzima bwawe. <em>Ubona igisubizo cy'inshuti.</em>",
+      "desc": "Inshuti ni umufasha w'ubuhanga uha urubyiruko ibisubizo nyakuri, bitaciye urubanza ku buzima bw'imyororokere — byasuzumwe n'impuguke, bihaboneka icyo gihe cyose, mu Cyongereza cyangwa Ikinyarwanda.",
+      "cta": "Kuganira na Inshuti",
+      "browseTopics": "Reba ingingo",
+      "trust1": "Nta kwiyandikisha bisabwa",
+      "trust2": "Byasuzumwe n'abaforomo",
+      "trust3": "Icyongereza & Ikinyarwanda"
+    },
+    "topics": {
+      "eyebrow": "Ingingo zikunze",
+      "title": "Aho utangirira hose",
+      "desc": "Ibyo urubyiruko rubaza cyane — kanda kimwe ukirukire mu kiganiro.",
+      "menstrualHealth": {
+        "name": "Imihango",
+        "desc": "Imizunguruko, ibimenyetso, ibikoresho, n'ibisanzwe ku mubiri wawe.",
+        "cta": "Baza ibirebana n'iyi ngingo"
+      },
+      "pregnancy": {
+        "name": "Inda",
+        "desc": "Ibimenyetso, ibihe, kwita ku nda, no gusubiza \"bigenda bite niba.\"",
+        "cta": "Baza ibirebana n'iyi ngingo"
+      },
+      "relationships": {
+        "name": "Imibanire",
+        "desc": "Uburenganzira, itumanaho, imipaka, n'imibanire myiza.",
+        "cta": "Baza ibirebana n'iyi ngingo"
+      },
+      "familyPlanning": {
+        "name": "Kuboneza Urubyaro",
+        "desc": "Uburyo bwo kuboneza urubyaro busobanuwe neza, nta kugahato.",
+        "cta": "Baza ibirebana n'iyi ngingo"
+      },
+      "hivStis": {
+        "name": "Virusi itera SIDA & Indwara z'imyororokere",
+        "desc": "Kwirinda, gupima, no kuvura — nta rwanda.",
+        "cta": "Baza ibirebana n'iyi ngingo"
+      },
+      "mentalHealth": {
+        "name": "Ubuzima bwo mu Mutwe",
+        "desc": "Umuhangayiko, guhangayika, no gushyigikirwa inyuma y'ibibazo.",
+        "cta": "Baza ibirebana n'iyi ngingo"
+      }
+    },
+    "features": {
+      "eyebrow": "Kuki Inshuti",
+      "title": "Yubatswe kugira ngo yizewe",
+      "aiAssistant": {
+        "title": "AI Assistant",
+        "body": "Baza ibibazo by'ubuzima bw'imyororokere igihe icyo ari cyo cyose, mu magambo yawe."
+      },
+      "anonymous": {
+        "title": "Ibanga",
+        "body": "Nta mazina, nta konti. Ubuzima bwawe bubitswe mu ibanga."
+      },
+      "bilingual": {
+        "title": "Indimi ebyiri",
+        "body": "Inkunga yuzuye mu Cyongereza n'Igikinyarwanda."
+      },
+      "evidenceBased": {
+        "title": "Ihingiye ku bimenyetso",
+        "body": "Buri gisubizo gishingiye ku birebwa byasuzumwe n'impuguke."
+      }
+    },
+    "chatPreview": {
+      "eyebrow": "Kureka ubibone",
+      "title": "Igerageza ikiganiro"
+    },
+    "footer": {
+      "privacy": "Ubuzima bw'ibanga",
+      "terms": "Amategeko",
+      "disclaimer": "Inshuti itanga amakuru rusange k'ubuzima ntabwo isimbuza gupima kwa muganga cyangwa kuvura. Niba uri mu kaga cyangwa ukeneye ubufasha vuba, baza ikigo cy'ubuzima cyangwa ibikoresho by'ubufasha biri muri iyi porogaramu."
+    }
+  },
+  "chat": {
+    "greeting": "Muraho! Ndi Inshuti — unshobora kubaza ikintu cyose ku mubiri wawe, imibanire yawe, cyangwa ubuzima bwawe. Iki kiganiro ni ibanga. Ni iki uri gutekereza kuri cyo uyu munsi?",
+    "inputPlaceholder": "Andika ikibazo cyawe mu Cyongereza cyangwa Ikinyarwanda…",
+    "crisisBar": "Uri mu kaga cyangwa ukeneye ubufasha vuba? ",
+    "crisisLink": "Kanda hano ubone ubufasha",
+    "typing": "Inshuti irandika…",
+    "quickTopics": "Ingingo zihuse",
+    "sources": "Inkomoko z'iki gisubizo",
+    "sourcesEmpty": "Nta nkomoko zabonetse kuri iki gisubizo.",
+    "sourcesLabel": "Inshuti knowledge base",
+    "endChat": "Rangiza ikiganiro",
+    "anonymousSession": "Ibanga · Ikiganiro cy'ibanga",
+    "error": "Habaye ikibazo. Ongera ugerageze.",
+    "quickTopicMenstrualHealth": "Umuzunguruko usanzwe w'imihango ni uwuhe?",
+    "quickTopicPregnancy": "Ni ibihe bimenyetso bya mbere by'inda?",
+    "quickTopicRelationships": "Ibigize imibanire myiza ni ibihe?",
+    "quickTopicFamilyPlanning": "Hari ubuhe buryo bwo kuboneza urubyaro?",
+    "quickTopicHivStis": "Virusi itera SIDA yandura ite?",
+    "quickTopicMentalHealth": "Nihanganira umuhangayiko nte?"
+  },
+  "mySpace": {
+    "title": "Ibibazo byawe, iterambere ryawe.",
+    "desc": "Aha ni ho ibiganiro byawe byabanje biba, hamwe n'ibintu Inshuti yabonye bishobora kugufasha nyuma. Nta kintu gihuza n'izina ryawe — bihuze gusa n'iki gikoresho.",
+    "clearHistory": "Siba amateka yanje",
+    "clearing": "Irarasiba…",
+    "clearConfirm": "Wemeza ko ushaka gusiba amateka yawe yose?",
+    "clearConfirmTitle": "Gusiba amateka",
+    "clearSuccess": "Amateka yawe yasibwe",
+    "clearError": "Ntibyashobotse gusiba amateka yawe. Ongera ugerageze.",
+    "loadError": "Ntibyashobotse gukura amateka yawe. Ongera ugerageze.",
+    "privacyTitle": "Aya mateka ni ibanga ku gikoresho cyawe",
+    "privacyDesc": "Ntabwo ahuza n'izina ryawe cyangwa ngo asangizwe n'undi. Urashobora kuyasiba igihe icyo ari cyo cyose.",
+    "noHistory": "Nta biganiro byabanje.",
+    "startOne": "Tangira rimwe",
+    "suggestionsTitle": "Ibyo Inshuti igushishikariza",
+    "recentConversations": "Ibiganiro biherutse",
+    "last30Days": "Iminsi 30 ishize",
+    "topicsExplored": "Ingingo wasuzumye",
+    "generalTopic": "Rusange",
+    "privateBadge": "Ibanga · Ku gikoresho gusa"
+  },
+  "admin": {
+    "login": {
+      "title": "Kwinjira mu buyobozi",
+      "subtitle": "Shyiramo ibyangombwa byawe kugira ngo ugerweho na Inshuti admin.",
+      "email": "Imeli",
+      "emailPlaceholder": "you@inshuti.rw",
+      "password": "Ijambobanga",
+      "passwordPlaceholder": "••••••••••",
+      "button": "Injira",
+      "signingIn": "Irarinjira…",
+      "footer": "Kwinjira mu buyobozi birakurikiranwa mu rwego rw'umutekano.",
+      "heroTitle": "Koresha Inshuti n'ubwitange.",
+      "heroBody": "Suzuma ibirebwa, kura ibiganiro, kandi umenye ko ibisubizo ari byiza — kwinjira hano birakurikiranwa kandi bihabwa abemerewe gusuzuma."
+    },
+    "dashboard": {
+      "title": "Mwaramutse, {name}",
+      "desc": "Ubu ni uko Inshuti ikora uyu munsi.",
+      "conversations": "Ibiganiro byose",
+      "sessions": "Ibiganiro by'ibanga",
+      "flagged": "Byashyizwe akamaro",
+      "mostAskedTopic": "Ingingo ikunze kubazwa",
+      "topicEngagement": "Ingingo zakoreshejwe",
+      "noTopicActivity": "Nta gikorwa cy'ingingo kikibaho.",
+      "languageSplit": "Igabanywa ry'indimi"
+    },
+    "kb": {
+      "title": "Inkuri y'Ubumenyi",
+      "desc": "Ingingo zishingirwaho mu gusubiza ibibazo, zishyizwe mu matsinda.",
+      "newArticle": "Ingingo nshya",
+      "createTitle": "Kora & hindura",
+      "cancel": "Rekura",
+      "titleEnglish": "Umutwe (Icyongereza)",
+      "titleKinyarwanda": "Umutwe (Ikinyarwanda)",
+      "bodyEnglish": "Umubiri (Icyongereza)",
+      "bodyKinyarwanda": "Umubiri (Ikinyarwanda)",
+      "tagsLabel": "Ibimenyetso (bitandukanijwe na virgule)",
+      "status": "Imiterere",
+      "articleEditor": "Guhindura Ingingo",
+      "pickTopic": "Hitamo ingingo kandi wuzuze yombi.",
+      "articleCreated": "Ingingo yaremwe",
+      "draftSaved": "Igikonjeso cyabitswe",
+      "articleReviewed": "Ingingo yasuzumwe kandi irashyizwe ahagaragara",
+      "failedToLoad": "Ntibyashobotse gupakira ingingo",
+      "failedToSave": "Ntibyashobotse kubika",
+      "failedToCreate": "Ntibyashobotse gukora ingingo",
+      "reviewedCount": "{reviewed} / {total} byasuzumwe"
+    },
+    "flagged": {
+      "title": "Ibyashyizwe akamaro",
+      "desc": "Ubutumwa bwashyizwe akamaro kubera imvugo y'akaga, ukwizera gake, cyangwa raporo y'umukoresha.",
+      "allReasons": "Impamvu zose",
+      "allStatuses": "Imiterere yose",
+      "reasonCrisis": "Imvugo y'akaga",
+      "reasonLowConfidence": "Ukutizera",
+      "reasonUserReported": "Byaraporotswe n'umukoresha",
+      "statusFlagged": "Byashyizwe akamaro",
+      "statusPending": "Birategereje",
+      "statusResolved": "Byakemuwe",
+      "nothingFlagged": "Nta kintu cyashyizwe akamaro kugeza ubu.",
+      "detailTitle": "Ibirayi by'ikintu cyashyizwe akamaro",
+      "conversationLabel": "Ikiganiro: {language} · Cyashyizwe akamaro {date}",
+      "statusLabel": "Imiterere",
+      "reviewerNotes": "Inyandiko z'usuzuma",
+      "saveNotes": "Bika inyandiko",
+      "markResolved": "Shyira akamaro ko byakemuwe",
+      "notesSaved": "Inyandiko zabitswe",
+      "itemResolved": "Ikintu cyakemuwe",
+      "failedToLoad": "Ntibyashobotse gupakira ibyashyizwe akamaro",
+      "failedToSaveNotes": "Ntibyashobotse kubika inyandiko",
+      "failedToResolve": "Ntibyashobotse gukemura",
+      "resolvedBy": "Byakemuwe na {name}",
+      "generalTopic": "Rusange",
+      "tableSnippet": "Igice",
+      "tableTopic": "Ingingo",
+      "tableReason": "Impamvu",
+      "tableDate": "Itariki",
+      "tableStatus": "Imiterere"
+    },
+    "settings": {
+      "title": "Igenamiterere",
+      "desc": "Imikorere ya AI n'ibikoresho by'ubufasha mu kaga.",
+      "aiBehavior": "Imikorere ya AI",
+      "aiProvider": "Aba AI",
+      "aiModel": "Icyitegererezo cya AI",
+      "responseStyleNote": "Inyandiko y'uburyo bwo gusubiza",
+      "restrictToKb": "Gena ku nkuri y'ubumenyi",
+      "restrictToKbDesc": "Iyo byashyizwe, AI igomba kuvuga ko ibura amakuru yasuzumwe aho gusubiza ashingiye ku bumenyi rusange.",
+      "autoFlagCrisis": "Ohereza mu buryo bwikora imvugo y'akaga",
+      "autoFlagCrisisDesc": "Ohereza mu buryo bwikora ikimenyetso cy'ukagenzura iyo imvugo y'akaga imaze kumenyekana. Igisubizo cy'umutekano ubwacyo ntabwo gishobora gusimburwa.",
+      "autoDetectLanguage": "Menya ururimi mu buryo bwikora",
+      "autoDetectLanguageDesc": "Hagarika ihindagurika ry'indimi iyo ubutumwa bugaragara ko ari Icyongereza cyangwa Ikinyarwanda.",
+      "crisisResources": "Ibikoresho by'akaga",
+      "crisisResourcesDesc": "Byerekanwa abakoresha iyo imvugo y'akaga imenyekanye. Komeza nomero z'itumanaho zizewe.",
+      "resourceName": "Izina",
+      "resourceContact": "Itumanaho",
+      "resourceRegion": "Akarere",
+      "addResource": "Ongeraho",
+      "deleteResource": "Siba ikoresho",
+      "deleteConfirmMessage": "Kuraho \"{name}\" mu bikoresho by'akaga?",
+      "settingsSaved": "Igenamiterere ryabitswe",
+      "failedToSave": "Ntibyashobotse kubika igenamiterere",
+      "resourceAdded": "Ikoresho ryongewe",
+      "failedToAddResource": "Ntibyashobotse kongera ikoresho",
+      "resourceDeleted": "Ikoresho ryasibwe",
+      "failedToDeleteResource": "Ntibyashobotse gusiba ikoresho",
+      "failedToUpdateResource": "Ntibyashobotse kuvugurura ikoresho",
+      "fillAllFields": "Uzuzaza ibice byose"
+    }
+  }
+}

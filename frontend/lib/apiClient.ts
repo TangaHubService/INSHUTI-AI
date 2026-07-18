@@ -1,4 +1,4 @@
-export type Language = "EN" | "RW";
+export type Language = "EN" | "RW" | "FR" | "SW";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -24,6 +24,8 @@ export interface ChatSource {
   id: string;
   titleEn: string;
   titleRw: string;
+  bodySnippet?: string;
+  externalUrl?: string | null;
 }
 
 export interface ChatResponse {
@@ -31,6 +33,7 @@ export interface ChatResponse {
   topic: ChatTopic | null;
   sources: ChatSource[];
   quickReplies: string[];
+  canRequestHumanFollowUp?: boolean;
 }
 
 export async function sendChatMessage(message: string, language: Language): Promise<ChatResponse> {

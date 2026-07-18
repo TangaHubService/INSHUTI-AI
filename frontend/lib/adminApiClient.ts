@@ -96,8 +96,12 @@ export interface KbArticle {
   topicId: string;
   titleEn: string;
   titleRw: string;
+  titleFr: string;
+  titleSw: string;
   bodyEn: string;
   bodyRw: string;
+  bodyFr: string;
+  bodySw: string;
   tags: string[];
   status: ArticleStatus;
   reviewedBy: string | null;
@@ -125,8 +129,12 @@ export async function createKbArticle(input: {
   topicId: string;
   titleEn: string;
   titleRw: string;
+  titleFr?: string;
+  titleSw?: string;
   bodyEn?: string;
   bodyRw?: string;
+  bodyFr?: string;
+  bodySw?: string;
   tags?: string[];
 }): Promise<KbArticle> {
   const res = await adminFetch("/api/kb/articles", { method: "POST", body: JSON.stringify(input) });
@@ -140,7 +148,7 @@ export async function createKbArticle(input: {
 
 export async function updateKbArticle(
   id: string,
-  input: Partial<Pick<KbArticle, "titleEn" | "titleRw" | "bodyEn" | "bodyRw" | "tags" | "status">>,
+  input: Partial<Pick<KbArticle, "titleEn" | "titleRw" | "titleFr" | "titleSw" | "bodyEn" | "bodyRw" | "bodyFr" | "bodySw" | "tags" | "status">>,
 ): Promise<KbArticle> {
   const res = await adminFetch(`/api/kb/articles/${id}`, { method: "PATCH", body: JSON.stringify(input) });
   if (!res.ok) {

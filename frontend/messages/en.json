@@ -1,0 +1,269 @@
+{
+  "nav": {
+    "chat": "Chat",
+    "mySpace": "My Space",
+    "findCare": "Find Care",
+    "portals": "Portals",
+    "logIn": "Log in",
+    "register": "Register",
+    "admin": "Admin",
+    "home": "Home",
+    "startChatting": "Start chatting",
+    "endChat": "End chat",
+    "assistantName": "Inshuti Assistant",
+    "sessionLabel": "Anonymous · Private session"
+  },
+  "language": {
+    "en": "EN",
+    "rw": "RW",
+    "fr": "FR",
+    "sw": "SW"
+  },
+  "common": {
+    "loading": "Loading…",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "saveDraft": "Save draft",
+    "markReviewed": "Mark as Reviewed",
+    "reviewed": "Reviewed",
+    "needsReview": "Needs review",
+    "appName": "Inshuti",
+    "appDescription": "A warm, non-judgmental health assistant for young people in Rwanda.",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "{days} days ago",
+    "weekAgo": "1 week ago",
+    "weeksAgo": "{weeks} weeks ago",
+    "reviewedBy": "Reviewed by {name}",
+    "onDate": "on {date}"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Free · Anonymous · Bilingual",
+      "title": "Ask anything about your health. <em>Get a friend's answer.</em>",
+      "desc": "Inshuti is an AI assistant that gives young people honest, judgment-free answers on sexual and reproductive health — reviewed by professionals, available anytime, in English or Kinyarwanda.",
+      "cta": "Chat with Inshuti",
+      "browseTopics": "Browse topics",
+      "trust1": "No sign-up required",
+      "trust2": "Reviewed by clinicians",
+      "trust3": "English & Kinyarwanda"
+    },
+    "topics": {
+      "eyebrow": "Popular topics",
+      "title": "Wherever you're starting from",
+      "desc": "Six areas young people ask about most — tap one to jump straight into a conversation.",
+      "menstrualHealth": {
+        "name": "Menstrual Health",
+        "desc": "Cycles, symptoms, products, and what's normal for your body.",
+        "cta": "Ask about this"
+      },
+      "pregnancy": {
+        "name": "Pregnancy",
+        "desc": "Signs, timelines, prenatal care, and answering \"what if.\"",
+        "cta": "Ask about this"
+      },
+      "relationships": {
+        "name": "Relationships",
+        "desc": "Consent, communication, boundaries, and healthy partnerships.",
+        "cta": "Ask about this"
+      },
+      "familyPlanning": {
+        "name": "Family Planning",
+        "desc": "Contraception options explained clearly, without pressure.",
+        "cta": "Ask about this"
+      },
+      "hivStis": {
+        "name": "HIV & STIs",
+        "desc": "Prevention, testing, and treatment — with zero judgment.",
+        "cta": "Ask about this"
+      },
+      "mentalHealth": {
+        "name": "Mental Health",
+        "desc": "Stress, anxiety, and support for the feelings behind the questions.",
+        "cta": "Ask about this"
+      }
+    },
+    "features": {
+      "eyebrow": "Why Inshuti",
+      "title": "Built to be trusted",
+      "aiAssistant": {
+        "title": "AI Assistant",
+        "body": "Ask reproductive health questions anytime, in your own words."
+      },
+      "anonymous": {
+        "title": "Anonymous",
+        "body": "No names, no accounts. Your privacy is protected by design."
+      },
+      "bilingual": {
+        "title": "Bilingual",
+        "body": "Full support in English and Kinyarwanda."
+      },
+      "evidenceBased": {
+        "title": "Evidence Based",
+        "body": "Every answer is grounded in content reviewed by professionals."
+      }
+    },
+    "chatPreview": {
+      "eyebrow": "See it in action",
+      "title": "Chat preview"
+    },
+    "footer": {
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "disclaimer": "Inshuti provides general health information and is not a substitute for professional medical diagnosis or treatment. If you are in crisis or need urgent care, please contact a local health facility or the resources listed in the app."
+    }
+  },
+  "chat": {
+    "greeting": "Muraho! I'm Inshuti — you can ask me anything about your body, relationships, or health. This chat is anonymous. What's on your mind today?",
+    "inputPlaceholder": "Type your question in English or Kinyarwanda…",
+    "crisisBar": "In crisis or need urgent help? ",
+    "crisisLink": "Tap here for immediate support resources",
+    "typing": "Inshuti is typing…",
+    "quickTopics": "Quick topics",
+    "sources": "Sources for this answer",
+    "sourcesEmpty": "No specific sources for this answer yet.",
+    "sourcesLabel": "Inshuti knowledge base",
+    "endChat": "End chat",
+    "anonymousSession": "Anonymous · Private session",
+    "error": "Something went wrong. Please try again.",
+    "quickTopicMenstrualHealth": "What is a normal menstrual cycle?",
+    "quickTopicPregnancy": "What are early signs of pregnancy?",
+    "quickTopicRelationships": "What makes a relationship healthy?",
+    "quickTopicFamilyPlanning": "What contraception options exist?",
+    "quickTopicHivStis": "How is HIV transmitted?",
+    "quickTopicMentalHealth": "How do I cope with stress?"
+  },
+  "mySpace": {
+    "title": "Your questions, your progress.",
+    "desc": "This is where your past conversations live, along with a few things Inshuti noticed that might help you next. Nothing here is linked to your name — it's tied only to this device.",
+    "clearHistory": "Clear my history",
+    "clearing": "Clearing…",
+    "clearConfirm": "Are you sure you want to clear all your history?",
+    "clearConfirmTitle": "Clear history",
+    "clearSuccess": "History cleared",
+    "clearError": "Couldn't clear your history right now. Please try again.",
+    "loadError": "Couldn't load your history right now. Please try again.",
+    "privacyTitle": "This history is private to your device",
+    "privacyDesc": "It's never linked to your name or shared with anyone. You can clear it at any time.",
+    "noHistory": "No conversations yet.",
+    "startOne": "Start one now",
+    "suggestionsTitle": "Suggested for you",
+    "recentConversations": "Recent conversations",
+    "last30Days": "Last 30 days",
+    "topicsExplored": "Topics you've explored",
+    "generalTopic": "General",
+    "privateBadge": "Private · Only on this device"
+  },
+  "admin": {
+    "login": {
+      "title": "Admin sign in",
+      "subtitle": "Enter your credentials to access the Inshuti admin panel.",
+      "email": "Email",
+      "emailPlaceholder": "you@inshuti.rw",
+      "password": "Password",
+      "passwordPlaceholder": "••••••••••",
+      "button": "Sign in",
+      "signingIn": "Signing in…",
+      "footer": "Admin access is logged for security and safeguarding purposes.",
+      "heroTitle": "Manage Inshuti with care.",
+      "heroBody": "Review content, monitor conversations, and keep answers accurate — access here is logged and restricted to authorized reviewers."
+    },
+    "dashboard": {
+      "title": "Good morning, {name}",
+      "desc": "Here's how Inshuti is doing today.",
+      "conversations": "Total conversations",
+      "sessions": "Anonymous sessions",
+      "flagged": "Flagged for review",
+      "mostAskedTopic": "Most asked topic",
+      "topicEngagement": "Topic engagement",
+      "noTopicActivity": "No topic activity yet.",
+      "languageSplit": "Language split"
+    },
+    "kb": {
+      "title": "Knowledge Base",
+      "desc": "Articles grounding chat answers, grouped by topic.",
+      "newArticle": "New article",
+      "createTitle": "Create & edit",
+      "cancel": "Cancel",
+      "titleEnglish": "Title (English)",
+      "titleKinyarwanda": "Title (Kinyarwanda)",
+      "bodyEnglish": "Body (English)",
+      "bodyKinyarwanda": "Body (Kinyarwanda)",
+      "tagsLabel": "Tags (comma-separated)",
+      "status": "Status",
+      "articleEditor": "Article Editor",
+      "pickTopic": "Pick a topic and fill in both titles.",
+      "articleCreated": "Article created",
+      "draftSaved": "Draft saved",
+      "articleReviewed": "Article reviewed and published",
+      "failedToLoad": "Failed to load article",
+      "failedToSave": "Failed to save",
+      "failedToCreate": "Failed to create article",
+      "reviewedCount": "{reviewed} / {total} reviewed"
+    },
+    "flagged": {
+      "title": "Flagged Content",
+      "desc": "Messages flagged for crisis language, low confidence, or a user report.",
+      "allReasons": "All reasons",
+      "allStatuses": "All statuses",
+      "reasonCrisis": "Crisis language",
+      "reasonLowConfidence": "Low confidence",
+      "reasonUserReported": "User reported",
+      "statusFlagged": "Flagged",
+      "statusPending": "Pending",
+      "statusResolved": "Resolved",
+      "nothingFlagged": "Nothing flagged right now.",
+      "detailTitle": "Flagged Item Detail",
+      "conversationLabel": "Conversation: {language} · Flagged {date}",
+      "statusLabel": "Status",
+      "reviewerNotes": "Reviewer notes",
+      "saveNotes": "Save notes",
+      "markResolved": "Mark as resolved",
+      "notesSaved": "Notes saved",
+      "itemResolved": "Item resolved",
+      "failedToLoad": "Failed to load flagged item",
+      "failedToSaveNotes": "Failed to save notes",
+      "failedToResolve": "Failed to resolve",
+      "resolvedBy": "Resolved by {name}",
+      "generalTopic": "General",
+      "tableSnippet": "Snippet",
+      "tableTopic": "Topic",
+      "tableReason": "Reason",
+      "tableDate": "Date",
+      "tableStatus": "Status"
+    },
+    "settings": {
+      "title": "Settings",
+      "desc": "AI behavior and crisis-support resources.",
+      "aiBehavior": "AI behavior",
+      "aiProvider": "AI provider",
+      "aiModel": "AI model",
+      "responseStyleNote": "Response style note",
+      "restrictToKb": "Restrict to knowledge base",
+      "restrictToKbDesc": "When on, the AI must say it lacks reviewed information rather than answering from general knowledge when nothing is retrieved.",
+      "autoFlagCrisis": "Auto-flag crisis language",
+      "autoFlagCrisisDesc": "Automatically create a moderator flag when crisis language is detected. The safety response itself is never optional.",
+      "autoDetectLanguage": "Auto-detect language",
+      "autoDetectLanguageDesc": "Override the UI language toggle when a message looks clearly EN or RW.",
+      "crisisResources": "Crisis resources",
+      "crisisResourcesDesc": "Shown to users when crisis language is detected. Keep contact numbers verified.",
+      "resourceName": "Name",
+      "resourceContact": "Contact",
+      "resourceRegion": "Region",
+      "addResource": "Add",
+      "deleteResource": "Delete resource",
+      "deleteConfirmMessage": "Remove \"{name}\" from crisis resources?",
+      "settingsSaved": "Settings saved",
+      "failedToSave": "Failed to save settings",
+      "resourceAdded": "Resource added",
+      "failedToAddResource": "Failed to add resource",
+      "resourceDeleted": "Resource deleted",
+      "failedToDeleteResource": "Failed to delete resource",
+      "failedToUpdateResource": "Failed to update resource",
+      "fillAllFields": "Fill in all fields"
+    }
+  }
+}

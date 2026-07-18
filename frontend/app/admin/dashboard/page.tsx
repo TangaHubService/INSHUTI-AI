@@ -22,9 +22,12 @@ export default function AdminDashboardPage() {
 
   if (authLoading || !admin) return null;
 
-  const totalLanguage = stats ? stats.languageSplit.EN + stats.languageSplit.RW : 0;
-  const rwPct = totalLanguage > 0 && stats ? Math.round((stats.languageSplit.RW / totalLanguage) * 100) : 0;
-  const enPct = 100 - rwPct;
+  const langSplit = stats?.languageSplit ?? {} as Record<string, number>;
+  const totalLanguage = (langSplit.EN ?? 0) + (langSplit.RW ?? 0) + (langSplit.FR ?? 0) + (langSplit.SW ?? 0);
+  const enPct = totalLanguage > 0 ? Math.round(((langSplit.EN ?? 0) / totalLanguage) * 100) : 0;
+  const rwPct = totalLanguage > 0 ? Math.round(((langSplit.RW ?? 0) / totalLanguage) * 100) : 0;
+  const frPct = totalLanguage > 0 ? Math.round(((langSplit.FR ?? 0) / totalLanguage) * 100) : 0;
+  const swPct = totalLanguage > 0 ? 100 - enPct - rwPct - frPct : 0;
   const maxTopicCount = stats ? Math.max(1, ...stats.topicEngagement.map((t) => t.count)) : 1;
 
   return (
@@ -105,30 +108,22 @@ export default function AdminDashboardPage() {
             </div>
             <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[22px] shadow-card">
               <h3 className="mb-4 text-base text-teal-900">Language split</h3>
-              <div className="flex items-center gap-5">
-                <svg width="120" height="120" viewBox="0 0 36 36">
-                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#EFE9DB" strokeWidth="4" />
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="15.9"
-                    fill="none"
-                    stroke="var(--teal-700)"
-                    strokeWidth="4"
-                    strokeDasharray={`${rwPct} ${enPct}`}
-                    strokeDashoffset="25"
-                    transform="rotate(-90 18 18)"
-                  />
-                </svg>
-                <div>
-                  <div className="mt-2 flex items-center gap-2 text-[13px] font-semibold text-ink-soft">
-                    <span className="h-2.5 w-2.5 rounded-[3px] bg-teal-700" />
-                    Kinyarwanda — {rwPct}%
-                  </div>
-                  <div className="mt-2 flex items-center gap-2 text-[13px] font-semibold text-ink-soft">
-                    <span className="h-2.5 w-2.5 rounded-[3px] bg-[#EFE9DB]" />
-                    English — {enPct}%
-                  </div>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-[13px] font-semibold text-ink-soft">
+                  <span className="h-2.5 w-2.5 rounded-[3px] bg-teal-700" />
+                  English — {enPct}%
+                </div>
+                <div className="flex items-center gap-2 text-[13px] font-semibold text-ink-soft">
+                  <span className="h-2.5 w-2.5 rounded-[3px] bg-gold" />
+                  Kinyarwanda — {rwPct}%
+                </div>
+                <div className="flex items-center gap-2 text-[13px] font-semibold text-ink-soft">
+                  <span className="h-2.5 w-2.5 rounded-[3px] bg-coral" />
+                  French — {frPct}%
+                </div>
+                <div className="flex items-center gap-2 text-[13px] font-semibold text-ink-soft">
+                  <span className="h-2.5 w-2.5 rounded-[3px] bg-[#EFE9DB]" />
+                  Kiswahili — {swPct}%
                 </div>
               </div>
             </div>

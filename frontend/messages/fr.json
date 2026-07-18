@@ -1,0 +1,269 @@
+{
+  "nav": {
+    "chat": "Discuter",
+    "mySpace": "Mon Espace",
+    "findCare": "Trouver des Soins",
+    "portals": "Portails",
+    "logIn": "Connexion",
+    "register": "S'inscrire",
+    "admin": "Administration",
+    "home": "Accueil",
+    "startChatting": "Commencer à discuter",
+    "endChat": "Terminer la discussion",
+    "assistantName": "Assistant Inshuti",
+    "sessionLabel": "Anonyme · Session privée"
+  },
+  "language": {
+    "en": "EN",
+    "rw": "RW",
+    "fr": "FR",
+    "sw": "SW"
+  },
+  "common": {
+    "loading": "Chargement…",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "delete": "Supprimer",
+    "saveDraft": "Enregistrer le brouillon",
+    "markReviewed": "Marquer comme révisé",
+    "reviewed": "Révisé",
+    "needsReview": "Besoin de révision",
+    "appName": "Inshuti",
+    "appDescription": "Un assistant de santé chaleureux et sans jugement pour les jeunes au Rwanda.",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "daysAgo": "il y a {days} jours",
+    "weekAgo": "il y a 1 semaine",
+    "weeksAgo": "il y a {weeks} semaines",
+    "reviewedBy": "Révisé par {name}",
+    "onDate": "le {date}"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Gratuit · Anonyme · Bilingue",
+      "title": "Demandez tout sur votre santé. <em>Obtenez une réponse d'ami.</em>",
+      "desc": "Inshuti est un assistant IA qui offre aux jeunes des réponses honnêtes et sans jugement sur la santé sexuelle et reproductive — révisées par des professionnels, disponibles à tout moment, en anglais ou en kinyarwanda.",
+      "cta": "Discuter avec Inshuti",
+      "browseTopics": "Parcourir les sujets",
+      "trust1": "Aucune inscription requise",
+      "trust2": "Révisé par des cliniciens",
+      "trust3": "Anglais & Kinyarwanda"
+    },
+    "topics": {
+      "eyebrow": "Sujets populaires",
+      "title": "D'où que vous partiez",
+      "desc": "Six domaines que les jeunes interrogent le plus — appuyez pour passer directement à une conversation.",
+      "menstrualHealth": {
+        "name": "Santé Menstruelle",
+        "desc": "Cycles, symptômes, produits et ce qui est normal pour votre corps.",
+        "cta": "Poser une question"
+      },
+      "pregnancy": {
+        "name": "Grossesse",
+        "desc": "Signes, calendriers, soins prénatals et répondre au \"et si.\"",
+        "cta": "Poser une question"
+      },
+      "relationships": {
+        "name": "Relations",
+        "desc": "Consentement, communication, limites et relations saines.",
+        "cta": "Poser une question"
+      },
+      "familyPlanning": {
+        "name": "Planification Familiale",
+        "desc": "Options de contraception expliquées clairement, sans pression.",
+        "cta": "Poser une question"
+      },
+      "hivStis": {
+        "name": "VIH & IST",
+        "desc": "Prévention, dépistage et traitement — sans aucun jugement.",
+        "cta": "Poser une question"
+      },
+      "mentalHealth": {
+        "name": "Santé Mentale",
+        "desc": "Stress, anxiété et soutien pour les sentiments derrière les questions.",
+        "cta": "Poser une question"
+      }
+    },
+    "features": {
+      "eyebrow": "Pourquoi Inshuti",
+      "title": "Conçu pour être digne de confiance",
+      "aiAssistant": {
+        "title": "Assistant IA",
+        "body": "Posez des questions sur la santé reproductive à tout moment, avec vos propres mots."
+      },
+      "anonymous": {
+        "title": "Anonyme",
+        "body": "Pas de noms, pas de comptes. Votre vie privée est protégée par conception."
+      },
+      "bilingual": {
+        "title": "Bilingue",
+        "body": "Support complet en anglais et en kinyarwanda."
+      },
+      "evidenceBased": {
+        "title": "Basé sur des Preuves",
+        "body": "Chaque réponse est fondée sur un contenu révisé par des professionnels."
+      }
+    },
+    "chatPreview": {
+      "eyebrow": "Voir en action",
+      "title": "Aperçu de la discussion"
+    },
+    "footer": {
+      "privacy": "Confidentialité",
+      "terms": "Conditions",
+      "disclaimer": "Inshuti fournit des informations générales sur la santé et ne remplace pas un diagnostic ou un traitement médical professionnel. Si vous êtes en crise ou avez besoin d'aide urgente, veuillez contacter un établissement de santé local ou les ressources listées dans l'application."
+    }
+  },
+  "chat": {
+    "greeting": "Muraho! Je suis Inshuti — vous pouvez me demander tout ce qui concerne votre corps, vos relations ou votre santé. Cette discussion est anonyme. À quoi pensez-vous aujourd'hui?",
+    "inputPlaceholder": "Tapez votre question en anglais ou en kinyarwanda…",
+    "crisisBar": "En crise ou besoin d'aide urgente? ",
+    "crisisLink": "Appuyez ici pour des ressources de soutien immédiates",
+    "typing": "Inshuti écrit…",
+    "quickTopics": "Sujets rapides",
+    "sources": "Sources de cette réponse",
+    "sourcesEmpty": "Pas encore de sources spécifiques pour cette réponse.",
+    "sourcesLabel": "Base de connaissances Inshuti",
+    "endChat": "Terminer la discussion",
+    "anonymousSession": "Anonyme · Session privée",
+    "error": "Quelque chose s'est mal passé. Veuillez réessayer.",
+    "quickTopicMenstrualHealth": "Qu'est-ce qu'un cycle menstruel normal?",
+    "quickTopicPregnancy": "Quels sont les premiers signes de grossesse?",
+    "quickTopicRelationships": "Qu'est-ce qui rend une relation saine?",
+    "quickTopicFamilyPlanning": "Quelles options de contraception existent?",
+    "quickTopicHivStis": "Comment le VIH se transmet-il?",
+    "quickTopicMentalHealth": "Comment gérer le stress?"
+  },
+  "mySpace": {
+    "title": "Vos questions, votre progression.",
+    "desc": "C'est ici que vivent vos conversations passées, ainsi que quelques éléments qu'Inshuti a remarqués et qui pourraient vous aider ensuite. Rien ici n'est lié à votre nom — c'est lié uniquement à cet appareil.",
+    "clearHistory": "Effacer mon historique",
+    "clearing": "Effacement…",
+    "clearConfirm": "Êtes-vous sûr de vouloir effacer tout votre historique?",
+    "clearConfirmTitle": "Effacer l'historique",
+    "clearSuccess": "Historique effacé",
+    "clearError": "Impossible d'effacer votre historique pour le moment. Veuillez réessayer.",
+    "loadError": "Impossible de charger votre historique pour le moment. Veuillez réessayer.",
+    "privacyTitle": "Cet historique est privé sur votre appareil",
+    "privacyDesc": "Il n'est jamais lié à votre nom ni partagé avec personne. Vous pouvez l'effacer à tout moment.",
+    "noHistory": "Aucune conversation pour le moment.",
+    "startOne": "Commencez maintenant",
+    "suggestionsTitle": "Suggestions pour vous",
+    "recentConversations": "Conversations récentes",
+    "last30Days": "30 derniers jours",
+    "topicsExplored": "Sujets explorés",
+    "generalTopic": "Général",
+    "privateBadge": "Privé · Sur cet appareil uniquement"
+  },
+  "admin": {
+    "login": {
+      "title": "Connexion administrateur",
+      "subtitle": "Entrez vos identifiants pour accéder au panneau d'administration Inshuti.",
+      "email": "Email",
+      "emailPlaceholder": "vous@inshuti.rw",
+      "password": "Mot de passe",
+      "passwordPlaceholder": "••••••••••",
+      "button": "Se connecter",
+      "signingIn": "Connexion…",
+      "footer": "L'accès administrateur est journalisé pour des raisons de sécurité.",
+      "heroTitle": "Gérez Inshuti avec soin.",
+      "heroBody": "Révisez le contenu, surveillez les conversations et assurez l'exactitude des réponses — l'accès ici est journalisé et limité aux réviseurs autorisés."
+    },
+    "dashboard": {
+      "title": "Bonjour, {name}",
+      "desc": "Voici comment Inshuti se porte aujourd'hui.",
+      "conversations": "Total des conversations",
+      "sessions": "Sessions anonymes",
+      "flagged": "Signalés pour révision",
+      "mostAskedTopic": "Sujet le plus demandé",
+      "topicEngagement": "Engagement par sujet",
+      "noTopicActivity": "Aucune activité de sujet pour le moment.",
+      "languageSplit": "Répartition linguistique"
+    },
+    "kb": {
+      "title": "Base de Connaissances",
+      "desc": "Articles soutenant les réponses de discussion, regroupés par sujet.",
+      "newArticle": "Nouvel article",
+      "createTitle": "Créer & modifier",
+      "cancel": "Annuler",
+      "titleEnglish": "Titre (anglais)",
+      "titleKinyarwanda": "Titre (kinyarwanda)",
+      "bodyEnglish": "Corps (anglais)",
+      "bodyKinyarwanda": "Corps (kinyarwanda)",
+      "tagsLabel": "Étiquettes (séparées par des virgules)",
+      "status": "Statut",
+      "articleEditor": "Éditeur d'article",
+      "pickTopic": "Choisissez un sujet et remplissez les deux titres.",
+      "articleCreated": "Article créé",
+      "draftSaved": "Brouillon enregistré",
+      "articleReviewed": "Article révisé et publié",
+      "failedToLoad": "Échec du chargement de l'article",
+      "failedToSave": "Échec de l'enregistrement",
+      "failedToCreate": "Échec de la création de l'article",
+      "reviewedCount": "{reviewed} / {total} révisés"
+    },
+    "flagged": {
+      "title": "Contenu Signalé",
+      "desc": "Messages signalés pour langage de crise, faible confiance ou rapport d'utilisateur.",
+      "allReasons": "Toutes les raisons",
+      "allStatuses": "Tous les statuts",
+      "reasonCrisis": "Langage de crise",
+      "reasonLowConfidence": "Faible confiance",
+      "reasonUserReported": "Signalé par l'utilisateur",
+      "statusFlagged": "Signalé",
+      "statusPending": "En attente",
+      "statusResolved": "Résolu",
+      "nothingFlagged": "Rien de signalé pour le moment.",
+      "detailTitle": "Détail de l'élément signalé",
+      "conversationLabel": "Conversation: {language} · Signalé {date}",
+      "statusLabel": "Statut",
+      "reviewerNotes": "Notes du réviseur",
+      "saveNotes": "Enregistrer les notes",
+      "markResolved": "Marquer comme résolu",
+      "notesSaved": "Notes enregistrées",
+      "itemResolved": "Élément résolu",
+      "failedToLoad": "Échec du chargement de l'élément signalé",
+      "failedToSaveNotes": "Échec de l'enregistrement des notes",
+      "failedToResolve": "Échec de la résolution",
+      "resolvedBy": "Résolu par {name}",
+      "generalTopic": "Général",
+      "tableSnippet": "Extrait",
+      "tableTopic": "Sujet",
+      "tableReason": "Raison",
+      "tableDate": "Date",
+      "tableStatus": "Statut"
+    },
+    "settings": {
+      "title": "Paramètres",
+      "desc": "Comportement de l'IA et ressources de soutien en cas de crise.",
+      "aiBehavior": "Comportement de l'IA",
+      "aiProvider": "Fournisseur d'IA",
+      "aiModel": "Modèle d'IA",
+      "responseStyleNote": "Note de style de réponse",
+      "restrictToKb": "Restreindre à la base de connaissances",
+      "restrictToKbDesc": "Quand activé, l'IA doit dire qu'elle manque d'informations révisées plutôt que de répondre à partir de connaissances générales lorsque rien n'est récupéré.",
+      "autoFlagCrisis": "Signaler automatiquement le langage de crise",
+      "autoFlagCrisisDesc": "Créer automatiquement un signalement modérateur lorsqu'un langage de crise est détecté. La réponse de sécurité elle-même n'est jamais optionnelle.",
+      "autoDetectLanguage": "Détection automatique de la langue",
+      "autoDetectLanguageDesc": "Outrepasser le bouton de langue de l'interface lorsqu'un message semble clairement EN ou RW.",
+      "crisisResources": "Ressources de crise",
+      "crisisResourcesDesc": "Affichées aux utilisateurs lorsqu'un langage de crise est détecté. Gardez les numéros de contact vérifiés.",
+      "resourceName": "Nom",
+      "resourceContact": "Contact",
+      "resourceRegion": "Région",
+      "addResource": "Ajouter",
+      "deleteResource": "Supprimer la ressource",
+      "deleteConfirmMessage": "Supprimer \"{name}\" des ressources de crise?",
+      "settingsSaved": "Paramètres enregistrés",
+      "failedToSave": "Échec de l'enregistrement des paramètres",
+      "resourceAdded": "Ressource ajoutée",
+      "failedToAddResource": "Échec de l'ajout de la ressource",
+      "resourceDeleted": "Ressource supprimée",
+      "failedToDeleteResource": "Échec de la suppression de la ressource",
+      "failedToUpdateResource": "Échec de la mise à jour de la ressource",
+      "fillAllFields": "Remplissez tous les champs"
+    }
+  }
+}

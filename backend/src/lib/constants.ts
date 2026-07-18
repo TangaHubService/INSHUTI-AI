@@ -5,7 +5,7 @@
 // time instead of silently corrupting a row.
 import { z } from "zod";
 
-export const LANGUAGES = ["EN", "RW"] as const;
+export const LANGUAGES = ["EN", "RW", "FR", "SW"] as const;
 export const languageSchema = z.enum(LANGUAGES);
 export type Language = (typeof LANGUAGES)[number];
 
@@ -36,3 +36,20 @@ export const ADMIN_ROLE_RANK: Record<AdminRole, number> = {
   CONTENT_REVIEWER: 1,
   SUPER_ADMIN: 2,
 };
+
+// User-facing roles (Phase 6)
+export const USER_ROLES = ["TEENAGER", "PARENT_GUARDIAN", "HEALTHCARE_PROFESSIONAL", "GOVERNMENT_USER"] as const;
+export const userRoleSchema = z.enum(USER_ROLES);
+export type UserRole = (typeof USER_ROLES)[number];
+
+export const PROFESSIONAL_TYPES = ["CHW", "NURSE", "MIDWIFE", "PSYCHOLOGIST", "DOCTOR"] as const;
+export const professionalTypeSchema = z.enum(PROFESSIONAL_TYPES);
+export type ProfessionalType = (typeof PROFESSIONAL_TYPES)[number];
+
+export const GOV_LEVELS = ["NATIONAL", "PROVINCIAL", "DISTRICT", "SECTOR", "CELL"] as const;
+export const govLevelSchema = z.enum(GOV_LEVELS);
+export type GovLevel = (typeof GOV_LEVELS)[number];
+
+export const APPROVAL_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
+export const approvalStatusSchema = z.enum(APPROVAL_STATUSES);
+export type ApprovalStatus = (typeof APPROVAL_STATUSES)[number];

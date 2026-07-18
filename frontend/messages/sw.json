@@ -1,0 +1,269 @@
+{
+  "nav": {
+    "chat": "Ongea",
+    "mySpace": "Nafasi Yangu",
+    "findCare": "Tafuta Huduma",
+    "portals": "Milango",
+    "logIn": "Ingia",
+    "register": "Jisajili",
+    "admin": "Usimamizi",
+    "home": "Nyumbani",
+    "startChatting": "Anza kuongea",
+    "endChat": "Maliza mazungumzo",
+    "assistantName": "Msaidizi Inshuti",
+    "sessionLabel": "Isiyojulikana · Kikao cha faragha"
+  },
+  "language": {
+    "en": "EN",
+    "rw": "RW",
+    "fr": "FR",
+    "sw": "SW"
+  },
+  "common": {
+    "loading": "Inapakia…",
+    "save": "Hifadhi",
+    "saving": "Inahifadhi…",
+    "cancel": "Ghairi",
+    "confirm": "Thibitisha",
+    "delete": "Futa",
+    "saveDraft": "Hifadhi rasimu",
+    "markReviewed": "Weka alama ya kukaguliwa",
+    "reviewed": "Imehakikiwa",
+    "needsReview": "Inahitaji kukaguliwa",
+    "appName": "Inshuti",
+    "appDescription": "Msaidizi wa afya mwenye joto, asiye na ubaguzi kwa vijana nchini Rwanda.",
+    "today": "Leo",
+    "yesterday": "Jana",
+    "daysAgo": "siku {days} zilizopita",
+    "weekAgo": "wiki 1 iliyopita",
+    "weeksAgo": "wiki {weeks} zilizopita",
+    "reviewedBy": "Imehakikiwa na {name}",
+    "onDate": "tarehe {date}"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Bure · Siri · Lugha mbili",
+      "title": "Uliza chochote kuhusu afya yako. <em>Pata jibu la rafiki.</em>",
+      "desc": "Inshuti ni msaidizi wa AI anayewapa vijana majibu ya kweli, yasiyo na ubaguzi kuhusu afya ya ngono na uzazi — yaliyokaguliwa na wataalamu, yanapatikana wakati wowote, kwa Kiingereza au Kinyarwanda.",
+      "cta": "Ongea na Inshuti",
+      "browseTopics": "Vinjari mada",
+      "trust1": "Hakuna usajili unaohitajika",
+      "trust2": "Imehakikiwa na matabibu",
+      "trust3": "Kiingereza & Kinyarwanda"
+    },
+    "topics": {
+      "eyebrow": "Mada maarufu",
+      "title": "Popote unapoanzia",
+      "desc": "Maeneo sita ambayo vijana huuliza zaidi — gusa moja ili kuruka moja kwa moja kwenye mazungumzo.",
+      "menstrualHealth": {
+        "name": "Afya ya Mwezi",
+        "desc": "Mizunguko, dalili, bidhaa, na kile ambacho ni cha kawaida kwa mwili wako.",
+        "cta": "Uliza kuhusu hili"
+      },
+      "pregnancy": {
+        "name": "Ujauzito",
+        "desc": "Ishara, nyakati, huduma za kabla ya kuzaa, na kujibu \"vipi ikiwa.\"",
+        "cta": "Uliza kuhusu hili"
+      },
+      "relationships": {
+        "name": "Mahusiano",
+        "desc": "Ridhaa, mawasiliano, mipaka, na ushirikiano wenye afya.",
+        "cta": "Uliza kuhusu hili"
+      },
+      "familyPlanning": {
+        "name": "Upangaji wa Familia",
+        "desc": "Chaguzi za uzazi wa mpango zimefafanuliwa wazi, bila shinikizo.",
+        "cta": "Uliza kuhusu hili"
+      },
+      "hivStis": {
+        "name": "VVU & Magonjwa ya Zinaa",
+        "desc": "Kinga, upimaji, na matibabu — bila hukumu yoyote.",
+        "cta": "Uliza kuhusu hili"
+      },
+      "mentalHealth": {
+        "name": "Afya ya Akili",
+        "desc": "Mkazo, wasiwasi, na msaada kwa hisia nyuma ya maswali.",
+        "cta": "Uliza kuhusu hili"
+      }
+    },
+    "features": {
+      "eyebrow": "Kwa nini Inshuti",
+      "title": "Imejengwa kuaminika",
+      "aiAssistant": {
+        "title": "Msaidizi AI",
+        "body": "Uliza maswali ya afya ya uzazi wakati wowote, kwa maneno yako mwenyewe."
+      },
+      "anonymous": {
+        "title": "Siri",
+        "body": "Hakuna majina, hakuna akaunti. Faragha yako inalindwa kwa muundo."
+      },
+      "bilingual": {
+        "title": "Lugha Mbili",
+        "body": "Msaada kamili kwa Kiingereza na Kinyarwanda."
+      },
+      "evidenceBased": {
+        "title": "Kulingana na Ushahidi",
+        "body": "Kila jibu linategemea maudhui yaliyokaguliwa na wataalamu."
+      }
+    },
+    "chatPreview": {
+      "eyebrow": "Tazama ikifanya kazi",
+      "title": "Onyesho la mazungumzo"
+    },
+    "footer": {
+      "privacy": "Faragha",
+      "terms": "Sheria",
+      "disclaimer": "Inshuti hutoa taarifa za jumla za afya na sio mbadala wa uchunguzi wa kitaalamu wa matibabu au matibabu. Ikiwa uko kwenye dharura au unahitaji msaada wa haraka, tafadhali wasiliana na kituo cha afya cha karibu au rasilimali zilizoorodheshwa kwenye programu."
+    }
+  },
+  "chat": {
+    "greeting": "Muraho! Mimi ni Inshuti — unaweza kuniuliza chochote kuhusu mwili wako, mahusiano yako, au afya yako. Mazungumzo haya ni siri. Una nini akilini mwako leo?",
+    "inputPlaceholder": "Andika swali lako kwa Kiingereza au Kinyarwanda…",
+    "crisisBar": "Uko kwenye dharura au unahitaji msaada wa haraka? ",
+    "crisisLink": "Bonyeza hapa kupata rasilimali za msaada wa haraka",
+    "typing": "Inshuti anaandika…",
+    "quickTopics": "Mada za haraka",
+    "sources": "Vyanzo vya jibu hili",
+    "sourcesEmpty": "Hakuna vyanzo mahususi vya jibu hili kwa sasa.",
+    "sourcesLabel": "Msingi wa maarifa wa Inshuti",
+    "endChat": "Maliza mazungumzo",
+    "anonymousSession": "Siri · Kikao cha faragha",
+    "error": "Kuna kitu kimeenda vibaya. Tafadhali jaribu tena.",
+    "quickTopicMenstrualHealth": "Mzunguko wa kawaida wa hedhi ni upi?",
+    "quickTopicPregnancy": "Dalili za mwanzo za ujauzito ni zipi?",
+    "quickTopicRelationships": "Nini hufanya uhusiano kuwa mzuri?",
+    "quickTopicFamilyPlanning": "Ni chaguzi zipi za uzazi wa mpango zipo?",
+    "quickTopicHivStis": "VVU huambukizwa vipi?",
+    "quickTopicMentalHealth": "Ninawezaje kukabiliana na mkazo?"
+  },
+  "mySpace": {
+    "title": "Maswali yako, maendeleo yako.",
+    "desc": "Hapa ndipo mazungumzo yako ya zamani yanapoishi, pamoja na mambo machache ambayo Inshuti amegundua ambayo yanaweza kukusaidia baadaye. Hakuna kinachounganishwa na jina lako — kimefungwa kwenye kifaa hiki pekee.",
+    "clearHistory": "Futa historia yangu",
+    "clearing": "Inafuta…",
+    "clearConfirm": "Una uhakika unataka kufuta historia yako yote?",
+    "clearConfirmTitle": "Futa historia",
+    "clearSuccess": "Historia imefutwa",
+    "clearError": "Haikuweza kufuta historia yako kwa sasa. Tafadhali jaribu tena.",
+    "loadError": "Haikuweza kupakia historia yako kwa sasa. Tafadhali jaribu tena.",
+    "privacyTitle": "Historia hii ni ya faragha kwa kifaa chako",
+    "privacyDesc": "Haijaunganishwa kamwe na jina lako wala kushirikiwa na mtu yeyote. Unaweza kuifuta wakati wowote.",
+    "noHistory": "Hakuna mazungumzo bado.",
+    "startOne": "Anza moja sasa",
+    "suggestionsTitle": "Mapendekezo kwako",
+    "recentConversations": "Mazungumzo ya hivi karibuni",
+    "last30Days": "Siku 30 zilizopita",
+    "topicsExplored": "Mada ulizochunguza",
+    "generalTopic": "Kwa ujumla",
+    "privateBadge": "Faragha · Kwenye kifaa hiki pekee"
+  },
+  "admin": {
+    "login": {
+      "title": "Ingia kwa usimamizi",
+      "subtitle": "Weka vitambulisho vyako kufikia paneli ya usimamizi ya Inshuti.",
+      "email": "Barua pepe",
+      "emailPlaceholder": "wewe@inshuti.rw",
+      "password": "Nywila",
+      "passwordPlaceholder": "••••••••••",
+      "button": "Ingia",
+      "signingIn": "Inaingia…",
+      "footer": "Ufikiaji wa usimamizi umeandikwa kwa usalama na ulinzi.",
+      "heroTitle": "Simamia Inshuti kwa uangalifu.",
+      "heroBody": "Kagua maudhui, fuatilia mazungumzo, na hakikisha majibu ni sahihi — ufikiaji hapa umeandikwa na ni kwa wakaguzi walioidhinishwa pekee."
+    },
+    "dashboard": {
+      "title": "Habari za asubuhi, {name}",
+      "desc": "Hivi ndivyo Inshuti alivyo leo.",
+      "conversations": "Jumla ya mazungumzo",
+      "sessions": "Vikao visivyojulikana",
+      "flagged": "Iliyowekwa alama kwa ukaguzi",
+      "mostAskedTopic": "Mada inayoulizwa zaidi",
+      "topicEngagement": "Ushiriki wa mada",
+      "noTopicActivity": "Hakuna shughuli za mada bado.",
+      "languageSplit": "Mgawanyiko wa lugha"
+    },
+    "kb": {
+      "title": "Msingi wa Maarifa",
+      "desc": "Makala yanayounga mkono majibu ya mazungumzo, yaliyopangwa kwa mada.",
+      "newArticle": "Makala mpya",
+      "createTitle": "Unda & hariri",
+      "cancel": "Ghairi",
+      "titleEnglish": "Kichwa (Kiingereza)",
+      "titleKinyarwanda": "Kichwa (Kinyarwanda)",
+      "bodyEnglish": "Mwili (Kiingereza)",
+      "bodyKinyarwanda": "Mwili (Kinyarwanda)",
+      "tagsLabel": "Lebo (zilizotengwa na koma)",
+      "status": "Hali",
+      "articleEditor": "Kihariri cha Makala",
+      "pickTopic": "Chagua mada na ujaze vichwa vyote viwili.",
+      "articleCreated": "Makala imeundwa",
+      "draftSaved": "Rasimu imehifadhiwa",
+      "articleReviewed": "Makala imekaguliwa na kuchapishwa",
+      "failedToLoad": "Imeshindwa kupakia makala",
+      "failedToSave": "Imeshindwa kuhifadhi",
+      "failedToCreate": "Imeshindwa kuunda makala",
+      "reviewedCount": "{reviewed} / {total} zimekaguliwa"
+    },
+    "flagged": {
+      "title": "Maudhui Yaliyowekwa Alama",
+      "desc": "Ujumbe uliowekwa alama kwa lugha ya dharura, kutoaminiwa, au kuripotiwa na mtumiaji.",
+      "allReasons": "Sababu zote",
+      "allStatuses": "Hali zote",
+      "reasonCrisis": "Lugha ya dharura",
+      "reasonLowConfidence": "Kutoaminiwa",
+      "reasonUserReported": "Imeripotiwa na mtumiaji",
+      "statusFlagged": "Imechapishwa alama",
+      "statusPending": "Inasubiri",
+      "statusResolved": "Imetatuliwa",
+      "nothingFlagged": "Hakuna kilichowekwa alama kwa sasa.",
+      "detailTitle": "Maelezo ya Kipengee Kilichowekwa Alama",
+      "conversationLabel": "Mazungumzo: {language} · Yamewekwa alama {date}",
+      "statusLabel": "Hali",
+      "reviewerNotes": "Vidokezo vya mkaguzi",
+      "saveNotes": "Hifadhi vidokezo",
+      "markResolved": "Weka alama kama imetatuliwa",
+      "notesSaved": "Vidokezo vimehifadhiwa",
+      "itemResolved": "Kipengee kimetatuliwa",
+      "failedToLoad": "Imeshindwa kupakia kipengee kilichowekwa alama",
+      "failedToSaveNotes": "Imeshindwa kuhifadhi vidokezo",
+      "failedToResolve": "Imeshindwa kutatua",
+      "resolvedBy": "Imetatuliwa na {name}",
+      "generalTopic": "Kwa ujumla",
+      "tableSnippet": "Sehemu",
+      "tableTopic": "Mada",
+      "tableReason": "Sababu",
+      "tableDate": "Tarehe",
+      "tableStatus": "Hali"
+    },
+    "settings": {
+      "title": "Mipangilio",
+      "desc": "Tabia ya AI na rasilimali za msaada wa dharura.",
+      "aiBehavior": "Tabia ya AI",
+      "aiProvider": "Mtoa huduma wa AI",
+      "aiModel": "Mfano wa AI",
+      "responseStyleNote": "Dokezo la mtindo wa kujibu",
+      "restrictToKb": "Zuia kwa msingi wa maarifa",
+      "restrictToKbDesc": "Ikiwa imewashwa, AI lazima iseme kwamba haina taarifa zilizokaguliwa badala ya kujibu kutoka kwa maarifa ya jumla wakati hakuna kinachopatikana.",
+      "autoFlagCrisis": "Weka alama kiotomatiki lugha ya dharura",
+      "autoFlagCrisisDesc": "Unda kiotomatiki alama ya msimamizi wakati lugha ya dharura inapogunduliwa. Jibu la usalama lenyewa kamwe si la hiari.",
+      "autoDetectLanguage": "Gundua lugha kiotomatiki",
+      "autoDetectLanguageDesc": "Puuza kubadilisha lugha ya kiolesura wakati ujumbe unaonekana wazi kuwa EN au RW.",
+      "crisisResources": "Rasilimali za dharura",
+      "crisisResourcesDesc": "Huonyeshwa kwa watumiaji wakati lugha ya dharura inapogunduliwa. Weka nambari za mawasiliano zikithibitishwa.",
+      "resourceName": "Jina",
+      "resourceContact": "Mawasiliano",
+      "resourceRegion": "Mkoa",
+      "addResource": "Ongeza",
+      "deleteResource": "Futa rasilimali",
+      "deleteConfirmMessage": "Ondoa \"{name}\" kutoka kwa rasilimali za dharura?",
+      "settingsSaved": "Mipangilio imehifadhiwa",
+      "failedToSave": "Imeshindwa kuhifadhi mipangilio",
+      "resourceAdded": "Rasilimali imeongezwa",
+      "failedToAddResource": "Imeshindwa kuongeza rasilimali",
+      "resourceDeleted": "Rasilimali imefutwa",
+      "failedToDeleteResource": "Imeshindwa kufuta rasilimali",
+      "failedToUpdateResource": "Imeshindwa kusasisha rasilimali",
+      "fillAllFields": "Jaza sehemu zote"
+    }
+  }
+}

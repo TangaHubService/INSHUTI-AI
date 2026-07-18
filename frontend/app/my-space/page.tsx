@@ -61,7 +61,11 @@ export default function MySpacePage() {
       setError(
         language === "RW"
           ? "Ntibyashobotse gukura amateka yawe. Ongera ugerageze."
-          : "Couldn't load your history right now. Please try again.",
+          : language === "FR"
+            ? "Impossible de charger votre historique. Veuillez réessayer."
+            : language === "SW"
+              ? "Haikuweza kupakia historia yako. Tafadhali jaribu tena."
+              : "Couldn't load your history right now. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -79,12 +83,16 @@ export default function MySpacePage() {
     try {
       await clearHistory();
       await loadAll();
-      toast(language === "RW" ? "Amateka yawe yasibwe" : "History cleared", "success");
+      toast(language === "RW" ? "Amateka yawe yasibwe" : language === "FR" ? "Historique effacé" : language === "SW" ? "Historia imefutwa" : "History cleared", "success");
     } catch {
       toast(
         language === "RW"
           ? "Ntibyashobotse gusiba amateka yawe. Ongera ugerageze."
-          : "Couldn't clear your history right now. Please try again.",
+          : language === "FR"
+            ? "Impossible d'effacer votre historique. Veuillez réessayer."
+            : language === "SW"
+              ? "Haikuweza kufuta historia yako. Tafadhali jaribu tena."
+              : "Couldn't clear your history right now. Please try again.",
         "error",
       );
     } finally {
@@ -118,19 +126,16 @@ export default function MySpacePage() {
             </a>
           </nav>
           <div className="flex items-center gap-3">
-            <div className="flex rounded-full bg-teal-100 p-[3px] text-[13px] font-bold">
-              <span
-                className={`cursor-pointer rounded-full px-3 py-1.5 ${language === "EN" ? "bg-teal-700 text-white" : "text-teal-700"}`}
-                onClick={() => setLanguage("EN")}
-              >
-                EN
-              </span>
-              <span
-                className={`cursor-pointer rounded-full px-3 py-1.5 ${language === "RW" ? "bg-teal-700 text-white" : "text-teal-700"}`}
-                onClick={() => setLanguage("RW")}
-              >
-                RW
-              </span>
+            <div className="flex rounded-full bg-teal-100 p-[3px] text-[12.5px] font-bold">
+              {(["EN", "RW", "FR", "SW"] as const).map((lang) => (
+                <span
+                  key={lang}
+                  className={`cursor-pointer rounded-full px-2.5 py-1.5 ${language === lang ? "bg-teal-700 text-white" : "text-teal-700"}`}
+                  onClick={() => setLanguage(lang)}
+                >
+                  {lang}
+                </span>
+              ))}
             </div>
             <Link
               href="/chat"
@@ -292,10 +297,10 @@ export default function MySpacePage() {
 
         <ConfirmModal
           open={showClearConfirm}
-          title={language === "RW" ? "Gusiba amateka" : "Clear history"}
-          message={language === "RW" ? "Wemeza ko ushaka gusiba amateka yawe yose?" : "Are you sure you want to clear all your history?"}
-          confirmLabel={language === "RW" ? "Siba" : "Clear"}
-          cancelLabel={language === "RW" ? "Rekura" : "Cancel"}
+          title={language === "RW" ? "Gusiba amateka" : language === "FR" ? "Effacer l'historique" : language === "SW" ? "Futa historia" : "Clear history"}
+          message={language === "RW" ? "Wemeza ko ushaka gusiba amateka yawe yose?" : language === "FR" ? "Êtes-vous sûr de vouloir effacer tout votre historique ?" : language === "SW" ? "Una uhakika unataka kufuta historia yako yote?" : "Are you sure you want to clear all your history?"}
+          confirmLabel={language === "RW" ? "Siba" : language === "FR" ? "Effacer" : language === "SW" ? "Futa" : "Clear"}
+          cancelLabel={language === "RW" ? "Rekura" : language === "FR" ? "Annuler" : language === "SW" ? "Ghairi" : "Cancel"}
           variant="danger"
           onConfirm={() => void handleClearHistory()}
           onCancel={() => setShowClearConfirm(false)}

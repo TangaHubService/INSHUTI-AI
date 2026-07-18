@@ -8,8 +8,12 @@ export const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
 interface PromptArticle {
   titleEn: string;
   titleRw: string;
+  titleFr: string;
+  titleSw: string;
   bodyEn: string;
   bodyRw: string;
+  bodyFr: string;
+  bodySw: string;
 }
 
 export interface BuildSystemPromptOptions {
@@ -22,14 +26,24 @@ export function buildSystemPrompt(
   language: Language,
   options: BuildSystemPromptOptions = {},
 ): string {
-  const languageLabel = language === "RW" ? "Kinyarwanda" : "English";
+  const languageLabels: Record<string, string> = { EN: "English", RW: "Kinyarwanda", FR: "French", SW: "Kiswahili" };
+  const languageLabel = languageLabels[language] ?? "English";
+
+  function pickLocalized(article: PromptArticle, field: "title" | "body"): string {
+    if (field === "title") {
+      return article.titleEn || article.titleRw || article.titleFr || article.titleSw;
+    }
+    return article.bodyEn || article.bodyRw || article.bodyFr || article.bodySw;
+  }
 
   const referenceMaterial =
     retrievedArticles.length > 0
       ? retrievedArticles
           .map((article, index) => {
-            const title = language === "RW" ? article.titleRw : article.titleEn;
-            const body = language === "RW" ? article.bodyRw : article.bodyEn;
+            const title = article[`title${language}` as keyof PromptArticle] as string
+              || pickLocalized(article, "title");
+            const body = article[`body${language}` as keyof PromptArticle] as string
+              || pickLocalized(article, "body");
             return `[${index + 1}] ${title}\n${body}`;
           })
           .join("\n\n")
@@ -54,7 +68,8 @@ export function buildSystemPrompt(
     `clinical specifics.${restrictNote} 3) Keep answers to 3-5 sentences, 8th-grade reading ` +
     `level.${styleNote} 4) Never be judgmental or preachy. 5) Respond in ${languageLabel}. ` +
     "6) Never give instructions that could facilitate self-harm or harm to others. 7) This is " +
-    "informational only, not a diagnosis — say so when relevant. " +
+    "informational only, not a diagnosis — say so when relevant. 8) End your answer with a brief " +
+    "natural follow-up question to keep the conversation going. " +
     `Reference material: ${referenceMaterial}`
   );
 }
@@ -63,15 +78,25 @@ export async function getChatCompletion(params: {
   systemPrompt: string;
   userMessage: string;
   model: string;
+  history?: Array<{ role: "user" | "assistant"; content: string }>;
 }): Promise<string> {
+  const messages: { role: string; content: string }[] = [
+    { role: "system", content: params.systemPrompt },
+  ];
+
+  if (params.history) {
+    for (const msg of params.history) {
+      messages.push(msg);
+    }
+  }
+
+  messages.push({ role: "user", content: params.userMessage });
+
   const completion = await openai.chat.completions.create({
     model: params.model,
-    messages: [
-      { role: "system", content: params.systemPrompt },
-      { role: "user", content: params.userMessage },
-    ],
+    messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
     temperature: 0.4,
-    max_tokens: 400,
+    max_tokens: 500,
   });
   return completion.choices[0]?.message?.content?.trim() ?? "";
 }

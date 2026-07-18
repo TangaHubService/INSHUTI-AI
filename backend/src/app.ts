@@ -5,6 +5,8 @@ import express, { type ErrorRequestHandler } from "express";
 import { env } from "./lib/env.js";
 import chatRouter from "./routes/chat.js";
 import healthRouter from "./routes/health.js";
+import historyRouter from "./routes/history.js";
+import suggestionsRouter from "./routes/suggestions.js";
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   console.error(err);
@@ -25,6 +27,8 @@ export function createApp() {
 
   app.use("/api/health", healthRouter);
   app.use("/api/chat", chatRouter);
+  app.use("/api/history", historyRouter);
+  app.use("/api/suggestions", suggestionsRouter);
 
   app.use(errorHandler);
 

@@ -1,5 +1,23 @@
 import type { Metadata } from "next";
+import { Baloo_2, IBM_Plex_Mono, Inter } from "next/font/google";
 import "./globals.css";
+import { IconSprite } from "@/components/IconSprite";
+
+const balooDisplay = Baloo_2({
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+  variable: "--font-display",
+});
+const interBody = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-body",
+});
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-mono",
+});
 
 export const metadata: Metadata = {
   title: "Inshuti",
@@ -12,8 +30,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" className={`${balooDisplay.variable} ${interBody.variable} ${plexMono.variable}`}>
+      <body>
+        <IconSprite />
+        {children}
+      </body>
     </html>
   );
 }

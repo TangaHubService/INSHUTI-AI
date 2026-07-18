@@ -38,7 +38,7 @@ async function getOrCreateConversation(sessionId: string, language: Language) {
 router.post("/", async (req, res) => {
   const parsed = chatRequestSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: "Invalid request", details: parsed.error.flatten() });
+    res.status(400).json({ error: "Invalid request", details: z.flattenError(parsed.error) });
     return;
   }
   const { message } = parsed.data;

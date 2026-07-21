@@ -619,6 +619,13 @@ async function upsertSuperAdmin() {
 }
 
 async function seedUsers() {
+  // These accounts share a hardcoded, source-visible password — fine for
+  // local dev demos, never acceptable on a real database with real users.
+  if (process.env.NODE_ENV === "production") {
+    console.log("NODE_ENV=production — skipping demo user accounts (teen/parent/nurse/gov@example.com).");
+    return;
+  }
+
   const pwHash = await bcrypt.hash("test1234", 12);
 
   const users = [

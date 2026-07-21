@@ -360,18 +360,30 @@ const TOPICS = [
   },
 ];
 
+// Sourced from rbc.gov.rw/contact and migeprof.gov.rw (fetched 2026-07-22) —
+// NOT independently confirmed by calling them. These are general government
+// toll-free lines, not dedicated 24/7 counseling hotlines, and the Isange
+// number below rests on a single secondary source. CALL AND VERIFY ALL
+// THREE before this goes live; update via the admin Settings screen (or
+// re-seed a fresh DB) once confirmed.
 const CRISIS_RESOURCES = [
   {
-    name: "PLACEHOLDER — National mental health / suicide helpline (verify before launch)",
-    contact: "PLACEHOLDER — replace with the real 24/7 helpline number",
+    name: "Rwanda Biomedical Centre (RBC) Call Center — UNVERIFIED, confirm before launch",
+    contact: "114 (toll-free)",
     region: "National",
     order: 1,
   },
   {
-    name: "PLACEHOLDER — Gender-based violence / abuse support line (verify before launch)",
-    contact: "PLACEHOLDER — replace with the real hotline number",
+    name: "Rwanda Investigation Bureau (RIB) — Gender-Based Violence reporting — UNVERIFIED, confirm before launch",
+    contact: "3512 (toll-free)",
     region: "National",
     order: 2,
+  },
+  {
+    name: "Isange One Stop Center — GBV survivor support (medical/psychosocial/legal) — UNVERIFIED, single-source only, confirm before launch",
+    contact: "3029 (toll-free)",
+    region: "National",
+    order: 3,
   },
 ];
 

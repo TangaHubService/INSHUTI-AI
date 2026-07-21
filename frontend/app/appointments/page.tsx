@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { useToast } from "@/lib/useToast";
 import { ConfirmModal } from "@/components/Modal";
+import { NotificationBell } from "@/components/NotificationBell";
 import type { Language } from "@/lib/apiClient";
 import {
   cancelAppointment,
@@ -77,6 +78,7 @@ export default function AppointmentsPage() {
             <Link href="/chat" className="hover:text-teal-700">Chat</Link>
             <Link href="/my-space" className="hover:text-teal-700">My Space</Link>
             <span className="text-teal-700">Appointments</span>
+            <Link href="/notifications" className="hover:text-teal-700">Notifications</Link>
           </nav>
           <div className="flex items-center gap-3">
             <div className="flex rounded-full bg-teal-100 p-[3px] text-[12.5px] font-bold">
@@ -90,6 +92,7 @@ export default function AppointmentsPage() {
                 </span>
               ))}
             </div>
+            {user && <NotificationBell />}
             {user === null && (
               <Link
                 href="/login"

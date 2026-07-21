@@ -161,3 +161,59 @@ export async function recordAppointmentOutcome(id: string, outcome: string): Pro
     throw new Error(body.error ?? "Failed to record outcome");
   }
 }
+
+export type NotificationType = "REGISTRATION_CONFIRMATION" | "APPOINTMENT_REMINDER" | "CONSULTATION_UPDATE" | "REFERRAL" | "PASSWORD_RESET";
+export type NotificationChannel = "IN_APP" | "EMAIL" | "SMS";
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export type NotificationPrefs = Record<NotificationType, Record<NotificationChannel, boolean>>;
+
+export async function getNotifications(): Promise<{ notifications: AppNotification[]; unreadCount: number }> {
+  const res = await apiFetch("/api/notifications");
+  if (!res.ok) throw new Error(`Failed to load notifications (${res.status})`);
+  return res.json();
+}
+
+export async function markNotificationRead(id: string): Promise<void> {
+  const res = await apiFetch(`/api/notifications/${id}/read`, { method: "PATCH" });
+  if (!res.ok) throw new Error(`Failed to mark notification read (${res.status})`);
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  const res = await apiFetch("/api/notifications/read-all", { method: "PATCH" });
+  if (!res.ok) throw new Error(`Failed to mark notifications read (${res.status})`);
+}
+
+export async function getNotificationPrefs(): Promise<{ prefs: NotificationPrefs; types: NotificationType[]; channels: NotificationChannel[] }> {
+  const res = await apiFetch("/api/users/me/notification-prefs");
+  if (!res.ok) throw new Error(`Failed to load preferences (${res.status})`);
+  return res.json();
+}
+
+export async function updateNotificationPrefs(prefs: Partial<Record<NotificationType, Partial<Record<NotificationChannel, boolean>>>>): Promise<NotificationPrefs> {
+  const res = await apiFetch("/api/users/me/notification-prefs", { method: "PUT", body: JSON.stringify({ prefs }) });
+  if (!res.ok) throw new Error(`Failed to update preferences (${res.status})`);
+  const data: { prefs: NotificationPrefs } = await res.json();
+  return data.prefs;
+}
+
+export async function forgotPassword(email: string): Promise<void> {
+  const res = await apiFetch("/api/users/forgot-password", { method: "POST", body: JSON.stringify({ email }) });
+  if (!res.ok) throw new Error("Failed to send reset link");
+}
+
+export async function resetPassword(email: string, token: string, newPassword: string): Promise<void> {
+  const res = await apiFetch("/api/users/reset-password", { method: "POST", body: JSON.stringify({ email, token, newPassword }) });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to reset password");
+  }
+}

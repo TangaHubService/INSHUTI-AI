@@ -1,4 +1,5 @@
 import { prisma } from "./prisma.js";
+import { notifyUser } from "./notifications.js";
 import type { ProfessionalType } from "./constants.js";
 
 const TOPIC_PROFESSIONAL_MAP: Record<string, ProfessionalType> = {
@@ -58,6 +59,21 @@ export async function routeConsultation(params: {
     },
   });
 
+  if (availableProfessional) {
+    await notifyUser({
+      userId: availableProfessional.userId,
+      type: "REFERRAL",
+      title: "New consultation assigned",
+      body: "A user has been referred to you for follow-up. Please review and respond.",
+    });
+    await notifyUser({
+      userId: params.userId,
+      type: "CONSULTATION_UPDATE",
+      title: "You've been connected with a professional",
+      body: "Someone from our team will follow up with you shortly.",
+    });
+  }
+
   return {
     consultationId: consultation.id,
     assignedTo: consultation.professionalId,
@@ -69,13 +85,29 @@ export async function reassignConsultation(
   consultationId: string,
   newProfessionalId: string,
 ): Promise<void> {
-  await prisma.consultation.update({
+  const consultation = await prisma.consultation.update({
     where: { id: consultationId },
     data: {
       professionalId: newProfessionalId,
       status: "ASSIGNED",
       assignedAt: new Date(),
     },
+  });
+
+  const newProfessional = await prisma.healthcareProfessional.findUnique({ where: { id: newProfessionalId } });
+  if (newProfessional) {
+    await notifyUser({
+      userId: newProfessional.userId,
+      type: "REFERRAL",
+      title: "Consultation reassigned to you",
+      body: "A consultation has been reassigned to you. Please review and respond.",
+    });
+  }
+  await notifyUser({
+    userId: consultation.userId,
+    type: "CONSULTATION_UPDATE",
+    title: "Your consultation has been reassigned",
+    body: "You've been connected with a different professional. They will follow up with you shortly.",
   });
 }
 
@@ -110,5 +142,20 @@ export async function escalateConsultation(consultationId: string): Promise<void
       status: newProfessional ? "ASSIGNED" : "PENDING",
       assignedAt: newProfessional ? new Date() : consultation.assignedAt,
     },
+  });
+
+  if (newProfessional) {
+    await notifyUser({
+      userId: newProfessional.userId,
+      type: "REFERRAL",
+      title: "Consultation escalated to you",
+      body: "A consultation has been escalated to you for higher-tier follow-up. Please review and respond.",
+    });
+  }
+  await notifyUser({
+    userId: consultation.userId,
+    type: "CONSULTATION_UPDATE",
+    title: "Your consultation has been escalated",
+    body: "Your case has been escalated to a specialist for closer follow-up.",
   });
 }

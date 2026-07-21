@@ -58,3 +58,29 @@ export type ApprovalStatus = (typeof APPROVAL_STATUSES)[number];
 export const APPOINTMENT_STATUSES = ["REQUESTED", "CONFIRMED", "RESCHEDULED", "CANCELLED", "COMPLETED"] as const;
 export const appointmentStatusSchema = z.enum(APPOINTMENT_STATUSES);
 export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
+
+// Notifications (Phase 9)
+export const NOTIFICATION_TYPES = [
+  "REGISTRATION_CONFIRMATION",
+  "APPOINTMENT_REMINDER",
+  "CONSULTATION_UPDATE",
+  "REFERRAL",
+  "PASSWORD_RESET",
+] as const;
+export const notificationTypeSchema = z.enum(NOTIFICATION_TYPES);
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+
+export const NOTIFICATION_CHANNELS = ["IN_APP", "EMAIL", "SMS"] as const;
+export const notificationChannelSchema = z.enum(NOTIFICATION_CHANNELS);
+export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
+
+// Default per-type channel preferences (a user's User.notificationPrefs JSON
+// overrides these — see src/lib/notificationPrefs.ts). Everything defaults to
+// in-app + email on; SMS defaults off since no gateway is wired up yet.
+export const DEFAULT_NOTIFICATION_PREFS: Record<NotificationType, Record<NotificationChannel, boolean>> = {
+  REGISTRATION_CONFIRMATION: { IN_APP: true, EMAIL: true, SMS: false },
+  APPOINTMENT_REMINDER: { IN_APP: true, EMAIL: true, SMS: false },
+  CONSULTATION_UPDATE: { IN_APP: true, EMAIL: true, SMS: false },
+  REFERRAL: { IN_APP: true, EMAIL: true, SMS: false },
+  PASSWORD_RESET: { IN_APP: false, EMAIL: true, SMS: false },
+};

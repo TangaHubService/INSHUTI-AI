@@ -14,6 +14,7 @@ import {
 } from "@/lib/apiClient";
 import { useToast } from "@/lib/useToast";
 import { ConfirmModal } from "@/components/Modal";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const COLOR_TOKENS: Record<string, { bg: string; fg: string; pillBg: string; pillFg: string }> = {
   coral: { bg: "bg-coral-100", fg: "text-coral-dark", pillBg: "bg-coral-100", pillFg: "text-coral-dark" },
@@ -121,6 +122,9 @@ export default function MySpacePage() {
             <Link href="/appointments" className="hover:text-teal-700">
               Appointments
             </Link>
+            <Link href="/notifications" className="hover:text-teal-700">
+              Notifications
+            </Link>
             <a href="#" className="hover:text-teal-700">
               Find Care
             </a>
@@ -140,6 +144,7 @@ export default function MySpacePage() {
                 </span>
               ))}
             </div>
+            <NotificationBell />
             <Link
               href="/chat"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark"

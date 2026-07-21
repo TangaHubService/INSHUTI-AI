@@ -15,6 +15,7 @@ import suggestionsRouter from "./routes/suggestions.js";
 import usersRouter from "./routes/users.js";
 import consultationsRouter from "./routes/consultations.js";
 import appointmentsRouter from "./routes/appointments.js";
+import notificationsRouter from "./routes/notifications.js";
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   console.error(err);
@@ -45,6 +46,7 @@ export function createApp() {
   app.use("/api/users", usersRouter);
   app.use("/api/consultations", consultationsRouter);
   app.use("/api/appointments", appointmentsRouter);
+  app.use("/api/notifications", notificationsRouter);
 
   app.use(errorHandler);
 

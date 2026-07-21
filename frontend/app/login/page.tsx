@@ -72,7 +72,12 @@ export default function LoginPage() {
           <input className="mb-3.5 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
 
           <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">{m.password}</label>
-          <input className="mb-5 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm" type="password" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <input className="mb-2 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm" type="password" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <div className="mb-5 text-right">
+            <Link href="/forgot-password" className="text-xs font-semibold text-teal-700">
+              Forgot password?
+            </Link>
+          </div>
 
           <button
             type="submit"

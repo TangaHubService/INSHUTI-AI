@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Logo } from "@/components/Logo";
 
 import { login } from "@/lib/adminApiClient";
 import { useToast } from "@/lib/useToast";
@@ -35,9 +36,7 @@ export default function AdminLoginPage() {
         >
           <use href="#mark-knot" />
         </svg>
-        <svg width="40" height="40" viewBox="0 0 64 64" className="mb-[26px]">
-          <use href="#mark-knot" />
-        </svg>
+        <Logo size={40} className="mb-[26px]" />
         <h2 className="max-w-[360px] font-display text-[30px] leading-[1.2] text-white">
           Manage Inshuti with care.
         </h2>

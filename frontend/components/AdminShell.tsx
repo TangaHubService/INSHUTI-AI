@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Logo } from "@/components/Logo";
 
 import { logout, type AdminRole, type AdminUser } from "@/lib/adminApiClient";
 
@@ -50,9 +51,7 @@ export function AdminShell({
     <div className="flex min-h-screen bg-paper-2">
       <aside className="sticky top-0 flex h-screen w-[250px] flex-shrink-0 flex-col bg-[var(--admin-bg)] px-4 py-[22px] text-[#DCEBE8]">
         <div className="flex items-center gap-2.5 px-2 pb-[26px]">
-          <svg width="26" height="26" viewBox="0 0 64 64">
-            <use href="#mark-knot" />
-          </svg>
+          <Logo size={26} />
           <span className="font-display text-[19px] font-bold text-white">Inshuti</span>
         </div>
         <nav className="flex flex-1 flex-col gap-[3px]">

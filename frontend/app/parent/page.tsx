@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Logo } from "@/components/Logo";
 import { useEffect, useState } from "react";
 
 import { NotificationBell } from "@/components/NotificationBell";
@@ -58,9 +59,7 @@ export default function ParentPortalPage() {
       <div className="mx-auto max-w-[1160px] px-8">
         <header className="flex items-center justify-between border-b border-line py-[22px]">
           <div className="flex items-center gap-2.5">
-            <svg className="inline-flex" width="34" height="34" viewBox="0 0 64 64">
-              <use href="#mark-knot" />
-            </svg>
+            <Logo size={34} />
             <span className="font-display text-[22px] font-bold text-teal-900">Inshuti</span>
           </div>
           <nav className="flex items-center gap-8 text-[14.5px] font-semibold text-ink-soft">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "@/components/Logo";
 
 const TOPICS = [
   {
@@ -58,9 +59,7 @@ export default function Home() {
       <div className="mx-auto max-w-[1160px] px-8">
         <header className="flex items-center justify-between border-b border-line py-[22px]">
           <div className="flex items-center gap-2.5">
-            <svg className="inline-flex" width="34" height="34" viewBox="0 0 64 64">
-              <use href="#mark-knot" />
-            </svg>
+            <Logo size={34} />
             <span className="font-display text-[22px] font-bold text-teal-900">Inshuti</span>
           </div>
           <nav className="flex items-center gap-8 text-[14.5px] font-semibold text-ink-soft">
@@ -269,9 +268,7 @@ export default function Home() {
         <footer className="border-t border-line py-9">
           <div className="flex flex-wrap items-center justify-between gap-[14px]">
             <div className="flex items-center gap-2.5">
-              <svg width="24" height="24" viewBox="0 0 64 64">
-                <use href="#mark-knot" />
-              </svg>
+              <Logo size={24} />
               <span className="font-display text-[17px] font-bold text-teal-900">Inshuti</span>
             </div>
             <div className="flex gap-[22px] text-[13.5px] font-semibold text-ink-soft">

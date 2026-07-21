@@ -84,3 +84,8 @@ export const DEFAULT_NOTIFICATION_PREFS: Record<NotificationType, Record<Notific
   REFERRAL: { IN_APP: true, EMAIL: true, SMS: false },
   PASSWORD_RESET: { IN_APP: false, EMAIL: true, SMS: false },
 };
+
+// Health facility locator (Phase 10)
+export const FACILITY_TYPES = ["HOSPITAL", "HEALTH_CENTRE", "CLINIC", "PHARMACY"] as const;
+export const facilityTypeSchema = z.enum(FACILITY_TYPES);
+export type FacilityType = (typeof FACILITY_TYPES)[number];

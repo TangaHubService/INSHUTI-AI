@@ -1,0 +1,247 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+import { AdminShell } from "@/components/AdminShell";
+import { Drawer } from "@/components/Drawer";
+import { ConfirmModal } from "@/components/Modal";
+import { useRequireAdmin } from "@/lib/useAdminAuth";
+import { useToast } from "@/lib/useToast";
+import {
+  createFacility,
+  deleteFacility,
+  getAdminFacilities,
+  updateFacility,
+  type FacilityInput,
+  type FacilityType,
+  type HealthFacility,
+} from "@/lib/adminApiClient";
+
+const FACILITY_TYPES: FacilityType[] = ["HOSPITAL", "HEALTH_CENTRE", "CLINIC", "PHARMACY"];
+const TYPE_LABEL: Record<FacilityType, string> = {
+  HOSPITAL: "Hospital",
+  HEALTH_CENTRE: "Health centre",
+  CLINIC: "Clinic",
+  PHARMACY: "Pharmacy",
+};
+
+const EMPTY_FORM: FacilityInput = {
+  name: "",
+  type: "HEALTH_CENTRE",
+  latitude: -1.9536,
+  longitude: 30.0606,
+  district: "",
+  sector: "",
+  services: [],
+  contact: "",
+};
+
+export default function AdminFacilitiesPage() {
+  const { admin, loading: authLoading } = useRequireAdmin("CONTENT_REVIEWER");
+  const { toast } = useToast();
+  const [facilities, setFacilities] = useState<HealthFacility[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<FacilityInput>(EMPTY_FORM);
+  const [servicesInput, setServicesInput] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<HealthFacility | null>(null);
+
+  async function loadAll() {
+    setLoading(true);
+    try {
+      setFacilities(await getAdminFacilities());
+    } catch {
+      toast("Failed to load facilities", "error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!admin) return;
+    void loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [admin]);
+
+  function openNew() {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setServicesInput("");
+    setDrawerOpen(true);
+  }
+
+  function openEdit(facility: HealthFacility) {
+    setEditingId(facility.id);
+    setForm({
+      name: facility.name,
+      type: facility.type,
+      latitude: facility.latitude,
+      longitude: facility.longitude,
+      district: facility.district,
+      sector: facility.sector,
+      services: facility.services,
+      contact: facility.contact ?? "",
+    });
+    setServicesInput(facility.services.join(", "));
+    setDrawerOpen(true);
+  }
+
+  async function handleSave() {
+    if (!form.name.trim() || !form.district.trim() || !form.sector.trim()) {
+      toast("Name, district, and sector are required.", "error");
+      return;
+    }
+    setSaving(true);
+    const services = servicesInput.split(",").map((s) => s.trim()).filter(Boolean);
+    try {
+      if (editingId) {
+        await updateFacility(editingId, { ...form, services });
+        toast("Facility updated", "success");
+      } else {
+        await createFacility({ ...form, services });
+        toast("Facility added", "success");
+      }
+      setDrawerOpen(false);
+      await loadAll();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to save facility", "error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    try {
+      await deleteFacility(deleteTarget.id);
+      toast("Facility removed", "success");
+      setDeleteTarget(null);
+      await loadAll();
+    } catch {
+      toast("Failed to remove facility", "error");
+    }
+  }
+
+  if (authLoading || !admin) return null;
+
+  return (
+    <AdminShell active="/admin/facilities" admin={admin}>
+      <div className="mb-[22px] flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-[26px] text-teal-900">Health Facilities</h1>
+          <p className="mt-1 text-sm text-ink-soft">Manage the locations shown in the Find Care locator.</p>
+        </div>
+        <button
+          onClick={openNew}
+          className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)]"
+        >
+          <svg width="15" height="15"><use href="#i-plus" /></svg>
+          New facility
+        </button>
+      </div>
+
+      {loading && <p className="text-sm text-ink-soft">Loading…</p>}
+
+      {!loading && (
+        <div className="overflow-hidden rounded-md border border-[rgba(22,48,44,0.05)] bg-white shadow-card">
+          {facilities.length === 0 && <p className="p-5 text-sm text-ink-soft">No facilities yet.</p>}
+          {facilities.map((facility) => (
+            <div
+              key={facility.id}
+              className="flex items-center justify-between border-b border-line px-5 py-[14px] last:border-b-0 hover:bg-paper-2"
+            >
+              <div className="min-w-0">
+                <div className="font-bold text-ink">{facility.name}</div>
+                <div className="mt-[3px] text-[12.5px] text-ink-soft">
+                  {TYPE_LABEL[facility.type]} · {facility.district} District, {facility.sector} Sector
+                </div>
+              </div>
+              <div className="flex flex-shrink-0 items-center gap-3">
+                <button onClick={() => openEdit(facility)} className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-teal-700">
+                  <svg width="14" height="14"><use href="#i-edit" /></svg>
+                </button>
+                <button onClick={() => setDeleteTarget(facility)} className="flex h-8 w-8 items-center justify-center rounded-full border border-coral-dark text-coral-dark">
+                  <svg width="14" height="14"><use href="#i-trash" /></svg>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title={editingId ? "Edit Facility" : "New Facility"}>
+        <div className="flex flex-col gap-4">
+          <label className="text-[12.5px] font-bold text-ink-soft">Name</label>
+          <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+
+          <label className="text-[12.5px] font-bold text-ink-soft">Type</label>
+          <select className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as FacilityType })}>
+            {FACILITY_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABEL[t]}</option>)}
+          </select>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[12.5px] font-bold text-ink-soft">Latitude</label>
+              <input
+                type="number"
+                step="any"
+                className="mt-1 w-full rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm"
+                value={form.latitude}
+                onChange={(e) => setForm({ ...form, latitude: Number(e.target.value) })}
+              />
+            </div>
+            <div>
+              <label className="text-[12.5px] font-bold text-ink-soft">Longitude</label>
+              <input
+                type="number"
+                step="any"
+                className="mt-1 w-full rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm"
+                value={form.longitude}
+                onChange={(e) => setForm({ ...form, longitude: Number(e.target.value) })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[12.5px] font-bold text-ink-soft">District</label>
+              <input className="mt-1 w-full rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-[12.5px] font-bold text-ink-soft">Sector</label>
+              <input className="mt-1 w-full rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })} />
+            </div>
+          </div>
+
+          <label className="text-[12.5px] font-bold text-ink-soft">Services (comma-separated)</label>
+          <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={servicesInput} onChange={(e) => setServicesInput(e.target.value)} placeholder="Family Planning, HIV Testing" />
+
+          <label className="text-[12.5px] font-bold text-ink-soft">Contact (optional)</label>
+          <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={form.contact ?? ""} onChange={(e) => setForm({ ...form, contact: e.target.value })} />
+
+          <button
+            onClick={() => void handleSave()}
+            disabled={saving}
+            className="mt-2 w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] disabled:opacity-50"
+          >
+            {saving ? "Saving…" : editingId ? "Save changes" : "Add facility"}
+          </button>
+        </div>
+      </Drawer>
+
+      <ConfirmModal
+        open={deleteTarget !== null}
+        title="Remove facility"
+        message={`Are you sure you want to remove "${deleteTarget?.name}"? This can't be undone.`}
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={() => void handleDelete()}
+        onCancel={() => setDeleteTarget(null)}
+      />
+    </AdminShell>
+  );
+}

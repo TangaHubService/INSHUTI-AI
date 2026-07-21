@@ -211,6 +211,23 @@ model Notification {
   @@index([userId, read])
 }
 
+model HealthFacility {
+  id        String   @id @default(cuid())
+  name      String
+  type      String
+  latitude  Float
+  longitude Float
+  district  String
+  sector    String
+  services  String   @default("[]")
+  contact   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([district])
+  @@index([type])
+}
+
 model AppSettings {
   id                      String  @id @default("singleton")
   aiProvider              String

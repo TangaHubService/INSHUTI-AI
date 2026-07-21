@@ -73,9 +73,9 @@ export default function Home() {
             <Link href="/appointments" className="hover:text-teal-700">
               Appointments
             </Link>
-            <a href="#" className="hover:text-teal-700">
+            <Link href="/facility-locator" className="hover:text-teal-700">
               Find Care
-            </a>
+            </Link>
             <a href="#" className="hover:text-teal-700">
               Portals
             </a>

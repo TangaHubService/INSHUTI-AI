@@ -105,3 +105,31 @@ export async function getSuggestions(language: Language): Promise<Suggestion[]> 
   const data: { suggestions: Suggestion[] } = await res.json();
   return data.suggestions;
 }
+
+export type FacilityType = "HOSPITAL" | "HEALTH_CENTRE" | "CLINIC" | "PHARMACY";
+
+export interface HealthFacility {
+  id: string;
+  name: string;
+  type: FacilityType;
+  latitude: number;
+  longitude: number;
+  district: string;
+  sector: string;
+  services: string[];
+  contact: string | null;
+}
+
+export async function getFacilities(filters?: { type?: FacilityType; district?: string; search?: string }): Promise<{
+  facilities: HealthFacility[];
+  facilityTypes: FacilityType[];
+}> {
+  const params = new URLSearchParams();
+  if (filters?.type) params.set("type", filters.type);
+  if (filters?.district) params.set("district", filters.district);
+  if (filters?.search) params.set("search", filters.search);
+  const query = params.toString() ? `?${params.toString()}` : "";
+  const res = await apiFetch(`/api/facilities${query}`);
+  if (!res.ok) throw new Error(`Facilities request failed (${res.status})`);
+  return res.json();
+}

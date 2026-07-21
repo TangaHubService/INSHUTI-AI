@@ -420,6 +420,84 @@ async function upsertCrisisResources() {
   console.log(`Seeded ${CRISIS_RESOURCES.length} placeholder crisis resources — REPLACE before launch.`);
 }
 
+// Approximate public coordinates for well-known Kigali facilities — good
+// enough to exercise the map/search UI in dev. Real deployments must verify
+// every coordinate, service list, and contact number before going live.
+const HEALTH_FACILITIES = [
+  {
+    name: "CHUK (Centre Hospitalier Universitaire de Kigali)",
+    type: "HOSPITAL",
+    latitude: -1.9548,
+    longitude: 30.0606,
+    district: "Nyarugenge",
+    sector: "Nyarugenge",
+    services: ["Maternal Health", "Mental Health", "Emergency Care"],
+    contact: "+250 788 123 456",
+  },
+  {
+    name: "King Faisal Hospital",
+    type: "HOSPITAL",
+    latitude: -1.9558,
+    longitude: 30.0925,
+    district: "Gasabo",
+    sector: "Kacyiru",
+    services: ["Specialist Care", "HIV Testing"],
+    contact: "+250 788 234 567",
+  },
+  {
+    name: "Kibagabaga Hospital",
+    type: "HOSPITAL",
+    latitude: -1.9276,
+    longitude: 30.1074,
+    district: "Gasabo",
+    sector: "Kibagabaga",
+    services: ["Maternal Health", "Family Planning"],
+    contact: "+250 788 345 678",
+  },
+  {
+    name: "Kicukiro Health Centre",
+    type: "HEALTH_CENTRE",
+    latitude: -1.9646,
+    longitude: 30.1044,
+    district: "Kicukiro",
+    sector: "Kicukiro",
+    services: ["Family Planning", "HIV Testing"],
+    contact: "+250 788 456 789",
+  },
+  {
+    name: "Remera Polyclinic",
+    type: "CLINIC",
+    latitude: -1.9536,
+    longitude: 30.1044,
+    district: "Gasabo",
+    sector: "Remera",
+    services: ["Mental Health", "General Consultation"],
+    contact: "+250 788 567 890",
+  },
+  {
+    name: "Gikondo Pharmacy",
+    type: "PHARMACY",
+    latitude: -1.9706,
+    longitude: 30.0736,
+    district: "Kicukiro",
+    sector: "Gikondo",
+    services: ["Pharmacy"],
+    contact: "+250 788 678 901",
+  },
+];
+
+async function upsertHealthFacilities() {
+  const existingCount = await prisma.healthFacility.count();
+  if (existingCount > 0) {
+    console.log("Health facilities already present, skipping.");
+    return;
+  }
+  await prisma.healthFacility.createMany({
+    data: HEALTH_FACILITIES.map((f) => ({ ...f, services: encodeJsonColumn(f.services) })),
+  });
+  console.log(`Seeded ${HEALTH_FACILITIES.length} placeholder health facilities — VERIFY before launch.`);
+}
+
 async function upsertAppSettings() {
   const existing = await prisma.appSettings.findUnique({ where: { id: "singleton" } });
   if (existing) {
@@ -601,6 +679,7 @@ async function seedUsers() {
 async function main() {
   await upsertTopicsAndArticles();
   await upsertCrisisResources();
+  await upsertHealthFacilities();
   await upsertAppSettings();
   await upsertSuperAdmin();
   await seedUsers();

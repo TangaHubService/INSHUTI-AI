@@ -235,6 +235,44 @@ export function IconSprite() {
         </symbol>
 
         {/* signature "friendship knot": two interlocking speech bubbles */}
+        <symbol id="i-map-pin" viewBox="0 0 24 24">
+          <path
+            d="M12 21s7-6.3 7-11.5A7 7 0 0 0 5 9.5C5 14.7 12 21 12 21Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          />
+          <circle cx="12" cy="9.5" r="2.4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+        </symbol>
+        <symbol id="i-building" viewBox="0 0 24 24">
+          <rect x="4" y="3" width="11" height="18" rx="1" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <path
+            d="M15 9h5v12h-5M7.5 7h2M7.5 11h2M7.5 15h2"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </symbol>
+        <symbol id="i-filter" viewBox="0 0 24 24">
+          <path
+            d="M4 5h16l-6 7v6l-4 2v-8L4 5Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          />
+        </symbol>
+        <symbol id="i-phone" viewBox="0 0 24 24">
+          <path
+            d="M6 3h4l1.5 4.5-2 1.5a12 12 0 0 0 5.5 5.5l1.5-2L21 14v4a2 2 0 0 1-2 2C11.5 20 4 12.5 4 5a2 2 0 0 1 2-2Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+        </symbol>
+
         <symbol id="mark-knot" viewBox="0 0 64 64">
           <path
             d="M14 12c-8 0-13 6-13 13 0 5 2.5 8.8 6.5 11L6 44l9-3.4c1.3.3 2.7.4 4 .3 8-.5 12-6.5 12-13 0-7-6.5-16-17-16Z"

@@ -125,9 +125,9 @@ export default function MySpacePage() {
             <Link href="/notifications" className="hover:text-teal-700">
               Notifications
             </Link>
-            <a href="#" className="hover:text-teal-700">
+            <Link href="/facility-locator" className="hover:text-teal-700">
               Find Care
-            </a>
+            </Link>
             <a href="#" className="hover:text-teal-700">
               Portals
             </a>

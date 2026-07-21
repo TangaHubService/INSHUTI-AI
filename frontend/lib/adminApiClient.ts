@@ -277,3 +277,53 @@ export async function deleteCrisisResource(id: string): Promise<void> {
   const res = await adminFetch(`/api/settings/crisis-resources/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete crisis resource");
 }
+
+export type FacilityType = "HOSPITAL" | "HEALTH_CENTRE" | "CLINIC" | "PHARMACY";
+
+export interface HealthFacility {
+  id: string;
+  name: string;
+  type: FacilityType;
+  latitude: number;
+  longitude: number;
+  district: string;
+  sector: string;
+  services: string[];
+  contact: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type FacilityInput = Omit<HealthFacility, "id" | "createdAt" | "updatedAt">;
+
+export async function getAdminFacilities(): Promise<HealthFacility[]> {
+  const res = await adminFetch("/api/facilities");
+  if (!res.ok) throw new Error("Failed to load facilities");
+  const data: { facilities: HealthFacility[] } = await res.json();
+  return data.facilities;
+}
+
+export async function createFacility(input: FacilityInput): Promise<HealthFacility> {
+  const res = await adminFetch("/api/facilities", { method: "POST", body: JSON.stringify(input) });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to create facility");
+  }
+  const data: { facility: HealthFacility } = await res.json();
+  return data.facility;
+}
+
+export async function updateFacility(id: string, input: Partial<FacilityInput>): Promise<HealthFacility> {
+  const res = await adminFetch(`/api/facilities/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to update facility");
+  }
+  const data: { facility: HealthFacility } = await res.json();
+  return data.facility;
+}
+
+export async function deleteFacility(id: string): Promise<void> {
+  const res = await adminFetch(`/api/facilities/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete facility");
+}

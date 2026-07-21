@@ -17,6 +17,8 @@ import consultationsRouter from "./routes/consultations.js";
 import appointmentsRouter from "./routes/appointments.js";
 import notificationsRouter from "./routes/notifications.js";
 import facilitiesRouter from "./routes/facilities.js";
+import { adminUsersRouter, adminAdminsRouter } from "./routes/adminUsers.js";
+import governmentRouter from "./routes/government.js";
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   console.error(err);
@@ -49,6 +51,9 @@ export function createApp() {
   app.use("/api/appointments", appointmentsRouter);
   app.use("/api/notifications", notificationsRouter);
   app.use("/api/facilities", facilitiesRouter);
+  app.use("/api/admin/users", adminUsersRouter);
+  app.use("/api/admin/admins", adminAdminsRouter);
+  app.use("/api/government", governmentRouter);
 
   app.use(errorHandler);
 

@@ -10,6 +10,7 @@ const NAV_ITEMS: { href: string; label: string; icon: string; minRole?: AdminRol
   { href: "/admin/knowledge-base", label: "Knowledge Base", icon: "i-book", minRole: "CONTENT_REVIEWER" },
   { href: "/admin/flagged", label: "Flagged Content", icon: "i-flag", minRole: "MODERATOR" },
   { href: "/admin/facilities", label: "Facilities", icon: "i-building", minRole: "CONTENT_REVIEWER" },
+  { href: "/admin/users", label: "Users & Admins", icon: "i-users", minRole: "SUPER_ADMIN" },
   { href: "/admin/settings", label: "Settings", icon: "i-gear", minRole: "SUPER_ADMIN" },
 ];
 

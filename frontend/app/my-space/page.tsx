@@ -122,15 +122,18 @@ export default function MySpacePage() {
             <Link href="/appointments" className="hover:text-teal-700">
               Appointments
             </Link>
+            <Link href="/consultations" className="hover:text-teal-700">
+              Consultations
+            </Link>
             <Link href="/notifications" className="hover:text-teal-700">
               Notifications
             </Link>
             <Link href="/facility-locator" className="hover:text-teal-700">
               Find Care
             </Link>
-            <a href="#" className="hover:text-teal-700">
-              Portals
-            </a>
+            <Link href="/profile" className="hover:text-teal-700">
+              Profile
+            </Link>
           </nav>
           <div className="flex items-center gap-3">
             <div className="flex rounded-full bg-teal-100 p-[3px] text-[12.5px] font-bold">

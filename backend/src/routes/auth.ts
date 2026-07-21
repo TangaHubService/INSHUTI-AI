@@ -38,6 +38,11 @@ router.post("/login", async (req, res) => {
     return;
   }
 
+  if (!admin.active) {
+    res.status(403).json({ error: "This admin account has been deactivated." });
+    return;
+  }
+
   const token = signAdminToken({
     sub: admin.id,
     email: admin.email,
@@ -57,6 +62,11 @@ router.get("/me", requireAdmin(), async (req, res) => {
   const admin = await prisma.adminUser.findUnique({ where: { id: req.admin!.sub } });
   if (!admin) {
     res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  if (!admin.active) {
+    clearAdminSessionCookie(res);
+    res.status(403).json({ error: "This admin account has been deactivated." });
     return;
   }
   res.json({ admin: { id: admin.id, email: admin.email, name: admin.name, role: admin.role } });

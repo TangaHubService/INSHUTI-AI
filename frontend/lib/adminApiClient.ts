@@ -327,3 +327,74 @@ export async function deleteFacility(id: string): Promise<void> {
   const res = await adminFetch(`/api/facilities/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete facility");
 }
+
+export type ManagedUserRole = "TEENAGER" | "PARENT_GUARDIAN" | "HEALTHCARE_PROFESSIONAL" | "GOVERNMENT_USER";
+export type ApprovalStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface ManagedUser {
+  id: string;
+  email: string;
+  name: string;
+  role: ManagedUserRole;
+  active: boolean;
+  createdAt: string;
+  healthcareProfessional: { professionalType: string; approvalStatus: ApprovalStatus } | null;
+  governmentUser: { level: string; regionName: string } | null;
+}
+
+export async function getManagedUsers(role?: ManagedUserRole): Promise<ManagedUser[]> {
+  const res = await adminFetch(`/api/admin/users${role ? `?role=${role}` : ""}`);
+  if (!res.ok) throw new Error("Failed to load users");
+  const data: { users: ManagedUser[] } = await res.json();
+  return data.users;
+}
+
+export async function setUserActive(id: string, active: boolean): Promise<void> {
+  const res = await adminFetch(`/api/admin/users/${id}`, { method: "PATCH", body: JSON.stringify({ active }) });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to update user");
+  }
+}
+
+export async function setProfessionalApproval(userId: string, approvalStatus: ApprovalStatus): Promise<void> {
+  const res = await adminFetch(`/api/admin/users/${userId}/approval`, { method: "PATCH", body: JSON.stringify({ approvalStatus }) });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to update approval status");
+  }
+}
+
+export interface ManagedAdmin {
+  id: string;
+  email: string;
+  name: string;
+  role: AdminRole;
+  active: boolean;
+  createdAt: string;
+}
+
+export async function getManagedAdmins(): Promise<ManagedAdmin[]> {
+  const res = await adminFetch("/api/admin/admins");
+  if (!res.ok) throw new Error("Failed to load admin team");
+  const data: { admins: ManagedAdmin[] } = await res.json();
+  return data.admins;
+}
+
+export async function createManagedAdmin(input: { email: string; password: string; name: string; role: AdminRole }): Promise<ManagedAdmin> {
+  const res = await adminFetch("/api/admin/admins", { method: "POST", body: JSON.stringify(input) });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to create admin");
+  }
+  return res.json();
+}
+
+export async function updateManagedAdmin(id: string, input: Partial<{ name: string; role: AdminRole; active: boolean }>): Promise<ManagedAdmin> {
+  const res = await adminFetch(`/api/admin/admins/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to update admin");
+  }
+  return res.json();
+}

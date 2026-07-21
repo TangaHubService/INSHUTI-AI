@@ -96,9 +96,21 @@ router.get("/professional", requireUser, async (req: AuthenticatedUserRequest, r
   const consultations = await prisma.consultation.findMany({
     where: { professionalId: hp.id },
     orderBy: { createdAt: "desc" },
-    include: { conversation: { select: { id: true, language: true } } },
+    include: {
+      conversation: { select: { id: true, language: true } },
+      user: { select: { name: true } },
+    },
   });
-  res.json({ consultations });
+  res.json({
+    consultations: consultations.map((c) => ({
+      id: c.id,
+      status: c.status,
+      priority: c.priority,
+      patientName: c.user.name,
+      language: c.conversation.language,
+      createdAt: c.createdAt,
+    })),
+  });
 });
 
 router.patch("/:id/reassign", requireAdmin(), async (req, res) => {
@@ -129,8 +141,9 @@ router.post("/:id/messages", requireUser, async (req: AuthenticatedUserRequest, 
     return;
   }
 
+  const professional = await prisma.healthcareProfessional.findUnique({ where: { userId: req.user!.userId } });
   const isUser = consultation.userId === req.user!.userId;
-  const isProfessional = consultation.professionalId === req.user!.userId;
+  const isProfessional = !!professional && consultation.professionalId === professional.id;
   if (!isUser && !isProfessional) {
     res.status(403).json({ error: "Not authorized" });
     return;
@@ -156,8 +169,9 @@ router.get("/:id/messages", requireUser, async (req: AuthenticatedUserRequest, r
     return;
   }
 
+  const professional = await prisma.healthcareProfessional.findUnique({ where: { userId: req.user!.userId } });
   const isUser = consultation.userId === req.user!.userId;
-  const isProfessional = consultation.professionalId === req.user!.userId;
+  const isProfessional = !!professional && consultation.professionalId === professional.id;
   if (!isUser && !isProfessional) {
     res.status(403).json({ error: "Not authorized" });
     return;

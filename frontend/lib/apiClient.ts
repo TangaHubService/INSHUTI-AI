@@ -29,6 +29,7 @@ export interface ChatSource {
 }
 
 export interface ChatResponse {
+  conversationId?: string;
   reply: string;
   topic: ChatTopic | null;
   sources: ChatSource[];

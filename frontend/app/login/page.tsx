@@ -34,9 +34,17 @@ export default function LoginPage() {
     }
     setSending(true);
     try {
-      await loginUser(email.trim(), password);
+      const loggedInUser = await loginUser(email.trim(), password);
       toast(m.welcome, "success");
-      router.push("/chat");
+      const destination =
+        loggedInUser.role === "HEALTHCARE_PROFESSIONAL"
+          ? "/professional"
+          : loggedInUser.role === "GOVERNMENT_USER"
+            ? "/government"
+            : loggedInUser.role === "PARENT_GUARDIAN"
+              ? "/parent"
+              : "/chat";
+      router.push(destination);
     } catch (err) {
       toast(err instanceof Error ? err.message : "Login failed", "error");
     } finally {

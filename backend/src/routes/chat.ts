@@ -91,7 +91,7 @@ router.post("/", async (req, res) => {
       }
     });
 
-    res.json({ reply, topic: null, sources: [], quickReplies: [], canRequestHumanFollowUp: true });
+    res.json({ conversationId: conversation.id, reply, topic: null, sources: [], quickReplies: [], canRequestHumanFollowUp: true });
     return;
   }
 
@@ -167,6 +167,7 @@ router.post("/", async (req, res) => {
   }
 
   res.json({
+    conversationId: conversation.id,
     reply,
     topic: topTopic ? { id: topTopic.id, slug: topTopic.slug, nameEn: topTopic.nameEn, nameRw: topTopic.nameRw } : null,
     sources: groundingArticles.map((a) => ({

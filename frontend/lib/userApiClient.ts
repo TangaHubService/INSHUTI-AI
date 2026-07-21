@@ -70,6 +70,16 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
   return data.user;
 }
 
+export async function updateProfile(input: { name?: string; phone?: string; preferredLanguage?: string }): Promise<UserProfile> {
+  const res = await apiFetch("/api/users/me", { method: "PATCH", body: JSON.stringify(input) });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to update profile");
+  }
+  const data: { user: UserProfile } = await res.json();
+  return data.user;
+}
+
 export type AppointmentStatus = "REQUESTED" | "CONFIRMED" | "RESCHEDULED" | "CANCELLED" | "COMPLETED";
 
 export interface Professional {
@@ -216,4 +226,86 @@ export async function resetPassword(email: string, token: string, newPassword: s
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error ?? "Failed to reset password");
   }
+}
+
+export type ConsultationStatus = "PENDING" | "ASSIGNED" | "IN_PROGRESS" | "RESOLVED" | "ESCALATED";
+
+export interface Consultation {
+  id: string;
+  status: ConsultationStatus;
+  priority: number;
+  assignedTo: string | null;
+  createdAt: string;
+}
+
+export interface ProfessionalConsultation {
+  id: string;
+  status: ConsultationStatus;
+  priority: number;
+  patientName: string;
+  language: string;
+  createdAt: string;
+}
+
+export interface ConsultationMessage {
+  id: string;
+  role: "USER" | "ASSISTANT";
+  content: string;
+  createdAt: string;
+}
+
+export async function requestConsultation(conversationId: string): Promise<{ consultationId: string; assignedTo: string | null; status: string }> {
+  const res = await apiFetch("/api/consultations/request", { method: "POST", body: JSON.stringify({ conversationId }) });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to request a consultation");
+  }
+  return res.json();
+}
+
+export async function getMyConsultations(): Promise<Consultation[]> {
+  const res = await apiFetch("/api/consultations/my");
+  if (!res.ok) throw new Error(`Failed to load consultations (${res.status})`);
+  const data: { consultations: Consultation[] } = await res.json();
+  return data.consultations;
+}
+
+export async function getProfessionalConsultations(): Promise<ProfessionalConsultation[]> {
+  const res = await apiFetch("/api/consultations/professional");
+  if (!res.ok) throw new Error(`Failed to load consultation queue (${res.status})`);
+  const data: { consultations: ProfessionalConsultation[] } = await res.json();
+  return data.consultations;
+}
+
+export async function getConsultationMessages(id: string): Promise<ConsultationMessage[]> {
+  const res = await apiFetch(`/api/consultations/${id}/messages`);
+  if (!res.ok) throw new Error(`Failed to load messages (${res.status})`);
+  const data: { messages: ConsultationMessage[] } = await res.json();
+  return data.messages;
+}
+
+export async function sendConsultationMessage(id: string, content: string): Promise<void> {
+  const res = await apiFetch(`/api/consultations/${id}/messages`, { method: "POST", body: JSON.stringify({ content }) });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to send message");
+  }
+}
+
+export interface GovernmentStats {
+  scope: { level: GovLevel; regionName: string; coverage: string };
+  totalConversations: number;
+  languageSplit: Record<string, number>;
+  topicEngagement: { topic: { id: string; slug: string; nameEn: string; nameRw: string; colorToken: string }; count: number }[];
+  consultationsByStatus: Record<string, number>;
+  referralCount: number;
+  appointmentsByStatus: Record<string, number>;
+  facilitiesByDistrict: Record<string, number>;
+  facilitiesByType: Record<string, number>;
+}
+
+export async function getGovernmentStats(): Promise<GovernmentStats> {
+  const res = await apiFetch("/api/government/stats");
+  if (!res.ok) throw new Error(`Failed to load government stats (${res.status})`);
+  return res.json();
 }

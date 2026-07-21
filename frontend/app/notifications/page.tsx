@@ -106,6 +106,8 @@ export default function NotificationsPage() {
             <Link href="/chat" className="hover:text-teal-700">Chat</Link>
             <Link href="/my-space" className="hover:text-teal-700">My Space</Link>
             <Link href="/appointments" className="hover:text-teal-700">Appointments</Link>
+            <Link href="/consultations" className="hover:text-teal-700">Consultations</Link>
+            <Link href="/profile" className="hover:text-teal-700">Profile</Link>
           </nav>
         </header>
 

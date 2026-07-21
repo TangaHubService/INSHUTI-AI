@@ -110,6 +110,11 @@ router.post("/login", async (req, res) => {
     return;
   }
 
+  if (!user.active) {
+    res.status(403).json({ error: "This account has been deactivated. Contact an administrator." });
+    return;
+  }
+
   const valid = await verifyPassword(password, user.passwordHash);
   if (!valid) {
     const maxAttempts = 5;
@@ -158,6 +163,11 @@ router.get("/me", async (req, res) => {
     res.status(401).json({ error: "User not found" });
     return;
   }
+  if (!user.active) {
+    clearUserCookie(res);
+    res.status(403).json({ error: "This account has been deactivated. Contact an administrator." });
+    return;
+  }
 
   await prisma.user.update({ where: { id: user.id }, data: { lastActivityAt: new Date() } });
 
@@ -167,6 +177,29 @@ router.get("/me", async (req, res) => {
       role: user.role, preferredLanguage: user.preferredLanguage,
       healthcareProfessional: user.healthcareProfessional ?? null,
       governmentUser: user.governmentUser ?? null,
+    },
+  });
+});
+
+const updateProfileSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  phone: z.string().max(30).optional(),
+  preferredLanguage: z.enum(["EN", "RW", "FR", "SW"]).optional(),
+});
+
+router.patch("/me", requireUser, async (req: AuthenticatedUserRequest, res) => {
+  const parsed = updateProfileSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request", details: z.flattenError(parsed.error) });
+    return;
+  }
+
+  const user = await prisma.user.update({ where: { id: req.user!.userId }, data: parsed.data });
+
+  res.json({
+    user: {
+      id: user.id, email: user.email, phone: user.phone, name: user.name,
+      role: user.role, preferredLanguage: user.preferredLanguage,
     },
   });
 });

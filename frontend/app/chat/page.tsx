@@ -1,12 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { sendChatMessage, type ChatSource, type Language } from "@/lib/apiClient";
 import { useToast } from "@/lib/useToast";
+import { getCurrentUser, requestConsultation, type UserProfile } from "@/lib/userApiClient";
+
+const ANONYMOUS_MODE_KEY = "inshuti_anonymous_mode";
 
 interface DisplayMessage {
   role: "user" | "bot";
@@ -90,6 +94,7 @@ const GREETING: Record<Language, string> = {
 
 export default function ChatPage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [language, setLanguage] = useState<Language>("EN");
   const [messages, setMessages] = useState<DisplayMessage[]>([
     { role: "bot", content: GREETING.EN, time: nowLabel() },
@@ -99,11 +104,41 @@ export default function ChatPage() {
   const [sources, setSources] = useState<ChatSource[]>([]);
   const [quickReplies, setQuickReplies] = useState<string[]>([]);
   const [activeTopicName, setActiveTopicName] = useState<string | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [canRequestFollowUp, setCanRequestFollowUp] = useState(false);
+  const [anonymousMode, setAnonymousMode] = useState(true);
+  const [requestingHelp, setRequestingHelp] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, sending]);
+
+  useEffect(() => {
+    setAnonymousMode(localStorage.getItem(ANONYMOUS_MODE_KEY) !== "false");
+    void getCurrentUser().then(setUser);
+  }, []);
+
+  function toggleAnonymousMode() {
+    const next = !anonymousMode;
+    setAnonymousMode(next);
+    localStorage.setItem(ANONYMOUS_MODE_KEY, String(next));
+  }
+
+  async function handleRequestFollowUp() {
+    if (!conversationId || requestingHelp) return;
+    setRequestingHelp(true);
+    try {
+      await requestConsultation(conversationId);
+      toast("A health worker will follow up with you soon.", "success");
+      router.push("/consultations");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to request a health worker", "error");
+    } finally {
+      setRequestingHelp(false);
+    }
+  }
 
   async function send(text: string) {
     const trimmed = text.trim();
@@ -113,6 +148,7 @@ export default function ChatPage() {
     setInput("");
     setSending(true);
     setQuickReplies([]);
+    setCanRequestFollowUp(false);
 
     try {
       const response = await sendChatMessage(trimmed, language);
@@ -120,6 +156,8 @@ export default function ChatPage() {
       setSources(response.sources);
       setQuickReplies(response.quickReplies);
       setActiveTopicName(response.topic ? (language === "RW" ? response.topic.nameRw : response.topic.nameEn) : null);
+      setConversationId(response.conversationId ?? null);
+      setCanRequestFollowUp(!!response.canRequestHumanFollowUp);
     } catch {
       toast(
         language === "RW"
@@ -164,6 +202,18 @@ export default function ChatPage() {
           </div>
         </div>
         <div className="flex items-center gap-[14px]">
+          {user && (
+            <button
+              type="button"
+              onClick={toggleAnonymousMode}
+              title="When on, this chat won't be linked to your account and you won't be offered human follow-up."
+              className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ${
+                anonymousMode ? "bg-teal-100 text-teal-700" : "bg-gold-100 text-[#8A5E1E]"
+              }`}
+            >
+              Anonymous mode: {anonymousMode ? "On" : "Off"}
+            </button>
+          )}
           <div className="flex rounded-full bg-teal-100 p-[3px] text-[12.5px] font-bold">
             {(["EN", "RW", "FR", "SW"] as const).map((lang) => (
               <span
@@ -287,6 +337,21 @@ export default function ChatPage() {
                   {reply}
                 </div>
               ))}
+            </div>
+          )}
+          {canRequestFollowUp && user && !anonymousMode && conversationId && (
+            <div className="ml-10 mb-1 mt-2 flex items-center gap-2 rounded-2xl border border-teal-700 bg-teal-100 px-4 py-3">
+              <span className="flex-1 text-[13px] font-semibold text-teal-900">
+                Would you like to talk to a health worker about this?
+              </span>
+              <button
+                type="button"
+                onClick={() => void handleRequestFollowUp()}
+                disabled={requestingHelp}
+                className="flex-shrink-0 rounded-full bg-teal-700 px-4 py-2 text-[12.5px] font-semibold text-white disabled:opacity-50"
+              >
+                {requestingHelp ? "Requesting…" : "Talk to a health worker"}
+              </button>
             </div>
           )}
           <div ref={bottomRef} />

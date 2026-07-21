@@ -99,6 +99,7 @@ model AdminUser {
   passwordHash String
   name         String
   role         String
+  active       Boolean  @default(true)
   createdAt    DateTime @default(now())
 }
 
@@ -124,6 +125,7 @@ model User {
   resetTokenHash    String?
   resetTokenExpiresAt DateTime?
   notificationPrefs String   @default("{}")
+  active            Boolean  @default(true)
   createdAt         DateTime @default(now())
 
   healthcareProfessional HealthcareProfessional?

@@ -46,6 +46,21 @@ export function IconSprite() {
             strokeLinejoin="round"
           />
         </symbol>
+        <symbol id="i-user-check" viewBox="0 0 24 24">
+          <circle cx="10" cy="8" r="3.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
+          <path d="M4 20c0-3.6 2.7-6 6-6s6 2.4 6 6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+          <path d="M16 12.5l2 2 3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </symbol>
+        <symbol id="i-stethoscope" viewBox="0 0 24 24">
+          <path
+            d="M6 3v6a4 4 0 0 0 8 0V3M6 4.5h-1.5M14 4.5h1.5M10 13v3a4 4 0 0 0 8 0v-1.3"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+          />
+          <circle cx="19" cy="16.5" r="2" fill="none" stroke="currentColor" strokeWidth="1.7" />
+        </symbol>
         <symbol id="i-mind" viewBox="0 0 24 24">
           <path
             d="M9 3a5 5 0 0 0-5 5c0 1.3.5 2.3 1.2 3.2C4.5 12 4 13 4 14.3 4 16.9 6 19 8.5 19H9v2h6v-2.3c1.7-.8 3-2.6 3-4.7 0-1.3-.5-2.3-1.2-3.2.7-.9 1.2-1.9 1.2-3.2A5 5 0 0 0 13 3c-.8 0-1.5.2-2 .5-.5-.3-1.2-.5-2-.5Z"
@@ -65,6 +80,26 @@ export function IconSprite() {
         <symbol id="i-lock" viewBox="0 0 24 24">
           <rect x="5" y="10" width="14" height="10" rx="2.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
           <path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" strokeWidth="1.7" />
+        </symbol>
+        <symbol id="i-eye" viewBox="0 0 24 24">
+          <path
+            d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinejoin="round"
+          />
+          <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.7" />
+        </symbol>
+        <symbol id="i-eye-off" viewBox="0 0 24 24">
+          <path
+            d="M3.5 3.5l17 17M9.9 5.7A10.7 10.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a15.6 15.6 0 0 1-3.3 4.1M6.6 6.9A15.9 15.9 0 0 0 2.5 12S6 18.5 12 18.5a10.6 10.6 0 0 0 3.2-.5M14.6 14.6a3 3 0 0 1-4.2-4.2"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </symbol>
         <symbol id="i-globe" viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" strokeWidth="1.7" />

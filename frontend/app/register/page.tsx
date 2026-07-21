@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useToast } from "@/lib/useToast";
 import { registerUser, type UserRole, type ProfessionalType, type GovLevel } from "@/lib/userApiClient";
 import type { Language } from "@/lib/apiClient";
+import { PasswordInput } from "@/components/PasswordInput";
 
 const ROLES: { value: UserRole; label: Record<Language, string>; desc: Record<Language, string>; icon: string; color: string }[] = [
   { value: "TEENAGER", label: { EN: "Teenager / User", RW: "Ingimbi / Ukoresha", FR: "Adolescent / Utilisateur", SW: "Kijana / Mtumiaji" }, desc: { EN: "Ages 10\u201319", RW: "Imyaka 10\u201319", FR: "\u00c2ges 10\u201319", SW: "Umri 10\u201319" }, icon: "i-user-check", color: "text-teal-700" },
@@ -162,7 +163,7 @@ export default function RegisterPage() {
           </div>
 
           <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">{m.password}</label>
-          <input className="mb-5 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm" type="password" placeholder={m.passwordPlaceholder} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
+          <PasswordInput className="mb-5 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm" placeholder={m.passwordPlaceholder} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
 
           {role === "HEALTHCARE_PROFESSIONAL" && (
             <>

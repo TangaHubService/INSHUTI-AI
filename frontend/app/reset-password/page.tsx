@@ -6,6 +6,7 @@ import { Suspense, useState } from "react";
 
 import { useToast } from "@/lib/useToast";
 import { resetPassword } from "@/lib/userApiClient";
+import { PasswordInput } from "@/components/PasswordInput";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -54,18 +55,16 @@ function ResetPasswordForm() {
       ) : (
         <form onSubmit={(e) => void handleSubmit(e)}>
           <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">New password</label>
-          <input
+          <PasswordInput
             className="mb-3.5 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm"
-            type="password"
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
           <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">Confirm password</label>
-          <input
+          <PasswordInput
             className="mb-5 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm"
-            type="password"
             placeholder="••••••••"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}

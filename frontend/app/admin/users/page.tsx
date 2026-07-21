@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/AdminShell";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
 import { useToast } from "@/lib/useToast";
+import { PasswordInput } from "@/components/PasswordInput";
 import {
   createManagedAdmin,
   getManagedAdmins,
@@ -204,8 +205,7 @@ export default function AdminUsersPage() {
                   required
                 />
                 <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">Temporary password</label>
-                <input
-                  type="password"
+                <PasswordInput
                   className="mb-3.5 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm"
                   value={newAdmin.password}
                   onChange={(e) => setNewAdmin((prev) => ({ ...prev, password: e.target.value }))}

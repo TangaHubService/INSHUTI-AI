@@ -6,6 +6,7 @@ import { Logo } from "@/components/Logo";
 
 import { login } from "@/lib/adminApiClient";
 import { useToast } from "@/lib/useToast";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -65,9 +66,8 @@ export default function AdminLoginPage() {
             </div>
             <div className="mb-4">
               <label className="mb-1.5 block text-[12.5px] font-bold text-ink-soft">Password</label>
-              <input
+              <PasswordInput
                 className="w-full rounded-[10px] border border-line bg-paper-2 px-[14px] py-3 text-sm"
-                type="password"
                 placeholder="••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

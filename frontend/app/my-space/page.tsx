@@ -118,6 +118,9 @@ export default function MySpacePage() {
               Chat
             </Link>
             <span className="text-teal-700">My Space</span>
+            <Link href="/appointments" className="hover:text-teal-700">
+              Appointments
+            </Link>
             <a href="#" className="hover:text-teal-700">
               Find Care
             </a>

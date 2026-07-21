@@ -70,6 +70,9 @@ export default function Home() {
             <Link href="/my-space" className="hover:text-teal-700">
               My Space
             </Link>
+            <Link href="/appointments" className="hover:text-teal-700">
+              Appointments
+            </Link>
             <a href="#" className="hover:text-teal-700">
               Find Care
             </a>

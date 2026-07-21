@@ -121,12 +121,17 @@ model User {
   loginAttempts     Int      @default(0)
   lockedUntil       DateTime?
   lastActivityAt    DateTime @default(now())
+  resetTokenHash    String?
+  resetTokenExpiresAt DateTime?
+  notificationPrefs String   @default("{}")
   createdAt         DateTime @default(now())
 
   healthcareProfessional HealthcareProfessional?
   governmentUser        GovernmentUser?
   consultations         Consultation[]
   conversations         Conversation[]
+  appointments          Appointment[]
+  notifications         Notification[]
 
   @@index([email])
 }
@@ -142,6 +147,7 @@ model HealthcareProfessional {
   approvedBy       String?
   approvedAt       DateTime?
   consultations    Consultation[]
+  appointments     Appointment[]
 
   @@index([professionalType])
 }
@@ -171,6 +177,38 @@ model Consultation {
 
   @@index([professionalId])
   @@index([status])
+}
+
+model Appointment {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+  professionalId String
+  professional   HealthcareProfessional @relation(fields: [professionalId], references: [id])
+  requestedTime  DateTime
+  status         String    @default("REQUESTED")
+  notes          String?
+  outcome        String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([professionalId])
+  @@index([status])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, read])
 }
 
 model AppSettings {

@@ -53,3 +53,8 @@ export type GovLevel = (typeof GOV_LEVELS)[number];
 export const APPROVAL_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
 export const approvalStatusSchema = z.enum(APPROVAL_STATUSES);
 export type ApprovalStatus = (typeof APPROVAL_STATUSES)[number];
+
+// Appointment lifecycle (Phase 8)
+export const APPOINTMENT_STATUSES = ["REQUESTED", "CONFIRMED", "RESCHEDULED", "CANCELLED", "COMPLETED"] as const;
+export const appointmentStatusSchema = z.enum(APPOINTMENT_STATUSES);
+export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];

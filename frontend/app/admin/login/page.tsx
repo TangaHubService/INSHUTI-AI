@@ -7,6 +7,8 @@ import { Logo } from "@/components/Logo";
 import { login } from "@/lib/adminApiClient";
 import { useToast } from "@/lib/useToast";
 import { PasswordInput } from "@/components/PasswordInput";
+import { isValidEmail } from "@/lib/validation";
+import { VALIDATION } from "@/lib/validationMessages";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -14,9 +16,24 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const v = VALIDATION.EN;
+
+  function validate(): boolean {
+    const next: typeof errors = {};
+    if (!email.trim()) next.email = v.required;
+    else if (!isValidEmail(email)) next.email = v.invalidEmail;
+    if (!password) next.password = v.required;
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!validate()) {
+      toast(v.fixErrors, "error");
+      return;
+    }
     setSubmitting(true);
     try {
       await login(email, password);
@@ -56,23 +73,23 @@ export default function AdminLoginPage() {
             <div className="mb-4">
               <label className="mb-1.5 block text-[12.5px] font-bold text-ink-soft">Email</label>
               <input
-                className="w-full rounded-[10px] border border-line bg-paper-2 px-[14px] py-3 text-sm"
+                className={`w-full rounded-[10px] border bg-paper-2 px-[14px] py-3 text-sm transition focus:outline-none focus:ring-2 ${errors.email ? "border-danger focus:ring-danger/20" : "border-line focus:border-teal-600 focus:ring-teal-100"}`}
                 type="email"
                 placeholder="you@inshuti.rw"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
               />
+              <p className="mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.email}</p>
             </div>
             <div className="mb-4">
               <label className="mb-1.5 block text-[12.5px] font-bold text-ink-soft">Password</label>
               <PasswordInput
-                className="w-full rounded-[10px] border border-line bg-paper-2 px-[14px] py-3 text-sm"
+                className={`w-full rounded-[10px] border bg-paper-2 px-[14px] py-3 text-sm transition focus:outline-none focus:ring-2 ${errors.password ? "border-danger focus:ring-danger/20" : "border-line focus:border-teal-600 focus:ring-teal-100"}`}
                 placeholder="••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
               />
+              <p className="mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.password}</p>
             </div>
             <button
               type="submit"

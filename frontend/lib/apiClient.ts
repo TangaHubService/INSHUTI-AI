@@ -107,6 +107,23 @@ export async function getSuggestions(language: Language): Promise<Suggestion[]> 
   return data.suggestions;
 }
 
+export interface CrisisResource {
+  id: string;
+  name: string;
+  contact: string;
+  region: string;
+  order: number;
+}
+
+export async function getCrisisResources(): Promise<CrisisResource[]> {
+  const res = await apiFetch("/api/chat/crisis-resources");
+  if (!res.ok) {
+    throw new Error(`Crisis resources request failed (${res.status})`);
+  }
+  const data: { resources: CrisisResource[] } = await res.json();
+  return data.resources;
+}
+
 export type FacilityType = "HOSPITAL" | "HEALTH_CENTRE" | "CLINIC" | "PHARMACY";
 
 export interface HealthFacility {

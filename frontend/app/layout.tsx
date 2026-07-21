@@ -3,6 +3,7 @@ import { Baloo_2, IBM_Plex_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { IconSprite } from "@/components/IconSprite";
 import { ToastProvider } from "@/lib/useToast";
+import { LanguageProvider } from "@/lib/LanguageContext";
 
 const balooDisplay = Baloo_2({
   subsets: ["latin"],
@@ -34,7 +35,9 @@ export default function RootLayout({
     <html lang="en" className={`${balooDisplay.variable} ${interBody.variable} ${plexMono.variable}`}>
       <body>
         <IconSprite />
-        <ToastProvider>{children}</ToastProvider>
+        <LanguageProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

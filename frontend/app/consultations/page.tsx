@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Logo } from "@/components/Logo";
 import { useEffect, useState } from "react";
 
 import { useToast } from "@/lib/useToast";
-import { NotificationBell } from "@/components/NotificationBell";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import type { Language } from "@/lib/apiClient";
+import { NAV } from "@/lib/i18nCommon";
+import { useLanguage } from "@/lib/LanguageContext";
 import {
   getCurrentUser,
   getMyConsultations,
@@ -24,14 +26,102 @@ const STATUS_STYLE: Record<string, string> = {
   ESCALATED: "bg-coral-100 text-coral-dark",
 };
 
+const STATUS_LABEL: Record<Language, Record<string, string>> = {
+  EN: { PENDING: "Pending", ASSIGNED: "Assigned", IN_PROGRESS: "In progress", RESOLVED: "Resolved", ESCALATED: "Escalated" },
+  RW: { PENDING: "Bitegereje", ASSIGNED: "Byahawe umukozi", IN_PROGRESS: "Birakomeza", RESOLVED: "Byakemuwe", ESCALATED: "Byoherejwe hejuru" },
+  FR: { PENDING: "En attente", ASSIGNED: "Attribué", IN_PROGRESS: "En cours", RESOLVED: "Résolu", ESCALATED: "Escaladé" },
+  SW: { PENDING: "Inasubiri", ASSIGNED: "Imepangiwa", IN_PROGRESS: "Inaendelea", RESOLVED: "Imetatuliwa", ESCALATED: "Imepandishwa" },
+};
+
+type Copy = {
+  eyebrow: string;
+  titlePro: string;
+  titleUser: string;
+  subtitlePro: string;
+  subtitleUser: string;
+  loginGate: string;
+  noConsultations: string;
+  noneAssigned: string;
+  connected: string;
+  waiting: string;
+  languageLabel: string;
+  errLoadConsultations: string;
+  errLoadQueue: string;
+};
+
+const COPY: Record<Language, Copy> = {
+  EN: {
+    eyebrow: "Consultations",
+    titlePro: "Your consultation queue",
+    titleUser: "Your consultations",
+    subtitlePro: "People who requested a human follow-up from chat, waiting for your response.",
+    subtitleUser: "Secure, private conversations with a health worker you've been connected with.",
+    loginGate: "Log in to view your consultations.",
+    noConsultations: "No consultations yet. Ask “Talk to a health worker” from the chat when it's offered.",
+    noneAssigned: "No consultations assigned yet.",
+    connected: "Connected with a professional",
+    waiting: "Waiting to be assigned",
+    languageLabel: "Language",
+    errLoadConsultations: "Couldn't load your consultations right now.",
+    errLoadQueue: "Couldn't load your queue right now.",
+  },
+  RW: {
+    eyebrow: "Ubujyanama",
+    titlePro: "Urutonde rw'ubujyanama",
+    titleUser: "Ubujyanama bwawe",
+    subtitlePro: "Abantu basabye gukurikiranwa n'umuntu nyuma yo kuganira, bategereje igisubizo cyawe.",
+    subtitleUser: "Ibiganiro byizewe kandi byihariye n'umukozi w'ubuzima wahujwe na we.",
+    loginGate: "Injira kugira ngo urebe ubujyanama bwawe.",
+    noConsultations: "Nta bujyanama urafite. Saba “Vugana n'umukozi w'ubuzima” mu kiganiro igihe bitangwa.",
+    noneAssigned: "Nta bujyanama urahabwa.",
+    connected: "Wahujwe n'umukozi w'ubuzima",
+    waiting: "Bitegereje guhabwa umukozi",
+    languageLabel: "Ururimi",
+    errLoadConsultations: "Ntibishoboka gushaka ubujyanama bwawe ubu.",
+    errLoadQueue: "Ntibishoboka gushaka urutonde rwawe ubu.",
+  },
+  FR: {
+    eyebrow: "Consultations",
+    titlePro: "Votre file de consultations",
+    titleUser: "Vos consultations",
+    subtitlePro: "Personnes ayant demandé un suivi humain depuis le chat, en attente de votre réponse.",
+    subtitleUser: "Conversations sécurisées et privées avec un agent de santé auquel vous avez été connecté(e).",
+    loginGate: "Connectez-vous pour consulter vos consultations.",
+    noConsultations: "Aucune consultation pour l'instant. Demandez « Parler à un agent de santé » depuis le chat lorsque cela est proposé.",
+    noneAssigned: "Aucune consultation attribuée pour l'instant.",
+    connected: "Connecté(e) à un professionnel",
+    waiting: "En attente d'attribution",
+    languageLabel: "Langue",
+    errLoadConsultations: "Impossible de charger vos consultations pour le moment.",
+    errLoadQueue: "Impossible de charger votre file pour le moment.",
+  },
+  SW: {
+    eyebrow: "Mashauriano",
+    titlePro: "Foleni yako ya mashauriano",
+    titleUser: "Mashauriano yako",
+    subtitlePro: "Watu walioomba mfuatiliaji wa binadamu kutoka kwenye mazungumzo, wanasubiri jibu lako.",
+    subtitleUser: "Mazungumzo salama na ya faragha na mhudumu wa afya uliyounganishwa naye.",
+    loginGate: "Ingia ili kuona mashauriano yako.",
+    noConsultations: "Bado hakuna mashauriano. Omba “Ongea na mhudumu wa afya” kwenye mazungumzo inapotolewa.",
+    noneAssigned: "Bado hakuna mashauriano yaliyopangiwa.",
+    connected: "Umeunganishwa na mtaalamu",
+    waiting: "Inasubiri kupangiwa",
+    languageLabel: "Lugha",
+    errLoadConsultations: "Imeshindwa kupakia mashauriano yako kwa sasa.",
+    errLoadQueue: "Imeshindwa kupakia foleni yako kwa sasa.",
+  },
+};
+
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString([], { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 export default function ConsultationsPage() {
   const { toast } = useToast();
-  const [language, setLanguage] = useState<Language>("EN");
+  const { language } = useLanguage();
   const [user, setUser] = useState<UserProfile | null | undefined>(undefined);
+  const nav = NAV[language];
+  const t = COPY[language];
 
   useEffect(() => {
     void getCurrentUser().then(setUser);
@@ -39,102 +129,62 @@ export default function ConsultationsPage() {
 
   return (
     <div className="bg-paper">
-      <div className="mx-auto max-w-[1160px] px-8">
-        <header className="flex items-center justify-between border-b border-line py-[22px]">
-          <div className="flex items-center gap-2.5">
-            <Logo size={34} />
-            <span className="font-display text-[22px] font-bold text-teal-900">Inshuti</span>
-          </div>
-          <nav className="flex items-center gap-8 text-[14.5px] font-semibold text-ink-soft">
-            <Link href="/" className="hover:text-teal-700">Home</Link>
-            <Link href="/chat" className="hover:text-teal-700">Chat</Link>
-            <Link href="/my-space" className="hover:text-teal-700">My Space</Link>
-            <Link href="/appointments" className="hover:text-teal-700">Appointments</Link>
-            <span className="text-teal-700">Consultations</span>
-            <Link href="/notifications" className="hover:text-teal-700">Notifications</Link>
-            <Link href="/profile" className="hover:text-teal-700">Profile</Link>
-          </nav>
-          <div className="flex items-center gap-3">
-            <div className="flex rounded-full bg-teal-100 p-[3px] text-[12.5px] font-bold">
-              {(["EN", "RW", "FR", "SW"] as const).map((lang) => (
-                <span
-                  key={lang}
-                  className={`cursor-pointer rounded-full px-2.5 py-1.5 ${language === lang ? "bg-teal-700 text-white" : "text-teal-700"}`}
-                  onClick={() => setLanguage(lang)}
-                >
-                  {lang}
-                </span>
-              ))}
-            </div>
-            {user && <NotificationBell />}
-            {user === null && (
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark"
-              >
-                Log in
-              </Link>
-            )}
-          </div>
-        </header>
-
+      <SiteHeader
+        activeHref="/consultations"
+        navItems={[
+          { href: "/chat", label: nav.chat },
+          { href: "/my-space", label: nav.mySpace },
+          { href: "/appointments", label: nav.appointments },
+          { href: "/consultations", label: nav.consultations },
+          { href: "/profile", label: nav.profile },
+        ]}
+      />
+      <div className="mx-auto max-w-[1160px] px-5 sm:px-8">
         <section className="pb-3 pt-12">
           <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
-            Consultations
+            {t.eyebrow}
           </span>
           <h1 className="mt-3 font-display text-[34px] text-teal-900">
-            {user?.role === "HEALTHCARE_PROFESSIONAL" ? "Your consultation queue" : "Your consultations"}
+            {user?.role === "HEALTHCARE_PROFESSIONAL" ? t.titlePro : t.titleUser}
           </h1>
           <p className="mt-[10px] max-w-[520px] text-[14.5px] leading-[1.6] text-ink-soft">
-            {user?.role === "HEALTHCARE_PROFESSIONAL"
-              ? "People who requested a human follow-up from chat, waiting for your response."
-              : "Secure, private conversations with a health worker you've been connected with."}
+            {user?.role === "HEALTHCARE_PROFESSIONAL" ? t.subtitlePro : t.subtitleUser}
           </p>
         </section>
 
-        {user === undefined && <p className="pb-16 text-sm text-ink-soft">Loading…</p>}
+        {user === undefined && <p className="pb-16 text-sm text-ink-soft">{nav.loading}</p>}
 
         {user === null && (
           <div className="mb-16 rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-8 text-center shadow-card">
-            <p className="text-[14.5px] text-ink-soft">Log in to view your consultations.</p>
+            <p className="text-[14.5px] text-ink-soft">{t.loginGate}</p>
             <Link
               href="/login"
               className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-[11px] text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark"
             >
-              Log in
+              {nav.logIn}
             </Link>
           </div>
         )}
 
-        {user && user.role === "HEALTHCARE_PROFESSIONAL" && <ProfessionalQueue toast={toast} />}
-        {user && user.role !== "HEALTHCARE_PROFESSIONAL" && <MyConsultations toast={toast} />}
+        {user && user.role === "HEALTHCARE_PROFESSIONAL" && <ProfessionalQueue toast={toast} language={language} />}
+        {user && user.role !== "HEALTHCARE_PROFESSIONAL" && <MyConsultations toast={toast} language={language} />}
 
-        <footer className="border-t border-line py-9">
-          <div className="flex flex-wrap items-center justify-between gap-[14px]">
-            <div className="flex items-center gap-2.5">
-              <Logo size={24} />
-              <span className="font-display text-[17px] font-bold text-teal-900">Inshuti</span>
-            </div>
-            <div className="flex gap-[22px] text-[13.5px] font-semibold text-ink-soft">
-              <a href="#" className="hover:text-teal-700">Privacy</a>
-              <a href="#" className="hover:text-teal-700">Terms</a>
-              <Link href="/admin/login" className="hover:text-teal-700">Admin</Link>
-            </div>
-          </div>
-        </footer>
+        <SiteFooter />
       </div>
     </div>
   );
 }
 
-function MyConsultations({ toast }: { toast: (message: string, type?: "success" | "error" | "info") => void }) {
+function MyConsultations({ toast, language }: { toast: (message: string, type?: "success" | "error" | "info") => void; language: Language }) {
+  const t = COPY[language];
+  const statusLabel = STATUS_LABEL[language];
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getMyConsultations()
       .then(setConsultations)
-      .catch(() => toast("Couldn't load your consultations right now.", "error"))
+      .catch(() => toast(t.errLoadConsultations, "error"))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -143,9 +193,7 @@ function MyConsultations({ toast }: { toast: (message: string, type?: "success" 
     <section className="pb-16 pt-5">
       <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white py-1.5 shadow-card">
         {!loading && consultations.length === 0 && (
-          <p className="px-5 pb-5 pt-4 text-[13.5px] text-ink-soft">
-            No consultations yet. Ask &ldquo;Talk to a health worker&rdquo; from the chat when it&apos;s offered.
-          </p>
+          <p className="px-5 pb-5 pt-4 text-[13.5px] text-ink-soft">{t.noConsultations}</p>
         )}
         {consultations.map((c) => (
           <Link
@@ -155,12 +203,12 @@ function MyConsultations({ toast }: { toast: (message: string, type?: "success" 
           >
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold text-ink">
-                {c.assignedTo ? "Connected with a professional" : "Waiting to be assigned"}
+                {c.assignedTo ? t.connected : t.waiting}
               </div>
               <div className="mt-[3px] text-xs text-ink-soft">{formatDateTime(c.createdAt)}</div>
             </div>
             <span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold ${STATUS_STYLE[c.status] ?? "bg-teal-100 text-teal-700"}`}>
-              {c.status}
+              {statusLabel[c.status] ?? c.status}
             </span>
           </Link>
         ))}
@@ -169,14 +217,16 @@ function MyConsultations({ toast }: { toast: (message: string, type?: "success" 
   );
 }
 
-function ProfessionalQueue({ toast }: { toast: (message: string, type?: "success" | "error" | "info") => void }) {
+function ProfessionalQueue({ toast, language }: { toast: (message: string, type?: "success" | "error" | "info") => void; language: Language }) {
+  const t = COPY[language];
+  const statusLabel = STATUS_LABEL[language];
   const [consultations, setConsultations] = useState<ProfessionalConsultation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getProfessionalConsultations()
       .then(setConsultations)
-      .catch(() => toast("Couldn't load your queue right now.", "error"))
+      .catch(() => toast(t.errLoadQueue, "error"))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -185,7 +235,7 @@ function ProfessionalQueue({ toast }: { toast: (message: string, type?: "success
     <section className="pb-16 pt-5">
       <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white py-1.5 shadow-card">
         {!loading && consultations.length === 0 && (
-          <p className="px-5 pb-5 pt-4 text-[13.5px] text-ink-soft">No consultations assigned yet.</p>
+          <p className="px-5 pb-5 pt-4 text-[13.5px] text-ink-soft">{t.noneAssigned}</p>
         )}
         {consultations.map((c) => (
           <Link
@@ -195,10 +245,10 @@ function ProfessionalQueue({ toast }: { toast: (message: string, type?: "success
           >
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold text-ink">{c.patientName}</div>
-              <div className="mt-[3px] text-xs text-ink-soft">{formatDateTime(c.createdAt)} · Language: {c.language}</div>
+              <div className="mt-[3px] text-xs text-ink-soft">{formatDateTime(c.createdAt)} · {t.languageLabel}: {c.language}</div>
             </div>
             <span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold ${STATUS_STYLE[c.status] ?? "bg-teal-100 text-teal-700"}`}>
-              {c.status}
+              {statusLabel[c.status] ?? c.status}
             </span>
           </Link>
         ))}

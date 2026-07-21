@@ -28,6 +28,7 @@ export default function ConsultationThreadPage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     void getCurrentUser().then(setUser);
@@ -59,19 +60,38 @@ export default function ConsultationThreadPage() {
 
   const myRole = user?.role === "HEALTHCARE_PROFESSIONAL" ? "ASSISTANT" : "USER";
 
-  async function handleSend(e: React.FormEvent) {
-    e.preventDefault();
+  async function sendMessage() {
     const trimmed = input.trim();
     if (!trimmed || sending) return;
     setSending(true);
     try {
       await sendConsultationMessage(consultationId, trimmed);
       setInput("");
+      if (textareaRef.current) textareaRef.current.style.height = "auto";
       setMessages(await getConsultationMessages(consultationId));
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to send message", "error");
     } finally {
       setSending(false);
+    }
+  }
+
+  function handleSend(e: React.FormEvent) {
+    e.preventDefault();
+    void sendMessage();
+  }
+
+  function handleInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setInput(e.target.value);
+    const el = e.target;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }
+
+  function handleInputKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      void sendMessage();
     }
   }
 
@@ -126,12 +146,15 @@ export default function ConsultationThreadPage() {
         <div ref={bottomRef} />
       </main>
 
-      <form className="flex gap-[10px] border-t border-line bg-white px-[30px] pb-2 pt-4" onSubmit={(e) => void handleSend(e)}>
-        <input
-          className="flex-1 rounded-full border border-line bg-paper-2 px-[18px] py-[14px] font-body text-[14.5px]"
+      <form className="flex items-end gap-[10px] border-t border-line bg-white px-[30px] pb-2 pt-4" onSubmit={handleSend}>
+        <textarea
+          ref={textareaRef}
+          rows={1}
+          className="max-h-[120px] min-h-[48px] flex-1 resize-none overflow-y-auto rounded-[22px] border border-line bg-paper-2 px-[18px] py-[13px] font-body text-[14.5px] leading-[1.4]"
           placeholder="Type a message…"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={handleInputChange}
+          onKeyDown={handleInputKeyDown}
           disabled={sending}
         />
         <button

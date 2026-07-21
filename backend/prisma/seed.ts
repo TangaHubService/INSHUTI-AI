@@ -14,6 +14,11 @@ import { prisma } from "../src/lib/prisma.js";
 const SUPER_ADMIN = adminRoleSchema.enum.SUPER_ADMIN;
 const REVIEWED = articleStatusSchema.enum.REVIEWED;
 
+// Default super admin account. Override via SEED_SUPER_ADMIN_EMAIL if needed;
+// the password is never hardcoded — it must come from SEED_SUPER_ADMIN_PASSWORD
+// (see .env.example) or, for local/interactive runs, a masked prompt.
+const DEFAULT_SUPER_ADMIN_EMAIL = "sibomanadamascene1999@gmail.com";
+
 // icon/colorToken match the SVG symbol ids and CSS color tokens already used
 // in the design prototype ( test-g/index.html topic cards), so Phase 3 can
 // wire these up without renaming anything.
@@ -582,7 +587,7 @@ async function upsertSuperAdmin() {
     return;
   }
 
-  const email = process.env.SEED_SUPER_ADMIN_EMAIL ?? (await prompt("Super admin email: "));
+  const email = process.env.SEED_SUPER_ADMIN_EMAIL ?? DEFAULT_SUPER_ADMIN_EMAIL;
   const password =
     process.env.SEED_SUPER_ADMIN_PASSWORD ?? (await promptMasked("Super admin password (min 12 chars): "));
   const name = process.env.SEED_SUPER_ADMIN_NAME ?? "Super Admin";

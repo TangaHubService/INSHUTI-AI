@@ -42,6 +42,7 @@ export default function KnowledgeBasePage() {
 
   const [creating, setCreating] = useState(false);
   const [newArticle, setNewArticle] = useState({ topicId: "", titleEn: "", titleRw: "", titleFr: "", titleSw: "" });
+  const [newArticleErrors, setNewArticleErrors] = useState<{ titleEn?: string; titleRw?: string }>({});
 
   async function loadAll() {
     setLoading(true);
@@ -98,6 +99,10 @@ export default function KnowledgeBasePage() {
 
   async function save(status?: ArticleStatus) {
     if (!editingId) return;
+    if (status === "REVIEWED" && (!titleEn.trim() || !bodyEn.trim() || !titleRw.trim() || !bodyRw.trim())) {
+      toast("English and Kinyarwanda title and body are required before marking an article reviewed.", "error");
+      return;
+    }
     setSaving(true);
     try {
       const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
@@ -115,7 +120,11 @@ export default function KnowledgeBasePage() {
   }
 
   async function handleCreate() {
-    if (!newArticle.topicId || !newArticle.titleEn.trim() || !newArticle.titleRw.trim()) {
+    const next: typeof newArticleErrors = {};
+    if (!newArticle.titleEn.trim()) next.titleEn = "Required";
+    if (!newArticle.titleRw.trim()) next.titleRw = "Required";
+    setNewArticleErrors(next);
+    if (!newArticle.topicId || Object.keys(next).length > 0) {
       toast("Pick a topic and fill in both titles.", "error");
       return;
     }
@@ -123,6 +132,7 @@ export default function KnowledgeBasePage() {
       const a = await createKbArticle(newArticle);
       setCreating(false);
       setNewArticle({ topicId: topics[0]?.id ?? "", titleEn: "", titleRw: "", titleFr: "", titleSw: "" });
+      setNewArticleErrors({});
       toast("Article created", "success");
       void loadAll();
       void openEditor(a.id);
@@ -157,8 +167,8 @@ export default function KnowledgeBasePage() {
             <select className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" value={newArticle.topicId} onChange={(e) => setNewArticle({ ...newArticle, topicId: e.target.value })}>
               {topics.map((t) => <option key={t.id} value={t.id}>{t.nameEn}</option>)}
             </select>
-            <input className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" placeholder="Title (English)" value={newArticle.titleEn} onChange={(e) => setNewArticle({ ...newArticle, titleEn: e.target.value })} />
-            <input className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" placeholder="Title (Kinyarwanda)" value={newArticle.titleRw} onChange={(e) => setNewArticle({ ...newArticle, titleRw: e.target.value })} />
+            <input className={`rounded-[10px] border bg-paper-2 px-3.5 py-2.5 text-sm ${newArticleErrors.titleEn ? "border-danger" : "border-line"}`} placeholder="Title (English)" value={newArticle.titleEn} onChange={(e) => setNewArticle({ ...newArticle, titleEn: e.target.value })} />
+            <input className={`rounded-[10px] border bg-paper-2 px-3.5 py-2.5 text-sm ${newArticleErrors.titleRw ? "border-danger" : "border-line"}`} placeholder="Title (Kinyarwanda)" value={newArticle.titleRw} onChange={(e) => setNewArticle({ ...newArticle, titleRw: e.target.value })} />
             <input className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" placeholder="Title (French)" value={newArticle.titleFr} onChange={(e) => setNewArticle({ ...newArticle, titleFr: e.target.value })} />
             <input className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" placeholder="Title (Kiswahili)" value={newArticle.titleSw} onChange={(e) => setNewArticle({ ...newArticle, titleSw: e.target.value })} />
           </div>

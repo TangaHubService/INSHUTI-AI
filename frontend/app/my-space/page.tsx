@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Logo } from "@/components/Logo";
 import { useEffect, useState } from "react";
 
 import {
@@ -9,13 +8,15 @@ import {
   getHistory,
   getSuggestions,
   type ConversationSummary,
-  type Language,
   type Suggestion,
   type TopicCount,
 } from "@/lib/apiClient";
 import { useToast } from "@/lib/useToast";
 import { ConfirmModal } from "@/components/Modal";
-import { NotificationBell } from "@/components/NotificationBell";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+import { useLanguage } from "@/lib/LanguageContext";
+import { NAV } from "@/lib/i18nCommon";
 
 const COLOR_TOKENS: Record<string, { bg: string; fg: string; pillBg: string; pillFg: string }> = {
   coral: { bg: "bg-coral-100", fg: "text-coral-dark", pillBg: "bg-coral-100", pillFg: "text-coral-dark" },
@@ -42,7 +43,8 @@ function relativeTime(iso: string): string {
 
 export default function MySpacePage() {
   const { toast } = useToast();
-  const [language, setLanguage] = useState<Language>("EN");
+  const { language } = useLanguage();
+  const nav = NAV[language];
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [topicCounts, setTopicCounts] = useState<TopicCount[]>([]);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -104,57 +106,26 @@ export default function MySpacePage() {
 
   return (
     <div className="bg-paper">
-      <div className="mx-auto max-w-[1160px] px-8">
-        <header className="flex items-center justify-between border-b border-line py-[22px]">
-          <div className="flex items-center gap-2.5">
-            <Logo size={34} />
-            <span className="font-display text-[22px] font-bold text-teal-900">Inshuti</span>
-          </div>
-          <nav className="flex items-center gap-8 text-[14.5px] font-semibold text-ink-soft">
-            <Link href="/" className="hover:text-teal-700">
-              Home
-            </Link>
-            <Link href="/chat" className="hover:text-teal-700">
-              Chat
-            </Link>
-            <span className="text-teal-700">My Space</span>
-            <Link href="/appointments" className="hover:text-teal-700">
-              Appointments
-            </Link>
-            <Link href="/consultations" className="hover:text-teal-700">
-              Consultations
-            </Link>
-            <Link href="/notifications" className="hover:text-teal-700">
-              Notifications
-            </Link>
-            <Link href="/facility-locator" className="hover:text-teal-700">
-              Find Care
-            </Link>
-            <Link href="/profile" className="hover:text-teal-700">
-              Profile
-            </Link>
-          </nav>
-          <div className="flex items-center gap-3">
-            <div className="flex rounded-full bg-teal-100 p-[3px] text-[12.5px] font-bold">
-              {(["EN", "RW", "FR", "SW"] as const).map((lang) => (
-                <span
-                  key={lang}
-                  className={`cursor-pointer rounded-full px-2.5 py-1.5 ${language === lang ? "bg-teal-700 text-white" : "text-teal-700"}`}
-                  onClick={() => setLanguage(lang)}
-                >
-                  {lang}
-                </span>
-              ))}
-            </div>
-            <NotificationBell />
-            <Link
-              href="/chat"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark"
-            >
-              Start chatting
-            </Link>
-          </div>
-        </header>
+      <SiteHeader
+        activeHref="/my-space"
+        navItems={[
+          { href: "/chat", label: nav.chat },
+          { href: "/my-space", label: nav.mySpace },
+          { href: "/appointments", label: nav.appointments },
+          { href: "/consultations", label: nav.consultations },
+          { href: "/facility-locator", label: nav.findCare },
+          { href: "/profile", label: nav.profile },
+        ]}
+        extraActions={
+          <Link
+            href="/chat"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark"
+          >
+            {nav.startChatting}
+          </Link>
+        }
+      />
+      <div className="mx-auto max-w-[1160px] px-5 sm:px-8">
 
         <section className="pb-3 pt-12">
           <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
@@ -315,25 +286,7 @@ export default function MySpacePage() {
           onConfirm={() => void handleClearHistory()}
           onCancel={() => setShowClearConfirm(false)}
         />
-        <footer className="border-t border-line py-9">
-          <div className="flex flex-wrap items-center justify-between gap-[14px]">
-            <div className="flex items-center gap-2.5">
-              <Logo size={24} />
-              <span className="font-display text-[17px] font-bold text-teal-900">Inshuti</span>
-            </div>
-            <div className="flex gap-[22px] text-[13.5px] font-semibold text-ink-soft">
-              <a href="#" className="hover:text-teal-700">
-                Privacy
-              </a>
-              <a href="#" className="hover:text-teal-700">
-                Terms
-              </a>
-              <a href="/admin/login" className="hover:text-teal-700">
-                Admin
-              </a>
-            </div>
-          </div>
-        </footer>
+        <SiteFooter />
       </div>
     </div>
   );

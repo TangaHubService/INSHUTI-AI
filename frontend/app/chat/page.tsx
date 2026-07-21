@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import { sendChatMessage, type ChatSource, type Language } from "@/lib/apiClient";
+import { sendChatMessage, getCrisisResources, type ChatSource, type CrisisResource, type Language } from "@/lib/apiClient";
 import { useToast } from "@/lib/useToast";
 import { getCurrentUser, requestConsultation, type UserProfile } from "@/lib/userApiClient";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/lib/LanguageContext";
 
 const ANONYMOUS_MODE_KEY = "inshuti_anonymous_mode";
 
@@ -93,13 +95,22 @@ const GREETING: Record<Language, string> = {
 };
 
 export default function ChatPage() {
+  return (
+    <Suspense fallback={null}>
+      <ChatPageInner />
+    </Suspense>
+  );
+}
+
+function ChatPageInner() {
   const { toast } = useToast();
   const router = useRouter();
-  const [language, setLanguage] = useState<Language>("EN");
+  const { language, setLanguage } = useLanguage();
   const [messages, setMessages] = useState<DisplayMessage[]>([
     { role: "bot", content: GREETING.EN, time: nowLabel() },
   ]);
   const [input, setInput] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [sending, setSending] = useState(false);
   const [sources, setSources] = useState<ChatSource[]>([]);
   const [quickReplies, setQuickReplies] = useState<string[]>([]);
@@ -108,6 +119,10 @@ export default function ChatPage() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [canRequestFollowUp, setCanRequestFollowUp] = useState(false);
   const [anonymousMode, setAnonymousMode] = useState(true);
+  const [showCrisisInfo, setShowCrisisInfo] = useState(false);
+  const [crisisResources, setCrisisResources] = useState<CrisisResource[]>([]);
+  const [crisisResourcesLoading, setCrisisResourcesLoading] = useState(false);
+  const crisisInfoRef = useRef<HTMLDivElement>(null);
   const [requestingHelp, setRequestingHelp] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -116,14 +131,36 @@ export default function ChatPage() {
   }, [messages, sending]);
 
   useEffect(() => {
-    setAnonymousMode(localStorage.getItem(ANONYMOUS_MODE_KEY) !== "false");
-    void getCurrentUser().then(setUser);
+    void getCurrentUser().then((loadedUser) => {
+      setUser(loadedUser);
+      const stored = localStorage.getItem(ANONYMOUS_MODE_KEY);
+      // Anonymous by default only for visitors who aren't logged in; a
+      // signed-in user's identity is used unless they explicitly opt out.
+      setAnonymousMode(stored !== null ? stored === "true" : !loadedUser);
+    });
   }, []);
 
   function toggleAnonymousMode() {
     const next = !anonymousMode;
     setAnonymousMode(next);
     localStorage.setItem(ANONYMOUS_MODE_KEY, String(next));
+  }
+
+  async function openCrisisInfo() {
+    setShowCrisisInfo(true);
+    if (crisisResources.length === 0) {
+      setCrisisResourcesLoading(true);
+      try {
+        setCrisisResources(await getCrisisResources());
+      } catch {
+        // Silent — the panel just shows its "no resources" fallback state.
+      } finally {
+        setCrisisResourcesLoading(false);
+      }
+    }
+    requestAnimationFrame(() => {
+      crisisInfoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }
 
   async function handleRequestFollowUp() {
@@ -146,6 +183,7 @@ export default function ChatPage() {
 
     setMessages((prev) => [...prev, { role: "user", content: trimmed, time: nowLabel() }]);
     setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
     setSending(true);
     setQuickReplies([]);
     setCanRequestFollowUp(false);
@@ -174,34 +212,68 @@ export default function ChatPage() {
     }
   }
 
+  const searchParams = useSearchParams();
+  const topicDeepLinkHandled = useRef(false);
+  useEffect(() => {
+    const topicIcon = searchParams.get("topic");
+    if (!topicIcon || topicDeepLinkHandled.current) return;
+    const topic = QUICK_TOPICS.find((t) => t.icon === topicIcon);
+    if (!topic) return;
+    topicDeepLinkHandled.current = true;
+    router.replace("/chat");
+    // Deferred so the language-context value (loaded from localStorage in a
+    // parent effect) has settled before picking which starter text to send.
+    setTimeout(() => {
+      setActiveTopicName(topic.name);
+      void send(topic[`starter${language.charAt(0)}${language.slice(1).toLowerCase()}` as keyof typeof topic] as string);
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     void send(input);
   }
 
+  function handleInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setInput(e.target.value);
+    const el = e.target;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }
+
+  function handleInputKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      void send(input);
+    }
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-paper">
-      <div className="flex items-center justify-between border-b border-line bg-white px-7 py-4">
+      <div className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-3 border-b border-line bg-white px-4 py-3 sm:px-7 sm:py-4">
         <div className="flex items-center gap-[14px]">
           <Link
             href="/"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white"
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-line bg-white"
           >
             <svg width="16" height="16">
               <use href="#i-back" />
             </svg>
           </Link>
-          <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-teal-700">
+          <div className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-full bg-teal-700">
             <svg width="18" height="18" className="text-white">
               <use href="#i-bot" />
             </svg>
           </div>
           <div>
             <div className="text-[14.5px] font-bold text-teal-900">Inshuti Assistant</div>
-            <div className="text-xs text-ink-soft">Anonymous · Private session</div>
+            <div className="text-xs text-ink-soft">
+              {user && !anonymousMode ? `Signed in as ${user.name}` : "Anonymous · Private session"}
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-[14px]">
+        <div className="flex flex-wrap items-center gap-[10px] sm:gap-[14px]">
           {user && (
             <button
               type="button"
@@ -214,17 +286,7 @@ export default function ChatPage() {
               Anonymous mode: {anonymousMode ? "On" : "Off"}
             </button>
           )}
-          <div className="flex rounded-full bg-teal-100 p-[3px] text-[12.5px] font-bold">
-            {(["EN", "RW", "FR", "SW"] as const).map((lang) => (
-              <span
-                key={lang}
-                className={`cursor-pointer rounded-full px-2.5 py-1.5 ${language === lang ? "bg-teal-700 text-white" : "text-teal-700"}`}
-                onClick={() => setLanguage(lang)}
-              >
-                {lang}
-              </span>
-            ))}
-          </div>
+          <LanguageSwitcher value={language} onChange={setLanguage} />
           <Link
             href="/my-space"
             title="My Space"
@@ -242,10 +304,63 @@ export default function ChatPage() {
 
       <div className="bg-gold-100 py-[9px] text-center text-[12.5px] font-semibold text-[#8A5E1E]">
         {language === "RW" ? "Uri mu kaga cyangwa ukeneye ubufasha vuba? " : language === "FR" ? "En crise ou besoin d'aide urgente ? " : language === "SW" ? "Katika hatari au unahitaji msaada wa dharura? " : "In crisis or need urgent help? "}
-        <a href="#crisis-info" className="underline">
+        <a
+          href="#crisis-info"
+          className="underline"
+          onClick={(e) => {
+            e.preventDefault();
+            void openCrisisInfo();
+          }}
+        >
           {language === "RW" ? "Kanda hano ubone ubufasha" : language === "FR" ? "Appuyez ici pour des ressources d'aide immédiate" : language === "SW" ? "Bonyeza hapa kwa usaidizi wa haraka" : "Tap here for immediate support resources"}
         </a>
       </div>
+
+      {showCrisisInfo && (
+        <div id="crisis-info" ref={crisisInfoRef} className="border-b border-line bg-gold-100/40 px-4 py-4 sm:px-7">
+          <div className="mx-auto flex max-w-2xl items-start justify-between gap-3">
+            <div className="flex-1">
+              <div className="text-[13.5px] font-bold text-[#8A5E1E]">
+                {language === "RW" ? "Ubufasha bwihutirwa" : language === "FR" ? "Ressources d'urgence" : language === "SW" ? "Rasilimali za dharura" : "Immediate support resources"}
+              </div>
+              {crisisResourcesLoading ? (
+                <p className="mt-2 text-[13px] text-[#8A5E1E]">
+                  {language === "RW" ? "Turimo gutegura…" : language === "FR" ? "Chargement…" : language === "SW" ? "Inapakia…" : "Loading…"}
+                </p>
+              ) : crisisResources.length === 0 ? (
+                <p className="mt-2 text-[13px] text-[#8A5E1E]">
+                  {language === "RW"
+                    ? "Nta bufasha buboneka ubu. Nyabona vugana n'ivuriro riri hafi."
+                    : language === "FR"
+                      ? "Aucune ressource disponible pour le moment. Contactez un établissement de santé proche."
+                      : language === "SW"
+                        ? "Hakuna rasilimali zinazopatikana kwa sasa. Wasiliana na kituo cha afya kilicho karibu."
+                        : "No resources available right now. Please contact a nearby health facility."}
+                </p>
+              ) : (
+                <ul className="mt-2 flex flex-col gap-1.5">
+                  {crisisResources.map((r) => (
+                    <li key={r.id} className="text-[13px] text-[#8A5E1E]">
+                      <span className="font-semibold">{r.name}</span> — {r.contact}
+                      <span className="text-[#8A5E1E]/70"> ({r.region})</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowCrisisInfo(false)}
+              className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[#8A5E1E] hover:bg-gold-100"
+              aria-label="Close"
+            >
+              <svg width="14" height="14">
+                <use href="#i-close" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid flex-1 grid-cols-1 md:grid-cols-[250px_1fr_280px]">
         <aside className="hidden border-r border-line p-4 px-4 py-[22px] md:block">
@@ -397,11 +512,13 @@ export default function ChatPage() {
       </div>
 
       <form
-        className="flex gap-[10px] border-t border-line bg-white px-[30px] pb-2 pt-4"
+        className="flex items-end gap-[10px] border-t border-line bg-white px-[30px] pb-2 pt-4"
         onSubmit={handleSubmit}
       >
-        <input
-          className="flex-1 rounded-full border border-line bg-paper-2 px-[18px] py-[14px] font-body text-[14.5px]"
+        <textarea
+          ref={textareaRef}
+          rows={1}
+          className="max-h-[120px] min-h-[48px] flex-1 resize-none overflow-y-auto rounded-[22px] border border-line bg-paper-2 px-[18px] py-[13px] font-body text-[14.5px] leading-[1.4]"
           placeholder={
             language === "RW"
               ? "Andika ikibazo cyawe…"
@@ -412,7 +529,8 @@ export default function ChatPage() {
                   : "Type your question in English or Kinyarwanda…"
           }
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={handleInputChange}
+          onKeyDown={handleInputKeyDown}
           disabled={sending}
         />
         <button

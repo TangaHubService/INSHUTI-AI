@@ -18,6 +18,7 @@ import {
   type ManagedAdmin,
   type ManagedUser,
 } from "@/lib/adminApiClient";
+import { isValidEmail, isStrongPassword } from "@/lib/validation";
 
 const ROLE_LABEL: Record<string, string> = {
   TEENAGER: "Teenager / User",
@@ -40,6 +41,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [newAdmin, setNewAdmin] = useState({ name: "", email: "", password: "", role: "MODERATOR" as AdminRole });
   const [creating, setCreating] = useState(false);
+  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string }>({});
 
   async function load() {
     const [u, a] = await Promise.all([getManagedUsers(), getManagedAdmins()]);
@@ -74,13 +76,29 @@ export default function AdminUsersPage() {
     }
   }
 
+  function validateNewAdmin(): boolean {
+    const next: typeof errors = {};
+    if (!newAdmin.name.trim()) next.name = "Required";
+    if (!newAdmin.email.trim()) next.email = "Required";
+    else if (!isValidEmail(newAdmin.email)) next.email = "Enter a valid email address.";
+    if (!newAdmin.password) next.password = "Required";
+    else if (!isStrongPassword(newAdmin.password)) next.password = "Must be at least 8 characters and include a letter and a number.";
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }
+
   async function handleCreateAdmin(e: React.FormEvent) {
     e.preventDefault();
+    if (!validateNewAdmin()) {
+      toast("Please fix the highlighted fields.", "error");
+      return;
+    }
     setCreating(true);
     try {
       await createManagedAdmin(newAdmin);
       toast("Admin created", "success");
       setNewAdmin({ name: "", email: "", password: "", role: "MODERATOR" });
+      setErrors({});
       await load();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to create admin", "error");
@@ -191,27 +209,28 @@ export default function AdminUsersPage() {
               <form onSubmit={(e) => void handleCreateAdmin(e)} className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
                 <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">Name</label>
                 <input
-                  className="mb-3.5 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm"
+                  className={`w-full rounded-[10px] border bg-paper-2 px-3.5 py-3 text-sm ${errors.name ? "border-danger" : "border-line"}`}
                   value={newAdmin.name}
                   onChange={(e) => setNewAdmin((prev) => ({ ...prev, name: e.target.value }))}
-                  required
                 />
+                <p className="mb-2.5 mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.name}</p>
+
                 <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">Email</label>
                 <input
                   type="email"
-                  className="mb-3.5 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm"
+                  className={`w-full rounded-[10px] border bg-paper-2 px-3.5 py-3 text-sm ${errors.email ? "border-danger" : "border-line"}`}
                   value={newAdmin.email}
                   onChange={(e) => setNewAdmin((prev) => ({ ...prev, email: e.target.value }))}
-                  required
                 />
+                <p className="mb-2.5 mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.email}</p>
+
                 <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">Temporary password</label>
                 <PasswordInput
-                  className="mb-3.5 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm"
+                  className={`w-full rounded-[10px] border bg-paper-2 px-3.5 py-3 text-sm ${errors.password ? "border-danger" : "border-line"}`}
                   value={newAdmin.password}
                   onChange={(e) => setNewAdmin((prev) => ({ ...prev, password: e.target.value }))}
-                  minLength={8}
-                  required
                 />
+                <p className="mb-2.5 mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.password}</p>
                 <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">Role</label>
                 <select
                   className="mb-4 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm"

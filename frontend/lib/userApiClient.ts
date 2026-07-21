@@ -63,6 +63,19 @@ export async function logoutUser(): Promise<void> {
   await apiFetch("/api/users/logout", { method: "POST" });
 }
 
+export function dashboardPathForRole(role: UserRole): string {
+  switch (role) {
+    case "HEALTHCARE_PROFESSIONAL":
+      return "/professional";
+    case "GOVERNMENT_USER":
+      return "/government";
+    case "PARENT_GUARDIAN":
+      return "/parent";
+    default:
+      return "/chat";
+  }
+}
+
 export async function getCurrentUser(): Promise<UserProfile | null> {
   const res = await apiFetch("/api/users/me");
   if (!res.ok) return null;

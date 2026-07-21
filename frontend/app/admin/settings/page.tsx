@@ -39,6 +39,7 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [newResource, setNewResource] = useState({ name: "", contact: "", region: "" });
+  const [newResourceErrors, setNewResourceErrors] = useState<{ name?: boolean; contact?: boolean; region?: boolean }>({});
   const [deleteTarget, setDeleteTarget] = useState<CrisisResource | null>(null);
 
   useEffect(() => {
@@ -65,7 +66,13 @@ export default function AdminSettingsPage() {
   }
 
   async function handleAddResource() {
-    if (!newResource.name || !newResource.contact || !newResource.region) {
+    const errs = {
+      name: !newResource.name.trim(),
+      contact: !newResource.contact.trim(),
+      region: !newResource.region.trim(),
+    };
+    setNewResourceErrors(errs);
+    if (errs.name || errs.contact || errs.region) {
       toast("Fill in all fields", "error");
       return;
     }
@@ -73,6 +80,7 @@ export default function AdminSettingsPage() {
       const resource = await createCrisisResource({ ...newResource, order: resources.length + 1 });
       setResources((prev) => [...prev, resource]);
       setNewResource({ name: "", contact: "", region: "" });
+      setNewResourceErrors({});
       toast("Resource added", "success");
     } catch {
       toast("Failed to add resource", "error");
@@ -216,19 +224,19 @@ export default function AdminSettingsPage() {
 
             <div className="mt-3 flex items-center gap-2.5">
               <input
-                className="flex-1 rounded-lg border border-line bg-paper-2 px-3 py-2 text-[13px]"
+                className={`flex-1 rounded-lg border bg-paper-2 px-3 py-2 text-[13px] ${newResourceErrors.name ? "border-danger" : "border-line"}`}
                 placeholder="Name"
                 value={newResource.name}
                 onChange={(e) => setNewResource({ ...newResource, name: e.target.value })}
               />
               <input
-                className="flex-1 rounded-lg border border-line bg-paper-2 px-3 py-2 text-[13px]"
+                className={`flex-1 rounded-lg border bg-paper-2 px-3 py-2 text-[13px] ${newResourceErrors.contact ? "border-danger" : "border-line"}`}
                 placeholder="Contact"
                 value={newResource.contact}
                 onChange={(e) => setNewResource({ ...newResource, contact: e.target.value })}
               />
               <input
-                className="w-[120px] rounded-lg border border-line bg-paper-2 px-3 py-2 text-[13px]"
+                className={`w-[120px] rounded-lg border bg-paper-2 px-3 py-2 text-[13px] ${newResourceErrors.region ? "border-danger" : "border-line"}`}
                 placeholder="Region"
                 value={newResource.region}
                 onChange={(e) => setNewResource({ ...newResource, region: e.target.value })}

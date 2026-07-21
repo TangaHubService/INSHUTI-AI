@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Lets the header nav scroll horizontally instead of wrapping/overlapping
+   when a translated label (e.g. Kinyarwanda, French) runs long. */
+.no-scrollbar{ scrollbar-width:none; -ms-overflow-style:none; }
+.no-scrollbar::-webkit-scrollbar{ display:none; }
+
 /* Below this line: ported from the design prototype' assets/style.css
    (../ test-g/assets/style.css) almost as-is, alongside Tailwind. */
 

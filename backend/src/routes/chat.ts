@@ -35,6 +35,11 @@ async function getOrCreateConversation(sessionId: string, language: Language) {
   return prisma.conversation.create({ data: { sessionId, language } });
 }
 
+router.get("/crisis-resources", async (_req, res) => {
+  const resources = await prisma.crisisResource.findMany({ orderBy: { order: "asc" } });
+  res.json({ resources });
+});
+
 router.post("/", async (req, res) => {
   const parsed = chatRequestSchema.safeParse(req.body);
   if (!parsed.success) {

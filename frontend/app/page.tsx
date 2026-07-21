@@ -1,18 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 
-import { Logo } from "@/components/Logo";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+import { useLanguage } from "@/lib/LanguageContext";
 import type { Language } from "@/lib/apiClient";
-
-const LANGUAGES: Language[] = ["EN", "RW", "FR", "SW"];
 
 type Topic = { icon: string; bg: string; fg: string; name: string; body: string };
 type Feature = { icon: string; title: string; body: string };
 
 type Copy = {
-  nav: { chat: string; mySpace: string; appointments: string; findCare: string; portals: string; login: string; register: string };
+  nav: {
+    chat: string;
+    mySpace: string;
+    appointments: string;
+    findCare: string;
+    portals: string;
+    login: string;
+    register: string;
+    goToChat: string;
+    goToDashboard: string;
+    logOut: string;
+  };
   hero: {
     eyebrow: string;
     titleLead: string;
@@ -33,7 +43,7 @@ type Copy = {
 
 const COPY: Record<Language, Copy> = {
   EN: {
-    nav: { chat: "Chat", mySpace: "My Space", appointments: "Appointments", findCare: "Find Care", portals: "Portals", login: "Log in", register: "Register" },
+    nav: { chat: "Chat", mySpace: "My Space", appointments: "Appointments", findCare: "Find Care", portals: "Portals", login: "Log in", register: "Register", goToChat: "Go to Chat", goToDashboard: "Go to Dashboard", logOut: "Log out" },
     hero: {
       eyebrow: "Free · Anonymous · Bilingual",
       titleLead: "Ask anything about your health. ",
@@ -94,7 +104,7 @@ const COPY: Record<Language, Copy> = {
     },
   },
   RW: {
-    nav: { chat: "Ganira", mySpace: "Umwanya wanjye", appointments: "Gahunda", findCare: "Shaka Ubuvuzi", portals: "Urubuga", login: "Injira", register: "Iyandikishe" },
+    nav: { chat: "Ganira", mySpace: "Umwanya wanjye", appointments: "Gahunda", findCare: "Shaka Ubuvuzi", portals: "Urubuga", login: "Injira", register: "Iyandikishe", goToChat: "Jya ku Kiganiro", goToDashboard: "Jya ku Kibaho", logOut: "Sohoka" },
     hero: {
       eyebrow: "Ku buntu · Wihishe · Indimi ebyiri",
       titleLead: "Baza ikibazo icyo aricyo cyose ku buzima bwawe. ",
@@ -155,7 +165,7 @@ const COPY: Record<Language, Copy> = {
     },
   },
   FR: {
-    nav: { chat: "Discuter", mySpace: "Mon Espace", appointments: "Rendez-vous", findCare: "Trouver des Soins", portals: "Portails", login: "Connexion", register: "S'inscrire" },
+    nav: { chat: "Discuter", mySpace: "Mon Espace", appointments: "Rendez-vous", findCare: "Trouver des Soins", portals: "Portails", login: "Connexion", register: "S'inscrire", goToChat: "Aller au Chat", goToDashboard: "Aller au Tableau de bord", logOut: "Déconnexion" },
     hero: {
       eyebrow: "Gratuit · Anonyme · Bilingue",
       titleLead: "Posez toutes vos questions de santé. ",
@@ -216,7 +226,7 @@ const COPY: Record<Language, Copy> = {
     },
   },
   SW: {
-    nav: { chat: "Ongea", mySpace: "Nafasi Yangu", appointments: "Miadi", findCare: "Tafuta Huduma", portals: "Milango", login: "Ingia", register: "Jisajili" },
+    nav: { chat: "Ongea", mySpace: "Nafasi Yangu", appointments: "Miadi", findCare: "Tafuta Huduma", portals: "Milango", login: "Ingia", register: "Jisajili", goToChat: "Nenda kwa Mazungumzo", goToDashboard: "Nenda kwa Dashibodi", logOut: "Toka" },
     hero: {
       eyebrow: "Bure · Bila Jina · Lugha Mbili",
       titleLead: "Uliza chochote kuhusu afya yako. ",
@@ -279,63 +289,21 @@ const COPY: Record<Language, Copy> = {
 };
 
 export default function Home() {
-  const [language, setLanguage] = useState<Language>("EN");
+  const { language } = useLanguage();
   const t = COPY[language];
 
   return (
     <div className="bg-paper">
-      <div className="mx-auto max-w-[1160px] px-8">
-        <header className="flex items-center justify-between border-b border-line py-[22px]">
-          <div className="flex items-center gap-2.5">
-            <Logo size={34} />
-            <span className="font-display text-[22px] font-bold text-teal-900">Inshuti</span>
-          </div>
-          <nav className="flex items-center gap-8 text-[14.5px] font-semibold text-ink-soft">
-            <Link href="/chat" className="hover:text-teal-700">
-              {t.nav.chat}
-            </Link>
-            <Link href="/my-space" className="hover:text-teal-700">
-              {t.nav.mySpace}
-            </Link>
-            <Link href="/appointments" className="hover:text-teal-700">
-              {t.nav.appointments}
-            </Link>
-            <Link href="/facility-locator" className="hover:text-teal-700">
-              {t.nav.findCare}
-            </Link>
-            <a href="#" className="hover:text-teal-700">
-              {t.nav.portals}
-            </a>
-          </nav>
-          <div className="flex items-center gap-3">
-            <div className="flex rounded-full bg-teal-100 p-[3px] text-[12.5px] font-bold">
-              {LANGUAGES.map((lang) => (
-                <button
-                  key={lang}
-                  type="button"
-                  onClick={() => setLanguage(lang)}
-                  className={`rounded-full px-2.5 py-1.5 transition ${
-                    language === lang ? "bg-teal-700 text-white" : "text-teal-700"
-                  }`}
-                >
-                  {lang}
-                </button>
-              ))}
-            </div>
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center gap-2 rounded-full border-[1.5px] border-teal-700 px-4 py-[9px] text-[13px] font-semibold text-teal-700 transition hover:-translate-y-px hover:bg-teal-100"
-            >
-              {t.nav.login}
-            </Link>
-            <Link
-              href="/register"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark"
-            >
-              {t.nav.register}
-            </Link>
-          </div>
-        </header>
+      <SiteHeader
+        activeHref="/"
+        navItems={[
+          { href: "/chat", label: t.nav.chat },
+          { href: "/my-space", label: t.nav.mySpace },
+          { href: "/appointments", label: t.nav.appointments },
+          { href: "/facility-locator", label: t.nav.findCare },
+        ]}
+      />
+      <div className="mx-auto max-w-[1160px] px-5 sm:px-8">
 
         <section className="grid grid-cols-1 items-center gap-14 py-[76px] pb-[88px] md:grid-cols-[1.05fr_0.95fr]">
           <div>
@@ -434,7 +402,7 @@ export default function Home() {
           <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
             {t.topics.items.map((topic) => (
               <Link
-                href="/chat"
+                href={`/chat?topic=${topic.icon}`}
                 key={topic.name}
                 className="flex cursor-pointer flex-col gap-[14px] rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[26px] shadow-card transition hover:-translate-y-1 hover:shadow-soft"
               >
@@ -498,26 +466,7 @@ export default function Home() {
           </div>
         </section>
 
-        <footer className="border-t border-line py-9">
-          <div className="flex flex-wrap items-center justify-between gap-[14px]">
-            <div className="flex items-center gap-2.5">
-              <Logo size={24} />
-              <span className="font-display text-[17px] font-bold text-teal-900">Inshuti</span>
-            </div>
-            <div className="flex gap-[22px] text-[13.5px] font-semibold text-ink-soft">
-              <a href="#" className="hover:text-teal-700">
-                {t.footer.privacy}
-              </a>
-              <a href="#" className="hover:text-teal-700">
-                {t.footer.terms}
-              </a>
-              <a href="/admin/login" className="hover:text-teal-700">
-                {t.footer.admin}
-              </a>
-            </div>
-          </div>
-          <p className="mt-4 max-w-[640px] text-[12.5px] leading-[1.6] text-ink-soft">{t.footer.disclaimer}</p>
-        </footer>
+        <SiteFooter disclaimer={t.footer.disclaimer} />
       </div>
     </div>
   );

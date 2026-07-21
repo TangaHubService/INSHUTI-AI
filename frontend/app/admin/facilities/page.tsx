@@ -16,6 +16,7 @@ import {
   type FacilityType,
   type HealthFacility,
 } from "@/lib/adminApiClient";
+import { isValidLatitude, isValidLongitude } from "@/lib/validation";
 
 const FACILITY_TYPES: FacilityType[] = ["HOSPITAL", "HEALTH_CENTRE", "CLINIC", "PHARMACY"];
 const TYPE_LABEL: Record<FacilityType, string> = {
@@ -48,6 +49,7 @@ export default function AdminFacilitiesPage() {
   const [servicesInput, setServicesInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<HealthFacility | null>(null);
+  const [errors, setErrors] = useState<{ name?: string; district?: string; sector?: string; latitude?: string; longitude?: string }>({});
 
   async function loadAll() {
     setLoading(true);
@@ -70,6 +72,7 @@ export default function AdminFacilitiesPage() {
     setEditingId(null);
     setForm(EMPTY_FORM);
     setServicesInput("");
+    setErrors({});
     setDrawerOpen(true);
   }
 
@@ -86,12 +89,24 @@ export default function AdminFacilitiesPage() {
       contact: facility.contact ?? "",
     });
     setServicesInput(facility.services.join(", "));
+    setErrors({});
     setDrawerOpen(true);
   }
 
+  function validate(): boolean {
+    const next: typeof errors = {};
+    if (!form.name.trim()) next.name = "Name is required.";
+    if (!form.district.trim()) next.district = "District is required.";
+    if (!form.sector.trim()) next.sector = "Sector is required.";
+    if (!isValidLatitude(form.latitude)) next.latitude = "Latitude must be between -90 and 90.";
+    if (!isValidLongitude(form.longitude)) next.longitude = "Longitude must be between -180 and 180.";
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }
+
   async function handleSave() {
-    if (!form.name.trim() || !form.district.trim() || !form.sector.trim()) {
-      toast("Name, district, and sector are required.", "error");
+    if (!validate()) {
+      toast("Please fix the highlighted fields.", "error");
       return;
     }
     setSaving(true);
@@ -175,7 +190,8 @@ export default function AdminFacilitiesPage() {
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title={editingId ? "Edit Facility" : "New Facility"}>
         <div className="flex flex-col gap-4">
           <label className="text-[12.5px] font-bold text-ink-soft">Name</label>
-          <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <input className={`rounded-[10px] border bg-white px-[14px] py-3 text-sm ${errors.name ? "border-danger" : "border-line"}`} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          {errors.name && <p className="-mt-2 text-xs font-semibold text-danger">{errors.name}</p>}
 
           <label className="text-[12.5px] font-bold text-ink-soft">Type</label>
           <select className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as FacilityType })}>
@@ -188,31 +204,35 @@ export default function AdminFacilitiesPage() {
               <input
                 type="number"
                 step="any"
-                className="mt-1 w-full rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm"
+                className={`mt-1 w-full rounded-[10px] border bg-white px-[14px] py-3 text-sm ${errors.latitude ? "border-danger" : "border-line"}`}
                 value={form.latitude}
                 onChange={(e) => setForm({ ...form, latitude: Number(e.target.value) })}
               />
+              {errors.latitude && <p className="mt-1 text-xs font-semibold text-danger">{errors.latitude}</p>}
             </div>
             <div>
               <label className="text-[12.5px] font-bold text-ink-soft">Longitude</label>
               <input
                 type="number"
                 step="any"
-                className="mt-1 w-full rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm"
+                className={`mt-1 w-full rounded-[10px] border bg-white px-[14px] py-3 text-sm ${errors.longitude ? "border-danger" : "border-line"}`}
                 value={form.longitude}
                 onChange={(e) => setForm({ ...form, longitude: Number(e.target.value) })}
               />
+              {errors.longitude && <p className="mt-1 text-xs font-semibold text-danger">{errors.longitude}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-[12.5px] font-bold text-ink-soft">District</label>
-              <input className="mt-1 w-full rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} />
+              <input className={`mt-1 w-full rounded-[10px] border bg-white px-[14px] py-3 text-sm ${errors.district ? "border-danger" : "border-line"}`} value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} />
+              {errors.district && <p className="mt-1 text-xs font-semibold text-danger">{errors.district}</p>}
             </div>
             <div>
               <label className="text-[12.5px] font-bold text-ink-soft">Sector</label>
-              <input className="mt-1 w-full rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })} />
+              <input className={`mt-1 w-full rounded-[10px] border bg-white px-[14px] py-3 text-sm ${errors.sector ? "border-danger" : "border-line"}`} value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })} />
+              {errors.sector && <p className="mt-1 text-xs font-semibold text-danger">{errors.sector}</p>}
             </div>
           </div>
 

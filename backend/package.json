@@ -19,6 +19,7 @@
     "dev:db:push": "npm run dev:db:sync && prisma db push --schema=./prisma/schema.sqlite.prisma",
     "dev:db:seed": "tsx prisma/seed.ts",
     "admin:reset-password": "tsx scripts/reset-admin-password.ts",
+    "admin:check-login": "tsx scripts/check-admin-login.ts",
     "test:chat": "tsx scripts/test-chat.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -77,9 +77,9 @@ export const NAV: Record<Language, {
   },
 };
 
-export const FOOTER: Record<Language, { privacy: string; terms: string; admin: string }> = {
-  EN: { privacy: "Privacy", terms: "Terms", admin: "Admin" },
-  RW: { privacy: "Ibanga", terms: "Amabwiriza", admin: "Ubuyobozi" },
-  FR: { privacy: "Confidentialité", terms: "Conditions", admin: "Admin" },
-  SW: { privacy: "Faragha", terms: "Masharti", admin: "Msimamizi" },
+export const FOOTER: Record<Language, { privacy: string; terms: string; login: string }> = {
+  EN: { privacy: "Privacy", terms: "Terms", login: "Log in" },
+  RW: { privacy: "Ibanga", terms: "Amabwiriza", login: "Injira" },
+  FR: { privacy: "Confidentialité", terms: "Conditions", login: "Connexion" },
+  SW: { privacy: "Faragha", terms: "Masharti", login: "Ingia" },
 };

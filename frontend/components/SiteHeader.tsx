@@ -106,7 +106,7 @@ export function SiteHeader({
             {nav.register}
           </Link>
           <Link
-            href="/login"
+            href="/admin/login"
             className="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark"
           >
             {nav.logIn}

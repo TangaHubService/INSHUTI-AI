@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { AdminShell } from "@/components/AdminShell";
+import { AppShell } from "@/components/AppShell";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
 import { useToast } from "@/lib/useToast";
 import { PasswordInput } from "@/components/PasswordInput";
@@ -120,7 +120,7 @@ export default function AdminUsersPage() {
   if (authLoading || !admin) return null;
 
   return (
-    <AdminShell active="/admin/users" admin={admin}>
+    <AppShell active="/admin/users" session={{ kind: "admin", admin }}>
       <div className="mb-[22px]">
         <h1 className="font-display text-[26px] text-teal-900">Users &amp; Admins</h1>
         <p className="mt-1 text-sm text-ink-soft">Manage app accounts, professional approvals, and the admin team.</p>
@@ -253,6 +253,6 @@ export default function AdminUsersPage() {
           </div>
         </>
       )}
-    </AdminShell>
+    </AppShell>
   );
 }

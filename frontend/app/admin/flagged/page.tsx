@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { AdminShell } from "@/components/AdminShell";
+import { AppShell } from "@/components/AppShell";
 import { Drawer } from "@/components/Drawer";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
 import { useToast } from "@/lib/useToast";
@@ -103,7 +103,7 @@ export default function FlaggedContentPage() {
   if (authLoading || !admin) return null;
 
   return (
-    <AdminShell active="/admin/flagged" admin={admin}>
+    <AppShell active="/admin/flagged" session={{ kind: "admin", admin }}>
       <div className="mb-[22px]">
         <h1 className="font-display text-[26px] text-teal-900">Flagged Content</h1>
         <p className="mt-1 text-sm text-ink-soft">Messages flagged for crisis language, low confidence, or a user report.</p>
@@ -196,6 +196,6 @@ export default function FlaggedContentPage() {
           </div>
         )}
       </Drawer>
-    </AdminShell>
+    </AppShell>
   );
 }

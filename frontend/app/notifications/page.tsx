@@ -1,17 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useState } from "react";
 
 import { useToast } from "@/lib/useToast";
-import { SiteHeader } from "@/components/SiteHeader";
-import { SiteFooter } from "@/components/SiteFooter";
+import { AppShell } from "@/components/AppShell";
 import { useLanguage } from "@/lib/LanguageContext";
-import { NAV } from "@/lib/i18nCommon";
+import { useRequireUser } from "@/lib/useUserAuth";
 import type { Language } from "@/lib/apiClient";
 import {
-  getCurrentUser,
   getNotificationPrefs,
   getNotifications,
   markAllNotificationsRead,
@@ -21,7 +18,6 @@ import {
   type NotificationChannel,
   type NotificationPrefs,
   type NotificationType,
-  type UserProfile,
 } from "@/lib/userApiClient";
 
 const TYPE_LABEL: Record<Language, Record<NotificationType, string>> = {
@@ -187,9 +183,8 @@ export default function NotificationsPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { language } = useLanguage();
-  const nav = NAV[language];
+  const { user, loading: authLoading } = useRequireUser();
   const t = COPY[language];
-  const [user, setUser] = useState<UserProfile | null | undefined>(undefined);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
   const [saving, setSaving] = useState(false);
@@ -201,11 +196,9 @@ export default function NotificationsPage() {
   }
 
   useEffect(() => {
-    void getCurrentUser().then((u) => {
-      setUser(u);
-      if (u) void loadAll();
-    });
-  }, []);
+    if (user) void loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   function toggle(type: NotificationType, channel: NotificationChannel) {
     if (!prefs) return;
@@ -240,20 +233,12 @@ export default function NotificationsPage() {
     if (href) router.push(href);
   }
 
+  if (authLoading || !user) return null;
+
   return (
-    <div className="bg-paper">
-      <SiteHeader
-        activeHref="/notifications"
-        navItems={[
-          { href: "/chat", label: nav.chat },
-          { href: "/my-space", label: nav.mySpace },
-          { href: "/appointments", label: nav.appointments },
-          { href: "/consultations", label: nav.consultations },
-          { href: "/profile", label: nav.profile },
-        ]}
-      />
-      <div className="mx-auto max-w-[1160px] px-5 sm:px-8">
-        <section className="pb-3 pt-12">
+    <AppShell active="/notifications" session={{ kind: "user", user }}>
+      <div className="mx-auto max-w-[1160px]">
+        <section className="pb-3">
           <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
             {t.eyebrow}
           </span>
@@ -263,22 +248,7 @@ export default function NotificationsPage() {
           </p>
         </section>
 
-        {user === undefined && <p className="pb-16 text-sm text-ink-soft">{t.loading}</p>}
-
-        {user === null && (
-          <div className="mb-16 rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-8 text-center shadow-card">
-            <p className="text-[14.5px] text-ink-soft">{t.loginGate}</p>
-            <Link
-              href="/login"
-              className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-[11px] text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark"
-            >
-              {t.logIn}
-            </Link>
-          </div>
-        )}
-
-        {user && (
-          <section className="grid grid-cols-1 items-start gap-4 pb-16 pt-5 lg:grid-cols-[1fr_1.1fr]">
+        <section className="grid grid-cols-1 items-start gap-4 pb-16 pt-5 lg:grid-cols-[1fr_1.1fr]">
             <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
               <h3 className="mb-4 text-base text-teal-900">{t.preferences}</h3>
               {prefs && (
@@ -345,9 +315,7 @@ export default function NotificationsPage() {
               ))}
             </div>
           </section>
-        )}
-        <SiteFooter />
       </div>
-    </div>
+    </AppShell>
   );
 }

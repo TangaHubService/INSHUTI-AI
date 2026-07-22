@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { AdminShell } from "@/components/AdminShell";
+import { AppShell } from "@/components/AppShell";
 import { ConfirmModal } from "@/components/Modal";
 import {
   createCrisisResource,
@@ -110,7 +110,7 @@ export default function AdminSettingsPage() {
   if (authLoading || !admin) return null;
 
   return (
-    <AdminShell active="/admin/settings" admin={admin}>
+    <AppShell active="/admin/settings" session={{ kind: "admin", admin }}>
       <div className="mb-[22px]">
         <h1 className="font-display text-[26px] text-teal-900">Settings</h1>
         <p className="mt-1 text-sm text-ink-soft">AI behavior and crisis-support resources.</p>
@@ -260,6 +260,6 @@ export default function AdminSettingsPage() {
         onConfirm={() => deleteTarget && void handleDeleteResource(deleteTarget.id)}
         onCancel={() => setDeleteTarget(null)}
       />
-    </AdminShell>
+    </AppShell>
   );
 }

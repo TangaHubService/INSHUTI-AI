@@ -1,18 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Logo } from "@/components/Logo";
 import { useEffect, useState } from "react";
 
-import { NotificationBell } from "@/components/NotificationBell";
-import type { Language } from "@/lib/apiClient";
+import { AppShell } from "@/components/AppShell";
+import { useRequireUser } from "@/lib/useUserAuth";
 import {
-  getCurrentUser,
   getMyAppointments,
   getNotifications,
   type AppNotification,
   type Appointment,
-  type UserProfile,
 } from "@/lib/userApiClient";
 
 const RESOURCE_TOPICS = [
@@ -29,15 +26,10 @@ function formatDateTime(iso: string): string {
 }
 
 export default function ParentPortalPage() {
-  const [language, setLanguage] = useState<Language>("EN");
-  const [user, setUser] = useState<UserProfile | null | undefined>(undefined);
+  const { user, loading: authLoading } = useRequireUser();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    void getCurrentUser().then(setUser);
-  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -52,52 +44,26 @@ export default function ParentPortalPage() {
       .finally(() => setLoading(false));
   }, [user]);
 
+  if (authLoading || !user) return null;
+
   const upcoming = appointments.filter((a) => a.status === "CONFIRMED" || a.status === "REQUESTED" || a.status === "RESCHEDULED").slice(0, 4);
 
   return (
-    <div className="bg-paper">
-      <div className="mx-auto max-w-[1160px] px-8">
-        <header className="flex items-center justify-between border-b border-line py-[22px]">
-          <div className="flex items-center gap-2.5">
-            <Logo size={34} />
-            <span className="font-display text-[22px] font-bold text-teal-900">Inshuti</span>
-          </div>
-          <nav className="flex items-center gap-8 text-[14.5px] font-semibold text-ink-soft">
-            <span className="text-teal-700">Dashboard</span>
-            <Link href="/chat" className="hover:text-teal-700">Chat</Link>
-            <Link href="/appointments" className="hover:text-teal-700">Appointments</Link>
-            <Link href="/notifications" className="hover:text-teal-700">Notifications</Link>
-            <Link href="/profile" className="hover:text-teal-700">Profile</Link>
-          </nav>
-          <div className="flex items-center gap-3">
-            <div className="flex rounded-full bg-teal-100 p-[3px] text-[12.5px] font-bold">
-              {(["EN", "RW", "FR", "SW"] as const).map((lang) => (
-                <span
-                  key={lang}
-                  className={`cursor-pointer rounded-full px-2.5 py-1.5 ${language === lang ? "bg-teal-700 text-white" : "text-teal-700"}`}
-                  onClick={() => setLanguage(lang)}
-                >
-                  {lang}
-                </span>
-              ))}
-            </div>
-            {user && <NotificationBell />}
-          </div>
-        </header>
-
-        <section className="pb-3 pt-12">
+    <AppShell active="/parent" session={{ kind: "user", user }}>
+      <div className="mx-auto max-w-[1160px]">
+        <section className="pb-3">
           <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
             Parent & Guardian Portal
           </span>
           <h1 className="mt-3 font-display text-[34px] text-teal-900">
-            {user ? `Welcome, ${user.name.split(" ")[0]}` : "Welcome"}
+            Welcome, {user.name.split(" ")[0]}
           </h1>
           <p className="mt-[10px] max-w-[560px] text-[14.5px] leading-[1.6] text-ink-soft">
             Resources, appointments, and updates in one place.
           </p>
         </section>
 
-        {user === undefined || loading ? (
+        {loading ? (
           <p className="pb-16 text-sm text-ink-soft">Loading…</p>
         ) : (
           <section className="grid grid-cols-1 gap-4 pb-16 lg:grid-cols-[1.2fr_1fr]">
@@ -158,6 +124,6 @@ export default function ParentPortalPage() {
           </section>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }

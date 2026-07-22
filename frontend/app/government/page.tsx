@@ -1,24 +1,17 @@
 "use client";
 
-import Link from "next/link";
-import { Logo } from "@/components/Logo";
 import { useEffect, useState } from "react";
 
-import { NotificationBell } from "@/components/NotificationBell";
-import type { Language } from "@/lib/apiClient";
-import { getCurrentUser, getGovernmentStats, type GovernmentStats, type UserProfile } from "@/lib/userApiClient";
+import { AppShell } from "@/components/AppShell";
+import { useRequireUser } from "@/lib/useUserAuth";
+import { getGovernmentStats, type GovernmentStats } from "@/lib/userApiClient";
 
 const TOPIC_BAR_COLORS = ["bg-coral", "bg-teal-600", "bg-gold", "bg-teal-700", "bg-coral-dark", "bg-teal-100"];
 
 export default function GovernmentPortalPage() {
-  const [language, setLanguage] = useState<Language>("EN");
-  const [user, setUser] = useState<UserProfile | null | undefined>(undefined);
+  const { user, loading: authLoading } = useRequireUser();
   const [stats, setStats] = useState<GovernmentStats | null>(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    void getCurrentUser().then(setUser);
-  }, []);
 
   useEffect(() => {
     if (user?.role !== "GOVERNMENT_USER") {
@@ -30,40 +23,16 @@ export default function GovernmentPortalPage() {
       .finally(() => setLoading(false));
   }, [user]);
 
+  if (authLoading || !user) return null;
+
   const langSplit = stats?.languageSplit ?? {};
   const totalLanguage = Object.values(langSplit).reduce((a, b) => a + b, 0);
   const maxTopicCount = stats ? Math.max(1, ...stats.topicEngagement.map((t) => t.count)) : 1;
 
   return (
-    <div className="bg-paper">
-      <div className="mx-auto max-w-[1160px] px-8">
-        <header className="flex items-center justify-between border-b border-line py-[22px]">
-          <div className="flex items-center gap-2.5">
-            <Logo size={34} />
-            <span className="font-display text-[22px] font-bold text-teal-900">Inshuti</span>
-          </div>
-          <nav className="flex items-center gap-8 text-[14.5px] font-semibold text-ink-soft">
-            <span className="text-teal-700">Dashboard</span>
-            <Link href="/notifications" className="hover:text-teal-700">Notifications</Link>
-            <Link href="/profile" className="hover:text-teal-700">Profile</Link>
-          </nav>
-          <div className="flex items-center gap-3">
-            <div className="flex rounded-full bg-teal-100 p-[3px] text-[12.5px] font-bold">
-              {(["EN", "RW", "FR", "SW"] as const).map((lang) => (
-                <span
-                  key={lang}
-                  className={`cursor-pointer rounded-full px-2.5 py-1.5 ${language === lang ? "bg-teal-700 text-white" : "text-teal-700"}`}
-                  onClick={() => setLanguage(lang)}
-                >
-                  {lang}
-                </span>
-              ))}
-            </div>
-            {user && <NotificationBell />}
-          </div>
-        </header>
-
-        <section className="pb-3 pt-12">
+    <AppShell active="/government" session={{ kind: "user", user }}>
+      <div className="mx-auto max-w-[1160px]">
+        <section className="pb-3">
           <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
             Government Portal
           </span>
@@ -76,7 +45,7 @@ export default function GovernmentPortalPage() {
           </p>
         </section>
 
-        {user === undefined || loading ? (
+        {loading ? (
           <p className="pb-16 text-sm text-ink-soft">Loading…</p>
         ) : !stats ? (
           <p className="pb-16 text-sm text-ink-soft">Government account required to view this dashboard.</p>
@@ -150,6 +119,6 @@ export default function GovernmentPortalPage() {
           </section>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }

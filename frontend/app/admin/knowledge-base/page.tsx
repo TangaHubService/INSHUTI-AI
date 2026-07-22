@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { AdminShell } from "@/components/AdminShell";
+import { AppShell } from "@/components/AppShell";
 import { Drawer } from "@/components/Drawer";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
 import { useToast } from "@/lib/useToast";
@@ -144,7 +144,7 @@ export default function KnowledgeBasePage() {
   if (authLoading || !admin) return null;
 
   return (
-    <AdminShell active="/admin/knowledge-base" admin={admin}>
+    <AppShell active="/admin/knowledge-base" session={{ kind: "admin", admin }}>
       <div className="mb-[22px] flex items-center justify-between">
         <div>
           <h1 className="font-display text-[26px] text-teal-900">Knowledge Base</h1>
@@ -282,6 +282,6 @@ export default function KnowledgeBasePage() {
           </div>
         )}
       </Drawer>
-    </AdminShell>
+    </AppShell>
   );
 }

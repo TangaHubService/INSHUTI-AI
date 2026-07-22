@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { AdminShell } from "@/components/AdminShell";
+import { AppShell } from "@/components/AppShell";
 import { Drawer } from "@/components/Drawer";
 import { ConfirmModal } from "@/components/Modal";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
@@ -143,7 +143,7 @@ export default function AdminFacilitiesPage() {
   if (authLoading || !admin) return null;
 
   return (
-    <AdminShell active="/admin/facilities" admin={admin}>
+    <AppShell active="/admin/facilities" session={{ kind: "admin", admin }}>
       <div className="mb-[22px] flex items-center justify-between">
         <div>
           <h1 className="font-display text-[26px] text-teal-900">Health Facilities</h1>
@@ -262,6 +262,6 @@ export default function AdminFacilitiesPage() {
         onConfirm={() => void handleDelete()}
         onCancel={() => setDeleteTarget(null)}
       />
-    </AdminShell>
+    </AppShell>
   );
 }

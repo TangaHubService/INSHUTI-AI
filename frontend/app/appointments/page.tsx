@@ -1,19 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { useToast } from "@/lib/useToast";
 import { ConfirmModal } from "@/components/Modal";
-import { SiteHeader } from "@/components/SiteHeader";
-import { SiteFooter } from "@/components/SiteFooter";
+import { AppShell } from "@/components/AppShell";
 import type { Language } from "@/lib/apiClient";
-import { NAV } from "@/lib/i18nCommon";
 import { useLanguage } from "@/lib/LanguageContext";
+import { useRequireUser } from "@/lib/useUserAuth";
 import { VALIDATION } from "@/lib/validationMessages";
 import {
   cancelAppointment,
-  getCurrentUser,
   getMyAppointments,
   getProfessionalCalendar,
   getProfessionals,
@@ -25,7 +22,6 @@ import {
   type Professional,
   type ProfessionalAppointment,
   type ProfessionalType,
-  type UserProfile,
 } from "@/lib/userApiClient";
 
 const PROFESSIONAL_TYPE_LABEL: Record<Language, Record<ProfessionalType, string>> = {
@@ -311,59 +307,33 @@ function toLocalInputValue(date: Date): string {
 export default function AppointmentsPage() {
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [user, setUser] = useState<UserProfile | null | undefined>(undefined);
-  const nav = NAV[language];
+  const { user, loading: authLoading } = useRequireUser();
   const t = COPY[language];
 
-  useEffect(() => {
-    void getCurrentUser().then(setUser);
-  }, []);
+  if (authLoading || !user) return null;
 
   return (
-    <div className="bg-paper">
-      <SiteHeader
-        activeHref="/appointments"
-        navItems={[
-          { href: "/chat", label: nav.chat },
-          { href: "/my-space", label: nav.mySpace },
-          { href: "/appointments", label: nav.appointments },
-          { href: "/consultations", label: nav.consultations },
-          { href: "/profile", label: nav.profile },
-        ]}
-      />
-      <div className="mx-auto max-w-[1160px] px-5 sm:px-8">
-        <section className="pb-3 pt-12">
+    <AppShell active="/appointments" session={{ kind: "user", user }}>
+      <div className="mx-auto max-w-[1160px]">
+        <section className="pb-3">
           <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
             {t.eyebrow}
           </span>
           <h1 className="mt-3 font-display text-[34px] text-teal-900">
-            {user?.role === "HEALTHCARE_PROFESSIONAL" ? t.titlePro : t.titleUser}
+            {user.role === "HEALTHCARE_PROFESSIONAL" ? t.titlePro : t.titleUser}
           </h1>
           <p className="mt-[10px] max-w-[520px] text-[14.5px] leading-[1.6] text-ink-soft">
-            {user?.role === "HEALTHCARE_PROFESSIONAL" ? t.subtitlePro : t.subtitleUser}
+            {user.role === "HEALTHCARE_PROFESSIONAL" ? t.subtitlePro : t.subtitleUser}
           </p>
         </section>
 
-        {user === undefined && <p className="pb-16 text-sm text-ink-soft">{nav.loading}</p>}
-
-        {user === null && (
-          <div className="mb-16 rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-8 text-center shadow-card">
-            <p className="text-[14.5px] text-ink-soft">{t.loginGate}</p>
-            <Link
-              href="/login"
-              className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-[11px] text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark"
-            >
-              {nav.logIn}
-            </Link>
-          </div>
+        {user.role === "HEALTHCARE_PROFESSIONAL" ? (
+          <ProfessionalView language={language} />
+        ) : (
+          <UserView toast={toast} language={language} />
         )}
-
-        {user && user.role === "HEALTHCARE_PROFESSIONAL" && <ProfessionalView language={language} />}
-        {user && user.role !== "HEALTHCARE_PROFESSIONAL" && <UserView toast={toast} language={language} />}
-
-        <SiteFooter />
       </div>
-    </div>
+    </AppShell>
   );
 }
 

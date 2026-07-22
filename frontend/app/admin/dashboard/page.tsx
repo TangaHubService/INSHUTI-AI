@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { getDashboard, type DashboardStats } from "@/lib/adminApiClient";
-import { AdminShell } from "@/components/AdminShell";
+import { AppShell } from "@/components/AppShell";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
 
 const TOPIC_BAR_COLORS = ["bg-coral", "bg-teal-600", "bg-gold", "bg-teal-700", "bg-coral-dark", "bg-teal-100"];
@@ -31,7 +31,7 @@ export default function AdminDashboardPage() {
   const maxTopicCount = stats ? Math.max(1, ...stats.topicEngagement.map((t) => t.count)) : 1;
 
   return (
-    <AdminShell active="/admin/dashboard" admin={admin}>
+    <AppShell active="/admin/dashboard" session={{ kind: "admin", admin }}>
       <div className="mb-[22px] flex items-center justify-between">
         <div>
           <h1 className="font-display text-[26px] text-teal-900">Good morning, {admin.name.split(" ")[0]}</h1>
@@ -130,6 +130,6 @@ export default function AdminDashboardPage() {
           </div>
         </>
       )}
-    </AdminShell>
+    </AppShell>
   );
 }

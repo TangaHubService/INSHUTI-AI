@@ -10,7 +10,6 @@ import type { Language } from "@/lib/apiClient";
 import { PasswordInput } from "@/components/PasswordInput";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
-import { SiteFooter } from "@/components/SiteFooter";
 import { useLanguage } from "@/lib/LanguageContext";
 import { isValidEmail, isStrongPassword } from "@/lib/validation";
 import { VALIDATION } from "@/lib/validationMessages";
@@ -31,43 +30,48 @@ const GOV_LEVELS: GovLevel[] = ["NATIONAL", "PROVINCIAL", "DISTRICT", "SECTOR", 
 const LANGUAGES: Language[] = ["EN", "RW", "FR", "SW"];
 
 const MSG: Record<Language, {
+  heroTitle: string; heroSubtitle: string;
   title: string; heading: string; subtitle: string; name: string; email: string;
   langPref: string; password: string; passwordPlaceholder: string; profType: string;
   specialization: string; specPlaceholder: string; govLevel: string; region: string;
   regionPlaceholder: string; create: string; creating: string; haveAccount: string;
-  login: string; fill: string; backButton: string;
+  login: string; fill: string;
 }> = {
   EN: {
+    heroTitle: "Join Inshuti.",
+    heroSubtitle: "Create your account to unlock appointments, consultations, and a space that remembers you.",
     title: "Create an account", heading: "Join Inshuti", subtitle: "Choose the option that describes you. You can still use Chat anonymously without registering.",
     name: "Full name", email: "Email", langPref: "Preferred language", password: "Password", passwordPlaceholder: "Min 8 characters",
     profType: "Professional type", specialization: "Specialization", specPlaceholder: "e.g. Pediatrics",
     govLevel: "Government level", region: "Region / District", regionPlaceholder: "District name",
     create: "Create account", creating: "Creating account\u2026", haveAccount: "Already have an account?", login: "Log in", fill: "Please fill in all required fields.",
-    backButton: "Back",
   },
   RW: {
+    heroTitle: "Injira muri Inshuti.",
+    heroSubtitle: "Fungura konti yawe kugira ngo ubone gahunda, ubujyanama, n'umwanya ukwibuka.",
     title: "Fungura konti", heading: "Injira muri Inshuti", subtitle: "Hitamo amahitamo agusobanura. Ukomeza gukoresha Chat utiyanditse nta kibazo.",
     name: "Izina ryuzuye", email: "Imeri", langPref: "Ururima ukunda", password: "Ijambobanga", passwordPlaceholder: "Byibura inyuguti 8",
     profType: "Ubwoko bw'umwuga", specialization: "Ubuhanga budasanzwe", specPlaceholder: "Urugero: Pediatrics",
     govLevel: "Urwego rwa Leta", region: "Akarere / Uturere", regionPlaceholder: "Izina ry'akarere",
     create: "Fungura konti", creating: "Ifungura\u2026", haveAccount: "Ufite konti?", login: "Injira", fill: "Nyabona uzuzisha imirima yose.",
-    backButton: "Subira inyuma",
   },
   FR: {
+    heroTitle: "Rejoignez Inshuti.",
+    heroSubtitle: "Cr\u00e9ez votre compte pour acc\u00e9der aux rendez-vous, consultations, et un espace qui vous conna\u00eet.",
     title: "Cr\u00e9er un compte", heading: "Rejoindre Inshuti", subtitle: "Choisissez l'option qui vous d\u00e9crit. Vous pouvez toujours utiliser le Chat anonymement sans vous inscrire.",
     name: "Nom complet", email: "Email", langPref: "Langue pr\u00e9f\u00e9r\u00e9e", password: "Mot de passe", passwordPlaceholder: "Min 8 caract\u00e8res",
     profType: "Type professionnel", specialization: "Sp\u00e9cialisation", specPlaceholder: "Ex : P\u00e9diatrie",
     govLevel: "Niveau gouvernemental", region: "R\u00e9gion / District", regionPlaceholder: "Nom du district",
     create: "Cr\u00e9er un compte", creating: "Cr\u00e9ation\u2026", haveAccount: "D\u00e9j\u00e0 un compte ?", login: "Se connecter", fill: "Veuillez remplir tous les champs obligatoires.",
-    backButton: "Retour",
   },
   SW: {
+    heroTitle: "Jiunge na Inshuti.",
+    heroSubtitle: "Fungua akaunti yako ili kufungua miadi, mashauriano, na nafasi inayokukumbuka.",
     title: "Fungua akaunti", heading: "Jiunge na Inshuti", subtitle: "Chagua chaguo linalokuelezea. Bado unaweza kutumia Gumzo bila kujisajili.",
     name: "Jina kamili", email: "Barua pepe", langPref: "Lugha unayopendelea", password: "Neno la siri", passwordPlaceholder: "Angalau herufi 8",
     profType: "Aina ya taaluma", specialization: "Utaalamu", specPlaceholder: "Mfano: Pediatrics",
     govLevel: "Kiwango cha serikali", region: "Mkoa / Wilaya", regionPlaceholder: "Jina la wilaya",
     create: "Fungua akaunti", creating: "Inafungua\u2026", haveAccount: "Tayari una akaunti?", login: "Ingia", fill: "Tafadhali jaza sehemu zote zinazohitajika.",
-    backButton: "Rudi nyuma",
   },
 };
 
@@ -128,32 +132,31 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="bg-paper">
-      <div className="mx-auto max-w-[560px] px-8 py-16">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="mb-6 inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink-soft transition hover:text-teal-700"
+    <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
+      <div className="relative hidden flex-col justify-center overflow-hidden bg-[var(--admin-bg)] p-[70px] md:sticky md:top-0 md:flex md:h-screen">
+        <svg
+          className="absolute -right-[60px] -top-10 w-[340px] opacity-[0.18]"
+          viewBox="0 0 64 64"
         >
-          <svg width="16" height="16"><use href="#i-back" /></svg>
-          {m.backButton}
-        </button>
-        <div className="mb-6 text-center">
-          <Link href="/" className="mb-5 inline-flex items-center justify-center gap-2">
-            <Logo size={34} />
-            <span className="font-display text-xl font-bold text-teal-900">Inshuti</span>
-          </Link>
-          <div className="mb-4 flex items-center justify-center">
+          <use href="#mark-knot" />
+        </svg>
+        <Logo size={40} className="mb-[26px]" />
+        <h2 className="max-w-[360px] font-display text-[30px] leading-[1.2] text-white">
+          {m.heroTitle}
+        </h2>
+        <p className="mt-[14px] max-w-[340px] text-[14.5px] leading-[1.6] text-[#9FC3BD]">
+          {m.heroSubtitle}
+        </p>
+      </div>
+      <div className="flex items-center justify-center bg-paper p-10 py-16">
+        <div className="w-full max-w-[480px]">
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="font-display text-[26px] text-teal-900">{m.heading}</h2>
             <LanguageSwitcher value={language} onChange={setLanguage} />
           </div>
-          <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
-            {m.title}
-          </span>
-          <h2 className="mt-3 font-display text-4xl text-teal-900">{m.heading}</h2>
-          <p className="mt-3 text-[15.5px] text-ink-soft">{m.subtitle}</p>
-        </div>
+          <p className="mb-7 text-sm text-ink-soft">{m.subtitle}</p>
 
-        <div className="mb-[22px] grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="mb-[22px] grid grid-cols-1 gap-3 sm:grid-cols-2">
           {ROLES.map((r) => (
             <div
               key={r.value}
@@ -250,10 +253,10 @@ export default function RegisterPage() {
           </button>
           <p className="mt-3.5 text-center text-xs text-ink-soft">
             {m.haveAccount}{" "}
-            <Link href="/login" className="font-bold text-teal-700 hover:text-teal-900">{m.login}</Link>
+            <Link href="/admin/login" className="font-bold text-teal-700 hover:text-teal-900">{m.login}</Link>
           </p>
-        </form>
-        <SiteFooter />
+          </form>
+        </div>
       </div>
     </div>
   );

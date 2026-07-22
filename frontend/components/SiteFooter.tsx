@@ -20,7 +20,7 @@ export function SiteFooter({ disclaimer }: { disclaimer?: string }) {
         <div className="flex gap-[22px] text-[13.5px] font-semibold text-ink-soft">
           <a href="#" className="hover:text-teal-700">{footer.privacy}</a>
           <a href="#" className="hover:text-teal-700">{footer.terms}</a>
-          <Link href="/admin/login" className="hover:text-teal-700">{footer.admin}</Link>
+          <Link href="/admin/login" className="hover:text-teal-700">{footer.login}</Link>
         </div>
       </div>
       {disclaimer && <p className="mt-4 max-w-[640px] text-[12.5px] leading-[1.6] text-ink-soft">{disclaimer}</p>}

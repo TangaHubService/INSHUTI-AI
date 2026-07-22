@@ -4,12 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { useToast } from "@/lib/useToast";
-import { SiteHeader } from "@/components/SiteHeader";
-import { SiteFooter } from "@/components/SiteFooter";
+import { AppShell } from "@/components/AppShell";
 import { useLanguage } from "@/lib/LanguageContext";
-import { NAV } from "@/lib/i18nCommon";
+import { useRequireUser } from "@/lib/useUserAuth";
 import type { Language } from "@/lib/apiClient";
-import { getCurrentUser, updateProfile, type UserProfile } from "@/lib/userApiClient";
+import { updateProfile } from "@/lib/userApiClient";
 import { isValidPhone } from "@/lib/validation";
 import { VALIDATION } from "@/lib/validationMessages";
 
@@ -163,9 +162,8 @@ const COPY: Record<Language, {
 export default function ProfilePage() {
   const { toast } = useToast();
   const { language, setLanguage } = useLanguage();
-  const nav = NAV[language];
+  const { user, loading: authLoading } = useRequireUser();
   const t = COPY[language];
-  const [user, setUser] = useState<UserProfile | null | undefined>(undefined);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [preferredLanguage, setPreferredLanguage] = useState<Language>("EN");
@@ -176,15 +174,15 @@ export default function ProfilePage() {
 
   useEffect(() => {
     setAnonymousMode(localStorage.getItem(ANONYMOUS_MODE_KEY) !== "false");
-    void getCurrentUser().then((u) => {
-      setUser(u);
-      if (u) {
-        setName(u.name);
-        setPhone(u.phone ?? "");
-        setPreferredLanguage((u.preferredLanguage as Language) ?? "EN");
-      }
-    });
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+      setPhone(user.phone ?? "");
+      setPreferredLanguage((user.preferredLanguage as Language) ?? "EN");
+    }
+  }, [user]);
 
   function toggleAnonymousMode() {
     const next = !anonymousMode;
@@ -218,42 +216,19 @@ export default function ProfilePage() {
     }
   }
 
+  if (authLoading || !user) return null;
+
   return (
-    <div className="bg-paper">
-      <SiteHeader
-        activeHref="/profile"
-        navItems={[
-          { href: "/chat", label: nav.chat },
-          { href: "/my-space", label: nav.mySpace },
-          { href: "/appointments", label: nav.appointments },
-          { href: "/consultations", label: nav.consultations },
-          { href: "/profile", label: nav.profile },
-        ]}
-      />
-      <div className="mx-auto max-w-[1160px] px-5 sm:px-8">
-        <section className="pb-3 pt-12">
+    <AppShell active="/profile" session={{ kind: "user", user }}>
+      <div className="mx-auto max-w-[1160px]">
+        <section className="pb-3">
           <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
             {t.eyebrow}
           </span>
           <h1 className="mt-3 font-display text-[34px] text-teal-900">{t.title}</h1>
         </section>
 
-        {user === undefined && <p className="pb-16 text-sm text-ink-soft">{t.loading}</p>}
-
-        {user === null && (
-          <div className="mb-16 rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-8 text-center shadow-card">
-            <p className="text-[14.5px] text-ink-soft">{t.loginGate}</p>
-            <Link
-              href="/login"
-              className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-[11px] text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark"
-            >
-              {t.logIn}
-            </Link>
-          </div>
-        )}
-
-        {user && (
-          <section className="grid grid-cols-1 gap-4 pb-16 lg:grid-cols-[1.2fr_1fr]">
+        <section className="grid grid-cols-1 gap-4 pb-16 lg:grid-cols-[1.2fr_1fr]">
             <form onSubmit={(e) => void handleSave(e)} className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-6 shadow-card">
               <div className="mb-4 flex items-center gap-3">
                 <span className="rounded-full bg-teal-100 px-3 py-1 text-[12px] font-bold text-teal-700">
@@ -327,9 +302,7 @@ export default function ProfilePage() {
               </div>
             </div>
           </section>
-        )}
-        <SiteFooter />
       </div>
-    </div>
+    </AppShell>
   );
 }

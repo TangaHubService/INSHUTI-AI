@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { getFacilities, type FacilityType, type HealthFacility } from "@/lib/apiClient";
+import { AppShell } from "@/components/AppShell";
+import { getCurrentUser, type UserProfile } from "@/lib/userApiClient";
 
 const FacilityMap = dynamic(() => import("@/components/FacilityMap").then((m) => m.FacilityMap), {
   ssr: false,
@@ -36,6 +38,11 @@ export default function FacilityLocatorPage() {
   const [typeFilter, setTypeFilter] = useState<FacilityType | "">("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    void getCurrentUser().then(setUser);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,17 +65,19 @@ export default function FacilityLocatorPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, typeFilter]);
 
-  return (
+  const page = (
     <div className="flex h-screen flex-col md:flex-row">
       <div className="flex w-full flex-shrink-0 flex-col overflow-y-auto border-r border-line bg-white p-[18px] md:w-[380px]">
-        <Link
-          href="/"
-          className="mb-3.5 flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white"
-        >
-          <svg width="16" height="16">
-            <use href="#i-back" />
-          </svg>
-        </Link>
+        {!user && (
+          <Link
+            href="/"
+            className="mb-3.5 flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white"
+          >
+            <svg width="16" height="16">
+              <use href="#i-back" />
+            </svg>
+          </Link>
+        )}
 
         <span className="font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
           Find Care
@@ -173,4 +182,14 @@ export default function FacilityLocatorPage() {
       </div>
     </div>
   );
+
+  if (user) {
+    return (
+      <AppShell active="/facility-locator" session={{ kind: "user", user }} flush>
+        {page}
+      </AppShell>
+    );
+  }
+
+  return page;
 }

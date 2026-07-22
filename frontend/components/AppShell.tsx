@@ -37,6 +37,7 @@ function userNavItems(role: UserRole, nav: (typeof NAV)["EN"]): { href: string; 
         { href: "/parent", label: nav.dashboard, icon: "i-grid" },
         { href: "/chat", label: nav.chat, icon: "i-chat" },
         { href: "/appointments", label: nav.appointments, icon: "i-calendar" },
+        { href: "/facility-locator", label: nav.findCare, icon: "i-map-pin" },
         { href: "/notifications", label: nav.notifications, icon: "i-bell" },
         { href: "/profile", label: nav.profile, icon: "i-user-check" },
       ];
@@ -60,6 +61,7 @@ function userNavItems(role: UserRole, nav: (typeof NAV)["EN"]): { href: string; 
         { href: "/my-space", label: nav.mySpace, icon: "i-clock" },
         { href: "/appointments", label: nav.appointments, icon: "i-calendar" },
         { href: "/consultations", label: nav.consultations, icon: "i-stethoscope" },
+        { href: "/facility-locator", label: nav.findCare, icon: "i-map-pin" },
         { href: "/notifications", label: nav.notifications, icon: "i-bell" },
         { href: "/profile", label: nav.profile, icon: "i-user-check" },
       ];
@@ -81,10 +83,13 @@ export function AppShell({
   active,
   session,
   children,
+  flush = false,
 }: {
   active: string;
   session: AppSession;
   children: React.ReactNode;
+  /** Skip the default content padding for pages that manage their own full-bleed layout (e.g. chat). */
+  flush?: boolean;
 }) {
   const router = useRouter();
   const { language, setLanguage } = useLanguage();
@@ -130,9 +135,23 @@ export function AppShell({
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         } ${collapsed ? "lg:w-[76px]" : "lg:w-[250px]"}`}
       >
-        <div className="flex items-center gap-2.5 px-2 pb-[26px]">
-          <Logo size={26} />
-          {!collapsed && <span className="font-display text-[19px] font-bold text-white">Inshuti</span>}
+        <div
+          className={`flex items-center pb-[26px] px-2 ${collapsed ? "flex-col gap-2" : "justify-between gap-2.5"}`}
+        >
+          <div className="flex items-center gap-2.5">
+            <Logo size={26} />
+            {!collapsed && <span className="font-display text-[19px] font-bold text-white">Inshuti</span>}
+          </div>
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="hidden h-7 w-7 flex-shrink-0 items-center justify-center rounded-[8px] text-[#7FA79F] hover:bg-[var(--admin-bg-2)] hover:text-white lg:flex"
+          >
+            <svg width="14" height="14" className={`transition-transform ${collapsed ? "-rotate-90" : "rotate-90"}`}>
+              <use href="#i-chevron-down" />
+            </svg>
+          </button>
         </div>
         <nav className="flex flex-1 flex-col gap-[3px]">
           {navItems.map((item) => {
@@ -171,16 +190,6 @@ export function AppShell({
             </svg>
           </button>
         </div>
-        <button
-          type="button"
-          onClick={toggleCollapsed}
-          className="mt-2 hidden items-center justify-center gap-2 rounded-[10px] px-3 py-2 text-[12px] font-semibold text-[#7FA79F] hover:bg-[var(--admin-bg-2)] hover:text-white lg:flex"
-        >
-          <svg width="14" height="14" className={`transition-transform ${collapsed ? "-rotate-90" : "rotate-90"}`}>
-            <use href="#i-chevron-down" />
-          </svg>
-          {!collapsed && "Collapse"}
-        </button>
       </aside>
 
       <div className="min-w-0 flex-1">
@@ -213,7 +222,7 @@ export function AppShell({
             </div>
           </div>
         </div>
-        <div className="px-5 pb-[60px] pt-7 sm:px-8">{children}</div>
+        {flush ? <div className="flex flex-1 flex-col">{children}</div> : <div className="px-5 pb-[60px] pt-7 sm:px-8">{children}</div>}
       </div>
     </div>
   );

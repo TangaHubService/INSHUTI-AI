@@ -5,12 +5,12 @@ import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { useToast } from "@/lib/useToast";
+import { AppShell } from "@/components/AppShell";
+import { useRequireUser } from "@/lib/useUserAuth";
 import {
   getConsultationMessages,
-  getCurrentUser,
   sendConsultationMessage,
   type ConsultationMessage,
-  type UserProfile,
 } from "@/lib/userApiClient";
 
 const POLL_INTERVAL_MS = 4000;
@@ -23,16 +23,12 @@ export default function ConsultationThreadPage() {
   const params = useParams<{ id: string }>();
   const consultationId = params.id;
   const { toast } = useToast();
-  const [user, setUser] = useState<UserProfile | null | undefined>(undefined);
+  const { user, loading: authLoading } = useRequireUser();
   const [messages, setMessages] = useState<ConsultationMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    void getCurrentUser().then(setUser);
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -95,7 +91,10 @@ export default function ConsultationThreadPage() {
     }
   }
 
+  if (authLoading || !user) return null;
+
   return (
+    <AppShell active="/consultations" session={{ kind: "user", user }} flush>
     <div className="flex min-h-screen flex-col bg-paper">
       <div className="flex items-center justify-between border-b border-line bg-white px-7 py-4">
         <div className="flex items-center gap-[14px]">
@@ -168,5 +167,6 @@ export default function ConsultationThreadPage() {
         </button>
       </form>
     </div>
+    </AppShell>
   );
 }

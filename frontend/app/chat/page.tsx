@@ -10,6 +10,7 @@ import { sendChatMessage, getCrisisResources, type ChatSource, type CrisisResour
 import { useToast } from "@/lib/useToast";
 import { getCurrentUser, requestConsultation, type UserProfile } from "@/lib/userApiClient";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { AppShell } from "@/components/AppShell";
 import { useLanguage } from "@/lib/LanguageContext";
 
 const ANONYMOUS_MODE_KEY = "inshuti_anonymous_mode";
@@ -249,7 +250,7 @@ function ChatPageInner() {
     }
   }
 
-  return (
+  const page = (
     <div className="flex min-h-screen flex-col bg-paper">
       <div className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-3 border-b border-line bg-white px-4 py-3 sm:px-7 sm:py-4">
         <div className="flex items-center gap-[14px]">
@@ -286,16 +287,18 @@ function ChatPageInner() {
               Anonymous mode: {anonymousMode ? "On" : "Off"}
             </button>
           )}
-          <LanguageSwitcher value={language} onChange={setLanguage} />
-          <Link
-            href="/my-space"
-            title="My Space"
-            className="flex h-[38px] w-[38px] items-center justify-center rounded-full border border-line bg-white"
-          >
-            <svg width="16" height="16" className="text-teal-700">
-              <use href="#i-clock" />
-            </svg>
-          </Link>
+          {!user && <LanguageSwitcher value={language} onChange={setLanguage} />}
+          {!user && (
+            <Link
+              href="/my-space"
+              title="My Space"
+              className="flex h-[38px] w-[38px] items-center justify-center rounded-full border border-line bg-white"
+            >
+              <svg width="16" height="16" className="text-teal-700">
+                <use href="#i-clock" />
+              </svg>
+            </Link>
+          )}
           <Link href="/" className="rounded-full px-4 py-[9px] text-[13px] font-semibold text-ink-soft">
             End chat
           </Link>
@@ -545,4 +548,14 @@ function ChatPageInner() {
       </form>
     </div>
   );
+
+  if (user) {
+    return (
+      <AppShell active="/chat" session={{ kind: "user", user }} flush>
+        {page}
+      </AppShell>
+    );
+  }
+
+  return page;
 }

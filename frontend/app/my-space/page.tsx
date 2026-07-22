@@ -15,6 +15,8 @@ import { useToast } from "@/lib/useToast";
 import { ConfirmModal } from "@/components/Modal";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { AppShell } from "@/components/AppShell";
+import { getCurrentUser, type UserProfile } from "@/lib/userApiClient";
 import { useLanguage } from "@/lib/LanguageContext";
 import { NAV } from "@/lib/i18nCommon";
 
@@ -52,6 +54,11 @@ export default function MySpacePage() {
   const [clearing, setClearing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [user, setUser] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    void getCurrentUser().then(setUser);
+  }, []);
 
   async function loadAll() {
     setLoading(true);
@@ -104,29 +111,8 @@ export default function MySpacePage() {
     }
   }
 
-  return (
-    <div className="bg-paper">
-      <SiteHeader
-        activeHref="/my-space"
-        navItems={[
-          { href: "/chat", label: nav.chat },
-          { href: "/my-space", label: nav.mySpace },
-          { href: "/appointments", label: nav.appointments },
-          { href: "/consultations", label: nav.consultations },
-          { href: "/facility-locator", label: nav.findCare },
-          { href: "/profile", label: nav.profile },
-        ]}
-        extraActions={
-          <Link
-            href="/chat"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark"
-          >
-            {nav.startChatting}
-          </Link>
-        }
-      />
-      <div className="mx-auto max-w-[1160px] px-5 sm:px-8">
-
+  const sections = (
+    <>
         <section className="pb-3 pt-12">
           <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
             Private · Only on this device
@@ -286,6 +272,40 @@ export default function MySpacePage() {
           onConfirm={() => void handleClearHistory()}
           onCancel={() => setShowClearConfirm(false)}
         />
+    </>
+  );
+
+  if (user) {
+    return (
+      <AppShell active="/my-space" session={{ kind: "user", user }}>
+        <div className="mx-auto max-w-[1160px]">{sections}</div>
+      </AppShell>
+    );
+  }
+
+  return (
+    <div className="bg-paper">
+      <SiteHeader
+        activeHref="/my-space"
+        navItems={[
+          { href: "/chat", label: nav.chat },
+          { href: "/my-space", label: nav.mySpace },
+          { href: "/appointments", label: nav.appointments },
+          { href: "/consultations", label: nav.consultations },
+          { href: "/facility-locator", label: nav.findCare },
+          { href: "/profile", label: nav.profile },
+        ]}
+        extraActions={
+          <Link
+            href="/chat"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark"
+          >
+            {nav.startChatting}
+          </Link>
+        }
+      />
+      <div className="mx-auto max-w-[1160px] px-5 sm:px-8">
+        {sections}
         <SiteFooter />
       </div>
     </div>

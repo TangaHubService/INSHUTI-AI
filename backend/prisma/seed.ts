@@ -592,7 +592,13 @@ function promptMasked(question: string): Promise<string> {
   });
 }
 
-async function upsertSuperAdmin() {
+interface SuperAdminResult {
+  email: string;
+  password: string | null; // null when it already existed — we never see that plaintext
+  created: boolean;
+}
+
+async function upsertSuperAdmin(): Promise<SuperAdminResult> {
   const email = process.env.SEED_SUPER_ADMIN_EMAIL ?? DEFAULT_SUPER_ADMIN_EMAIL;
 
   // Keyed by this specific email, not "does any super admin exist" — a
@@ -602,7 +608,7 @@ async function upsertSuperAdmin() {
   const existing = await prisma.adminUser.findUnique({ where: { email } });
   if (existing) {
     console.log(`Admin "${email}" already exists (role: ${existing.role}), skipping.`);
-    return;
+    return { email, password: null, created: false };
   }
 
   const password =
@@ -621,17 +627,33 @@ async function upsertSuperAdmin() {
     data: { email, passwordHash, name, role: SUPER_ADMIN },
   });
   console.log(`Seeded super admin: ${email}`);
+  return { email, password, created: true };
 }
 
-async function seedUsers() {
-  // These accounts share a hardcoded, source-visible password — fine for
-  // local dev demos, never acceptable on a real database with real users.
-  if (process.env.NODE_ENV === "production") {
-    console.log("NODE_ENV=production — skipping demo user accounts (teen/parent/nurse/gov@example.com).");
-    return;
+interface DemoUsersResult {
+  password: string | null; // null when nothing was seeded this run
+  seeded: { email: string; role: string }[];
+}
+
+async function seedUsers(): Promise<DemoUsersResult> {
+  // No hardcoded password — every environment must say explicitly what
+  // these accounts' password should be. Local dev gets a convenience
+  // default so `npm run dev:db:seed` keeps working with zero config;
+  // production requires SEED_DEMO_USERS_PASSWORD to be set on purpose
+  // (still opt-in there, just not silently skipped — set it if you want
+  // these demo accounts on a production database too).
+  const isProd = process.env.NODE_ENV === "production";
+  const demoPassword = process.env.SEED_DEMO_USERS_PASSWORD ?? (isProd ? null : "test1234");
+
+  if (!demoPassword) {
+    console.log(
+      "NODE_ENV=production and SEED_DEMO_USERS_PASSWORD not set — skipping demo user accounts " +
+        "(teen/parent/nurse/gov@example.com). Set SEED_DEMO_USERS_PASSWORD to seed them here too.",
+    );
+    return { password: null, seeded: [] };
   }
 
-  const pwHash = await bcrypt.hash("test1234", 12);
+  const pwHash = await bcrypt.hash(demoPassword, 12);
 
   const users = [
     {
@@ -663,6 +685,8 @@ async function seedUsers() {
       regionName: "Kicukiro",
     },
   ];
+
+  const seeded: { email: string; role: string }[] = [];
 
   for (const u of users) {
     const exists = await prisma.user.findUnique({ where: { email: u.email } });
@@ -702,7 +726,10 @@ async function seedUsers() {
 
     await prisma.user.create({ data });
     console.log(`Seeded user: ${u.email} (${u.role})`);
+    seeded.push({ email: u.email, role: u.role });
   }
+
+  return { password: demoPassword, seeded };
 }
 
 async function main() {
@@ -710,8 +737,25 @@ async function main() {
   await upsertCrisisResources();
   await upsertHealthFacilities();
   await upsertAppSettings();
-  await upsertSuperAdmin();
-  await seedUsers();
+  const superAdmin = await upsertSuperAdmin();
+  const demoUsers = await seedUsers();
+
+  console.log("\n=== Seeded credentials ===");
+  console.log("(Only accounts CREATED in this run are shown with a password —");
+  console.log(" anything logged as \"already exists\" above kept its existing,");
+  console.log(" already-set password, which this script never has access to.)");
+  if (superAdmin.created) {
+    console.log(`Super admin — ${superAdmin.email} / ${superAdmin.password}`);
+  } else {
+    console.log(`Super admin — ${superAdmin.email} (already existed, password unchanged)`);
+  }
+  if (demoUsers.seeded.length > 0) {
+    for (const u of demoUsers.seeded) {
+      console.log(`${u.role} — ${u.email} / ${demoUsers.password}`);
+    }
+  } else {
+    console.log("No demo user accounts were created this run.");
+  }
 }
 
 main()

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Drawer } from "@/components/Drawer";
 import { ConfirmModal } from "@/components/Modal";
+import { PageLoading } from "@/components/Spinner";
 import {
   createCrisisResource,
   deleteCrisisResource,
@@ -133,7 +134,7 @@ export default function AdminSettingsPage() {
         <p className="mt-1 text-sm text-ink-soft">AI behavior and crisis-support resources.</p>
       </div>
 
-      {loading && <p className="text-sm text-ink-soft">Loading…</p>}
+      {loading && <PageLoading />}
 
       {!loading && settings && (
         <div className="flex flex-col gap-4">

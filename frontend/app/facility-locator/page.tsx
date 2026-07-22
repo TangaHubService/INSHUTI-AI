@@ -6,11 +6,16 @@ import { useEffect, useState } from "react";
 
 import { getFacilities, type FacilityType, type HealthFacility } from "@/lib/apiClient";
 import { AppShell } from "@/components/AppShell";
+import { PageLoading } from "@/components/Spinner";
 import { getCurrentUser, type UserProfile } from "@/lib/userApiClient";
 
 const FacilityMap = dynamic(() => import("@/components/FacilityMap").then((m) => m.FacilityMap), {
   ssr: false,
-  loading: () => <div className="flex h-full items-center justify-center text-sm text-ink-soft">Loading map…</div>,
+  loading: () => (
+    <div className="flex h-full items-center justify-center">
+      <PageLoading label="Loading map…" />
+    </div>
+  ),
 });
 
 const TYPE_LABEL: Record<FacilityType, string> = {
@@ -121,7 +126,7 @@ export default function FacilityLocatorPage() {
         </div>
 
         <div className="mt-4 flex flex-col gap-3">
-          {loading && <p className="text-sm text-ink-soft">Loading…</p>}
+          {loading && <PageLoading />}
           {!loading && facilities.length === 0 && (
             <p className="text-sm text-ink-soft">No facilities match your search.</p>
           )}

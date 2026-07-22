@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { Drawer } from "@/components/Drawer";
+import { PageLoading } from "@/components/Spinner";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
 import { useToast } from "@/lib/useToast";
 import {
@@ -134,10 +135,13 @@ export default function FlaggedContentPage() {
             </tr>
           </thead>
           <tbody>
+            {loading && (
+              <tr><td colSpan={5} className="px-3.5 py-6"><PageLoading /></td></tr>
+            )}
             {!loading && items.length === 0 && (
               <tr><td colSpan={5} className="px-3.5 py-6 text-center text-ink-soft">Nothing flagged right now.</td></tr>
             )}
-            {items.map((item) => (
+            {!loading && items.map((item) => (
               <tr key={item.id} className="cursor-pointer border-b border-line last:border-b-0 hover:bg-paper-2" onClick={() => void openDetail(item.id)}>
                 <td className="p-3.5 font-semibold text-ink">&#34;…{item.messagePreview}…&#34;</td>
                 <td className="p-3.5">{item.topic?.nameEn ?? "General"}</td>
@@ -155,7 +159,7 @@ export default function FlaggedContentPage() {
       </div>
 
       <Drawer open={drawerOpen} onClose={closeDrawer} title="Flagged Item Detail">
-        {drawerLoading && <p className="text-sm text-ink-soft">Loading…</p>}
+        {drawerLoading && <PageLoading />}
         {!drawerLoading && detail && (
           <div className="flex flex-col gap-4">
             <div>

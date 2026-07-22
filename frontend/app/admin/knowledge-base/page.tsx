@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { Drawer } from "@/components/Drawer";
+import { PageLoading } from "@/components/Spinner";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
 import { useToast } from "@/lib/useToast";
 import {
@@ -167,7 +168,7 @@ export default function KnowledgeBasePage() {
         </button>
       </div>
 
-      {loading && <p className="text-sm text-ink-soft">Loading…</p>}
+      {loading && <PageLoading />}
 
       {!loading && topics.map((topic) => (
         <div key={topic.id} className="mb-4 rounded-md border border-[rgba(22,48,44,0.05)] bg-white shadow-card">
@@ -234,7 +235,7 @@ export default function KnowledgeBasePage() {
       </Drawer>
 
       <Drawer open={drawerOpen} onClose={closeDrawer} title={article?.titleEn ?? "Article Editor"}>
-        {drawerLoading && <p className="text-sm text-ink-soft">Loading…</p>}
+        {drawerLoading && <PageLoading />}
         {!drawerLoading && article && (
           <div className="flex flex-col gap-4">
             <div className="mb-1 flex gap-1.5">

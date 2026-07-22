@@ -16,6 +16,7 @@ import { ConfirmModal } from "@/components/Modal";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppShell } from "@/components/AppShell";
+import { PageLoading } from "@/components/Spinner";
 import { getCurrentUser, type UserProfile } from "@/lib/userApiClient";
 import { useLanguage } from "@/lib/LanguageContext";
 import { NAV } from "@/lib/i18nCommon";
@@ -140,6 +141,8 @@ export default function MySpacePage() {
                   Last 30 days
                 </span>
               </div>
+
+              {loading && <PageLoading />}
 
               {!loading && conversations.length === 0 && (
                 <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">

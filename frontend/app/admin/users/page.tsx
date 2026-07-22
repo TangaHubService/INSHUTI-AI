@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { Drawer } from "@/components/Drawer";
+import { PageLoading } from "@/components/Spinner";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
 import { useToast } from "@/lib/useToast";
 import { PasswordInput } from "@/components/PasswordInput";
@@ -144,7 +145,7 @@ export default function AdminUsersPage() {
         </button>
       </div>
 
-      {loading && <p className="text-sm text-ink-soft">Loading…</p>}
+      {loading && <PageLoading />}
 
       {!loading && (
         <>

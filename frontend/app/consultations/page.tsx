@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { useToast } from "@/lib/useToast";
 import { AppShell } from "@/components/AppShell";
+import { PageLoading } from "@/components/Spinner";
 import type { Language } from "@/lib/apiClient";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useRequireUser } from "@/lib/useUserAuth";
@@ -163,6 +164,8 @@ function MyConsultations({ toast, language }: { toast: (message: string, type?: 
   return (
     <section className="pb-16 pt-5">
       <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white py-1.5 shadow-card">
+        {loading && <PageLoading />}
+
         {!loading && consultations.length === 0 && (
           <p className="px-5 pb-5 pt-4 text-[13.5px] text-ink-soft">{t.noConsultations}</p>
         )}
@@ -205,6 +208,8 @@ function ProfessionalQueue({ toast, language }: { toast: (message: string, type?
   return (
     <section className="pb-16 pt-5">
       <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white py-1.5 shadow-card">
+        {loading && <PageLoading />}
+
         {!loading && consultations.length === 0 && (
           <p className="px-5 pb-5 pt-4 text-[13.5px] text-ink-soft">{t.noneAssigned}</p>
         )}

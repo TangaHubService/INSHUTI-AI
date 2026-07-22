@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { PageLoading } from "@/components/Spinner";
 import { useRequireUser } from "@/lib/useUserAuth";
 import { getGovernmentStats, type GovernmentStats } from "@/lib/userApiClient";
 
@@ -46,7 +47,7 @@ export default function GovernmentPortalPage() {
         </section>
 
         {loading ? (
-          <p className="pb-16 text-sm text-ink-soft">Loading…</p>
+          <PageLoading />
         ) : !stats ? (
           <p className="pb-16 text-sm text-ink-soft">Government account required to view this dashboard.</p>
         ) : (

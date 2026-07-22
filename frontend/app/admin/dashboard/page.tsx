@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { getDashboard, type DashboardStats } from "@/lib/adminApiClient";
 import { AppShell } from "@/components/AppShell";
+import { PageLoading } from "@/components/Spinner";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
 
 const TOPIC_BAR_COLORS = ["bg-coral", "bg-teal-600", "bg-gold", "bg-teal-700", "bg-coral-dark", "bg-teal-100"];
@@ -39,7 +40,7 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {loading && <p className="text-sm text-ink-soft">Loading…</p>}
+      {loading && <PageLoading />}
 
       {!loading && stats && (
         <>

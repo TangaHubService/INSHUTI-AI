@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useToast } from "@/lib/useToast";
 import { ConfirmModal } from "@/components/Modal";
 import { AppShell } from "@/components/AppShell";
+import { PageLoading } from "@/components/Spinner";
 import type { Language } from "@/lib/apiClient";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useRequireUser } from "@/lib/useUserAuth";
@@ -440,6 +441,8 @@ function UserView({ toast, language }: { toast: (message: string, type?: "succes
             <h3 className="text-base text-teal-900">{t.upcoming}</h3>
           </div>
 
+          {loading && <PageLoading />}
+
           {!loading && appointments.length === 0 && (
             <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">{t.noAppointments}</p>
           )}
@@ -639,6 +642,8 @@ function ProfessionalView({ language }: { language: Language }) {
         <div className="flex items-center justify-between px-5 pb-1.5 pt-[14px]">
           <h3 className="text-base text-teal-900">{t.calendar}</h3>
         </div>
+
+        {loading && <PageLoading />}
 
         {!loading && appointments.length === 0 && (
           <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">{t.noneAssigned}</p>

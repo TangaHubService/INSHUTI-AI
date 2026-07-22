@@ -8,6 +8,7 @@ import { useToast } from "@/lib/useToast";
 import { resetPassword } from "@/lib/userApiClient";
 import { PasswordInput } from "@/components/PasswordInput";
 import { Logo } from "@/components/Logo";
+import { PageLoading } from "@/components/Spinner";
 import { isStrongPassword } from "@/lib/validation";
 import { VALIDATION } from "@/lib/validationMessages";
 
@@ -120,7 +121,7 @@ export default function ResetPasswordPage() {
       <div className="flex items-center justify-center bg-paper p-10">
         <div className="w-full max-w-[380px]">
           <h2 className="mb-7 font-display text-[26px] text-teal-900">Reset password</h2>
-          <Suspense fallback={<p className="text-center text-sm text-ink-soft">Loading…</p>}>
+          <Suspense fallback={<div className="flex justify-center"><PageLoading /></div>}>
             <ResetPasswordForm />
           </Suspense>
         </div>

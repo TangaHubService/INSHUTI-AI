@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { PageLoading } from "@/components/Spinner";
 import { useRequireUser } from "@/lib/useUserAuth";
 import {
   getProfessionalCalendar,
@@ -63,7 +64,7 @@ export default function ProfessionalPortalPage() {
         </section>
 
         {loading ? (
-          <p className="pb-16 text-sm text-ink-soft">Loading…</p>
+          <PageLoading />
         ) : (
           <section className="grid grid-cols-1 gap-4 pb-16 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">

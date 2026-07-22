@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { getHistory, type ConversationSummary } from "@/lib/apiClient";
 import { AppShell } from "@/components/AppShell";
+import { PageLoading } from "@/components/Spinner";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useRequireUser } from "@/lib/useUserAuth";
 import { getNotifications, type AppNotification } from "@/lib/userApiClient";
@@ -71,7 +72,7 @@ export default function TeenDashboardPage() {
         </section>
 
         {loading ? (
-          <p className="pb-16 pt-8 text-sm text-ink-soft">Loading…</p>
+          <PageLoading />
         ) : (
           <section className="grid grid-cols-1 gap-4 pb-16 pt-8 lg:grid-cols-[1.2fr_1fr]">
             <div>

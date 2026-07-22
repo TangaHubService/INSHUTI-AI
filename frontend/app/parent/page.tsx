@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { PageLoading } from "@/components/Spinner";
 import { useRequireUser } from "@/lib/useUserAuth";
 import {
   getMyAppointments,
@@ -64,7 +65,7 @@ export default function ParentPortalPage() {
         </section>
 
         {loading ? (
-          <p className="pb-16 text-sm text-ink-soft">Loading…</p>
+          <PageLoading />
         ) : (
           <section className="grid grid-cols-1 gap-4 pb-16 lg:grid-cols-[1.2fr_1fr]">
             <div>

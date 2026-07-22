@@ -13,6 +13,7 @@
     "db:generate": "prisma generate",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
+    "db:reset": "prisma migrate reset",
     "dev:db:sync": "node scripts/sync-sqlite-schema.mjs",
     "dev:db:generate": "npm run dev:db:sync && prisma generate --schema=./prisma/schema.sqlite.prisma",
     "dev:db:push": "npm run dev:db:sync && prisma db push --schema=./prisma/schema.sqlite.prisma",
@@ -25,6 +26,9 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "bcryptjs": "^3.0.3",

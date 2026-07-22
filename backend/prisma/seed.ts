@@ -593,13 +593,18 @@ function promptMasked(question: string): Promise<string> {
 }
 
 async function upsertSuperAdmin() {
-  const existing = await prisma.adminUser.findFirst({ where: { role: SUPER_ADMIN } });
+  const email = process.env.SEED_SUPER_ADMIN_EMAIL ?? DEFAULT_SUPER_ADMIN_EMAIL;
+
+  // Keyed by this specific email, not "does any super admin exist" — a
+  // production database can legitimately have more than one super admin,
+  // and reseeding must never skip just because someone else already has
+  // the role.
+  const existing = await prisma.adminUser.findUnique({ where: { email } });
   if (existing) {
-    console.log(`Super admin already exists (${existing.email}), skipping.`);
+    console.log(`Admin "${email}" already exists (role: ${existing.role}), skipping.`);
     return;
   }
 
-  const email = process.env.SEED_SUPER_ADMIN_EMAIL ?? DEFAULT_SUPER_ADMIN_EMAIL;
   const password =
     process.env.SEED_SUPER_ADMIN_PASSWORD ?? (await promptMasked("Super admin password (min 12 chars): "));
   const name = process.env.SEED_SUPER_ADMIN_NAME ?? "Super Admin";

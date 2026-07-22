@@ -57,6 +57,7 @@ function userNavItems(role: UserRole, nav: (typeof NAV)["EN"]): { href: string; 
       ];
     default:
       return [
+        { href: "/dashboard", label: nav.dashboard, icon: "i-grid" },
         { href: "/chat", label: nav.chat, icon: "i-chat" },
         { href: "/my-space", label: nav.mySpace, icon: "i-clock" },
         { href: "/appointments", label: nav.appointments, icon: "i-calendar" },

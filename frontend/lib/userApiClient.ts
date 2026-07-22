@@ -72,7 +72,7 @@ export function dashboardPathForRole(role: UserRole): string {
     case "PARENT_GUARDIAN":
       return "/parent";
     default:
-      return "/chat";
+      return "/dashboard";
   }
 }
 

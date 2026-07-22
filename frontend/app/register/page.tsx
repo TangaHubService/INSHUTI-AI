@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useToast } from "@/lib/useToast";
-import { registerUser, type UserRole, type ProfessionalType, type GovLevel } from "@/lib/userApiClient";
+import { dashboardPathForRole, registerUser, type UserRole, type ProfessionalType, type GovLevel } from "@/lib/userApiClient";
 import type { Language } from "@/lib/apiClient";
 import { PasswordInput } from "@/components/PasswordInput";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -123,7 +123,7 @@ export default function RegisterPage() {
         ...(role === "GOVERNMENT_USER" ? { govLevel, regionName: regionName.trim() } : {}),
       });
       toast("Account created! Welcome to Inshuti.", "success");
-      router.push("/chat");
+      router.push(dashboardPathForRole(role));
     } catch (err) {
       toast(err instanceof Error ? err.message : "Registration failed", "error");
     } finally {

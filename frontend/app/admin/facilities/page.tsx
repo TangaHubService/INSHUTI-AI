@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 
 import { AppShell } from "@/components/AppShell";
 import { Drawer } from "@/components/Drawer";
 import { ConfirmModal } from "@/components/Modal";
+import { PageLoading } from "@/components/Spinner";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
 import { useToast } from "@/lib/useToast";
 import {
@@ -17,6 +19,15 @@ import {
   type HealthFacility,
 } from "@/lib/adminApiClient";
 import { isValidLatitude, isValidLongitude } from "@/lib/validation";
+
+const LocationPicker = dynamic(() => import("@/components/LocationPicker").then((m) => m.LocationPicker), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[240px] w-full items-center justify-center rounded-xl border border-line bg-paper-2">
+      <PageLoading label="Loading map…" />
+    </div>
+  ),
+});
 
 const FACILITY_TYPES: FacilityType[] = ["HOSPITAL", "HEALTH_CENTRE", "CLINIC", "PHARMACY"];
 const TYPE_LABEL: Record<FacilityType, string> = {
@@ -158,7 +169,7 @@ export default function AdminFacilitiesPage() {
         </button>
       </div>
 
-      {loading && <p className="text-sm text-ink-soft">Loading…</p>}
+      {loading && <PageLoading />}
 
       {!loading && (
         <div className="overflow-x-auto rounded-md border border-[rgba(22,48,44,0.05)] bg-white shadow-card">
@@ -207,6 +218,17 @@ export default function AdminFacilitiesPage() {
           <select className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as FacilityType })}>
             {FACILITY_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABEL[t]}</option>)}
           </select>
+
+          <label className="text-[12.5px] font-bold text-ink-soft">Location</label>
+          <p className="-mt-3 text-[12px] text-ink-soft">Click or drag the pin to set the exact location.</p>
+          <div className="overflow-hidden rounded-xl border border-line">
+            <LocationPicker
+              key={editingId ?? "new"}
+              latitude={form.latitude}
+              longitude={form.longitude}
+              onChange={(lat, lng) => setForm((prev) => ({ ...prev, latitude: lat, longitude: lng }))}
+            />
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>

@@ -7,5 +7,5 @@
     "rootDir": ".",
     "noEmit": true
   },
-  "include": ["src", "prisma/seed.ts", "scripts/test-chat.ts"]
+  "include": ["src", "prisma/seed.ts", "scripts/test-chat.ts", "scripts/reset-admin-password.ts"]
 }

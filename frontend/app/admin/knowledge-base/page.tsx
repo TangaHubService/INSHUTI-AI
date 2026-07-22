@@ -40,7 +40,7 @@ export default function KnowledgeBasePage() {
   const [tagsInput, setTagsInput] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const [creating, setCreating] = useState(false);
+  const [newDrawerOpen, setNewDrawerOpen] = useState(false);
   const [newArticle, setNewArticle] = useState({ topicId: "", titleEn: "", titleRw: "", titleFr: "", titleSw: "" });
   const [newArticleErrors, setNewArticleErrors] = useState<{ titleEn?: string; titleRw?: string }>({});
 
@@ -130,7 +130,7 @@ export default function KnowledgeBasePage() {
     }
     try {
       const a = await createKbArticle(newArticle);
-      setCreating(false);
+      setNewDrawerOpen(false);
       setNewArticle({ topicId: topics[0]?.id ?? "", titleEn: "", titleRw: "", titleFr: "", titleSw: "" });
       setNewArticleErrors({});
       toast("Article created", "success");
@@ -139,6 +139,12 @@ export default function KnowledgeBasePage() {
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to create article", "error");
     }
+  }
+
+  function openNewArticle() {
+    setNewArticle({ topicId: topics[0]?.id ?? "", titleEn: "", titleRw: "", titleFr: "", titleSw: "" });
+    setNewArticleErrors({});
+    setNewDrawerOpen(true);
   }
 
   if (authLoading || !admin) return null;
@@ -153,31 +159,13 @@ export default function KnowledgeBasePage() {
           </p>
         </div>
         <button
-          onClick={() => setCreating((v) => !v)}
+          onClick={openNewArticle}
           className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)]"
         >
           <svg width="15" height="15"><use href="#i-plus" /></svg>
           New article
         </button>
       </div>
-
-      {creating && (
-        <div className="mb-4 rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-5">
-            <select className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" value={newArticle.topicId} onChange={(e) => setNewArticle({ ...newArticle, topicId: e.target.value })}>
-              {topics.map((t) => <option key={t.id} value={t.id}>{t.nameEn}</option>)}
-            </select>
-            <input className={`rounded-[10px] border bg-paper-2 px-3.5 py-2.5 text-sm ${newArticleErrors.titleEn ? "border-danger" : "border-line"}`} placeholder="Title (English)" value={newArticle.titleEn} onChange={(e) => setNewArticle({ ...newArticle, titleEn: e.target.value })} />
-            <input className={`rounded-[10px] border bg-paper-2 px-3.5 py-2.5 text-sm ${newArticleErrors.titleRw ? "border-danger" : "border-line"}`} placeholder="Title (Kinyarwanda)" value={newArticle.titleRw} onChange={(e) => setNewArticle({ ...newArticle, titleRw: e.target.value })} />
-            <input className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" placeholder="Title (French)" value={newArticle.titleFr} onChange={(e) => setNewArticle({ ...newArticle, titleFr: e.target.value })} />
-            <input className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" placeholder="Title (Kiswahili)" value={newArticle.titleSw} onChange={(e) => setNewArticle({ ...newArticle, titleSw: e.target.value })} />
-          </div>
-          <div className="mt-4 flex gap-2.5">
-            <button onClick={() => void handleCreate()} className="rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)]">Create &amp; edit</button>
-            <button onClick={() => setCreating(false)} className="rounded-full px-4 py-[9px] text-[13px] font-semibold text-ink-soft">Cancel</button>
-          </div>
-        </div>
-      )}
 
       {loading && <p className="text-sm text-ink-soft">Loading…</p>}
 
@@ -194,20 +182,56 @@ export default function KnowledgeBasePage() {
               </div>
             </div>
           </div>
-          {(articlesByTopic[topic.id] ?? []).map((article) => (
-            <div
-              key={article.id}
-              onClick={() => void openEditor(article.id)}
-              className="flex cursor-pointer items-center justify-between border-b border-line px-5 py-[14px] last:border-b-0 hover:bg-paper-2"
-            >
-              <span className="text-sm font-semibold text-ink">{article.titleEn}</span>
-              <span className={`inline-flex items-center gap-1.5 text-[12.5px] font-semibold before:h-2 before:w-2 before:rounded-full before:content-[''] ${article.status === "REVIEWED" ? "text-[#1E7A5A] before:bg-[#2E9E76]" : "text-[#8A5E1E] before:bg-gold"}`}>
-                {article.status === "REVIEWED" ? "Reviewed" : "Needs review"}
-              </span>
-            </div>
-          ))}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-[13.5px]">
+              <tbody>
+                {(articlesByTopic[topic.id] ?? []).length === 0 && (
+                  <tr><td className="px-5 py-4 text-ink-soft">No articles in this topic yet.</td></tr>
+                )}
+                {(articlesByTopic[topic.id] ?? []).map((article) => (
+                  <tr
+                    key={article.id}
+                    onClick={() => void openEditor(article.id)}
+                    className="cursor-pointer border-b border-line last:border-b-0 hover:bg-paper-2"
+                  >
+                    <td className="px-5 py-[14px] font-semibold text-ink">{article.titleEn}</td>
+                    <td className="px-5 py-[14px] text-right">
+                      <span className={`inline-flex items-center gap-1.5 text-[12.5px] font-semibold before:h-2 before:w-2 before:rounded-full before:content-[''] ${article.status === "REVIEWED" ? "text-[#1E7A5A] before:bg-[#2E9E76]" : "text-[#8A5E1E] before:bg-gold"}`}>
+                        {article.status === "REVIEWED" ? "Reviewed" : "Needs review"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ))}
+
+      <Drawer open={newDrawerOpen} onClose={() => setNewDrawerOpen(false)} title="New Article">
+        <div className="flex flex-col gap-4">
+          <label className="text-[12.5px] font-bold text-ink-soft">Topic</label>
+          <select className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={newArticle.topicId} onChange={(e) => setNewArticle({ ...newArticle, topicId: e.target.value })}>
+            {topics.map((t) => <option key={t.id} value={t.id}>{t.nameEn}</option>)}
+          </select>
+
+          <label className="text-[12.5px] font-bold text-ink-soft">Title (English)</label>
+          <input className={`rounded-[10px] border bg-white px-[14px] py-3 text-sm ${newArticleErrors.titleEn ? "border-danger" : "border-line"}`} value={newArticle.titleEn} onChange={(e) => setNewArticle({ ...newArticle, titleEn: e.target.value })} />
+
+          <label className="text-[12.5px] font-bold text-ink-soft">Title (Kinyarwanda)</label>
+          <input className={`rounded-[10px] border bg-white px-[14px] py-3 text-sm ${newArticleErrors.titleRw ? "border-danger" : "border-line"}`} value={newArticle.titleRw} onChange={(e) => setNewArticle({ ...newArticle, titleRw: e.target.value })} />
+
+          <label className="text-[12.5px] font-bold text-ink-soft">Title (French)</label>
+          <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={newArticle.titleFr} onChange={(e) => setNewArticle({ ...newArticle, titleFr: e.target.value })} />
+
+          <label className="text-[12.5px] font-bold text-ink-soft">Title (Kiswahili)</label>
+          <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={newArticle.titleSw} onChange={(e) => setNewArticle({ ...newArticle, titleSw: e.target.value })} />
+
+          <button onClick={() => void handleCreate()} className="mt-2 w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)]">
+            Create &amp; edit
+          </button>
+        </div>
+      </Drawer>
 
       <Drawer open={drawerOpen} onClose={closeDrawer} title={article?.titleEn ?? "Article Editor"}>
         {drawerLoading && <p className="text-sm text-ink-soft">Loading…</p>}

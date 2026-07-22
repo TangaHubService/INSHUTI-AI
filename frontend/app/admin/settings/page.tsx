@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { Drawer } from "@/components/Drawer";
 import { ConfirmModal } from "@/components/Modal";
 import {
   createCrisisResource,
@@ -38,8 +39,11 @@ export default function AdminSettingsPage() {
   const [resources, setResources] = useState<CrisisResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [newResource, setNewResource] = useState({ name: "", contact: "", region: "" });
-  const [newResourceErrors, setNewResourceErrors] = useState<{ name?: boolean; contact?: boolean; region?: boolean }>({});
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editingResource, setEditingResource] = useState<CrisisResource | null>(null);
+  const [resourceForm, setResourceForm] = useState({ name: "", contact: "", region: "" });
+  const [resourceErrors, setResourceErrors] = useState<{ name?: boolean; contact?: boolean; region?: boolean }>({});
+  const [savingResource, setSavingResource] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<CrisisResource | null>(null);
 
   useEffect(() => {
@@ -65,34 +69,47 @@ export default function AdminSettingsPage() {
     }
   }
 
-  async function handleAddResource() {
+  function openNewResource() {
+    setEditingResource(null);
+    setResourceForm({ name: "", contact: "", region: "" });
+    setResourceErrors({});
+    setDrawerOpen(true);
+  }
+
+  function openEditResource(resource: CrisisResource) {
+    setEditingResource(resource);
+    setResourceForm({ name: resource.name, contact: resource.contact, region: resource.region });
+    setResourceErrors({});
+    setDrawerOpen(true);
+  }
+
+  async function handleSaveResource() {
     const errs = {
-      name: !newResource.name.trim(),
-      contact: !newResource.contact.trim(),
-      region: !newResource.region.trim(),
+      name: !resourceForm.name.trim(),
+      contact: !resourceForm.contact.trim(),
+      region: !resourceForm.region.trim(),
     };
-    setNewResourceErrors(errs);
+    setResourceErrors(errs);
     if (errs.name || errs.contact || errs.region) {
       toast("Fill in all fields", "error");
       return;
     }
+    setSavingResource(true);
     try {
-      const resource = await createCrisisResource({ ...newResource, order: resources.length + 1 });
-      setResources((prev) => [...prev, resource]);
-      setNewResource({ name: "", contact: "", region: "" });
-      setNewResourceErrors({});
-      toast("Resource added", "success");
+      if (editingResource) {
+        const updated = await updateCrisisResource(editingResource.id, resourceForm);
+        setResources((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+        toast("Resource updated", "success");
+      } else {
+        const resource = await createCrisisResource({ ...resourceForm, order: resources.length + 1 });
+        setResources((prev) => [...prev, resource]);
+        toast("Resource added", "success");
+      }
+      setDrawerOpen(false);
     } catch {
-      toast("Failed to add resource", "error");
-    }
-  }
-
-  async function handleUpdateResource(id: string, field: "name" | "contact" | "region", value: string) {
-    setResources((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
-    try {
-      await updateCrisisResource(id, { [field]: value });
-    } catch {
-      toast("Failed to update resource", "error");
+      toast(editingResource ? "Failed to update resource" : "Failed to add resource", "error");
+    } finally {
+      setSavingResource(false);
     }
   }
 
@@ -192,65 +209,91 @@ export default function AdminSettingsPage() {
           </div>
 
           <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-6 shadow-card">
-            <h3 className="mb-1 text-base text-teal-900">Crisis resources</h3>
-            <p className="mb-4 text-[12.5px] text-ink-soft">
-              Shown to users when crisis language is detected. Keep contact numbers verified.
-            </p>
-
-            {resources.map((resource) => (
-              <div key={resource.id} className="mb-2.5 flex items-center gap-2.5 rounded-[10px] border border-line p-3">
-                <input
-                  className="flex-1 rounded-lg border border-line bg-paper-2 px-3 py-2 text-[13px]"
-                  value={resource.name}
-                  onChange={(e) => void handleUpdateResource(resource.id, "name", e.target.value)}
-                />
-                <input
-                  className="flex-1 rounded-lg border border-line bg-paper-2 px-3 py-2 text-[13px]"
-                  value={resource.contact}
-                  onChange={(e) => void handleUpdateResource(resource.id, "contact", e.target.value)}
-                />
-                <input
-                  className="w-[120px] rounded-lg border border-line bg-paper-2 px-3 py-2 text-[13px]"
-                  value={resource.region}
-                  onChange={(e) => void handleUpdateResource(resource.id, "region", e.target.value)}
-                />
-                <button onClick={() => setDeleteTarget(resource)} title="Delete">
-                  <svg width="16" height="16" className="cursor-pointer text-coral-dark">
-                    <use href="#i-trash" />
-                  </svg>
-                </button>
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-base text-teal-900">Crisis resources</h3>
+                <p className="mt-1 text-[12.5px] text-ink-soft">
+                  Shown to users when crisis language is detected. Keep contact numbers verified.
+                </p>
               </div>
-            ))}
-
-            <div className="mt-3 flex items-center gap-2.5">
-              <input
-                className={`flex-1 rounded-lg border bg-paper-2 px-3 py-2 text-[13px] ${newResourceErrors.name ? "border-danger" : "border-line"}`}
-                placeholder="Name"
-                value={newResource.name}
-                onChange={(e) => setNewResource({ ...newResource, name: e.target.value })}
-              />
-              <input
-                className={`flex-1 rounded-lg border bg-paper-2 px-3 py-2 text-[13px] ${newResourceErrors.contact ? "border-danger" : "border-line"}`}
-                placeholder="Contact"
-                value={newResource.contact}
-                onChange={(e) => setNewResource({ ...newResource, contact: e.target.value })}
-              />
-              <input
-                className={`w-[120px] rounded-lg border bg-paper-2 px-3 py-2 text-[13px] ${newResourceErrors.region ? "border-danger" : "border-line"}`}
-                placeholder="Region"
-                value={newResource.region}
-                onChange={(e) => setNewResource({ ...newResource, region: e.target.value })}
-              />
               <button
-                onClick={() => void handleAddResource()}
-                className="rounded-full border-[1.5px] border-teal-700 px-4 py-2 text-[13px] font-semibold text-teal-700"
+                onClick={openNewResource}
+                className="inline-flex flex-shrink-0 items-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)]"
               >
-                Add
+                <svg width="15" height="15"><use href="#i-plus" /></svg>
+                Add resource
               </button>
+            </div>
+
+            <div className="overflow-x-auto rounded-md border border-line">
+              <table className="w-full border-collapse text-[13.5px]">
+                <thead>
+                  <tr>
+                    {["Name", "Contact", "Region", ""].map((h) => (
+                      <th key={h} className="border-b border-line px-3.5 pb-2.5 pt-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.06em] text-ink-soft">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {resources.length === 0 && (
+                    <tr><td colSpan={4} className="px-3.5 py-6 text-center text-ink-soft">No crisis resources yet.</td></tr>
+                  )}
+                  {resources.map((resource) => (
+                    <tr key={resource.id} className="border-b border-line last:border-b-0 hover:bg-paper-2">
+                      <td className="p-3.5 font-semibold text-ink">{resource.name}</td>
+                      <td className="p-3.5">{resource.contact}</td>
+                      <td className="p-3.5">{resource.region}</td>
+                      <td className="p-3.5">
+                        <div className="flex items-center justify-end gap-3">
+                          <button onClick={() => openEditResource(resource)} className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-teal-700">
+                            <svg width="14" height="14"><use href="#i-edit" /></svg>
+                          </button>
+                          <button onClick={() => setDeleteTarget(resource)} className="flex h-8 w-8 items-center justify-center rounded-full border border-coral-dark text-coral-dark">
+                            <svg width="14" height="14"><use href="#i-trash" /></svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       )}
+
+      <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title={editingResource ? "Edit Crisis Resource" : "New Crisis Resource"}>
+        <div className="flex flex-col gap-4">
+          <label className="text-[12.5px] font-bold text-ink-soft">Name</label>
+          <input
+            className={`rounded-[10px] border bg-white px-[14px] py-3 text-sm ${resourceErrors.name ? "border-danger" : "border-line"}`}
+            value={resourceForm.name}
+            onChange={(e) => setResourceForm({ ...resourceForm, name: e.target.value })}
+          />
+
+          <label className="text-[12.5px] font-bold text-ink-soft">Contact</label>
+          <input
+            className={`rounded-[10px] border bg-white px-[14px] py-3 text-sm ${resourceErrors.contact ? "border-danger" : "border-line"}`}
+            value={resourceForm.contact}
+            onChange={(e) => setResourceForm({ ...resourceForm, contact: e.target.value })}
+          />
+
+          <label className="text-[12.5px] font-bold text-ink-soft">Region</label>
+          <input
+            className={`rounded-[10px] border bg-white px-[14px] py-3 text-sm ${resourceErrors.region ? "border-danger" : "border-line"}`}
+            value={resourceForm.region}
+            onChange={(e) => setResourceForm({ ...resourceForm, region: e.target.value })}
+          />
+
+          <button
+            onClick={() => void handleSaveResource()}
+            disabled={savingResource}
+            className="mt-2 w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] disabled:opacity-50"
+          >
+            {savingResource ? "Saving…" : editingResource ? "Save changes" : "Add resource"}
+          </button>
+        </div>
+      </Drawer>
       <ConfirmModal
         open={!!deleteTarget}
         title="Delete resource"

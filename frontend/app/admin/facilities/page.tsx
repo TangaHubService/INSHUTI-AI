@@ -161,29 +161,39 @@ export default function AdminFacilitiesPage() {
       {loading && <p className="text-sm text-ink-soft">Loading…</p>}
 
       {!loading && (
-        <div className="overflow-hidden rounded-md border border-[rgba(22,48,44,0.05)] bg-white shadow-card">
-          {facilities.length === 0 && <p className="p-5 text-sm text-ink-soft">No facilities yet.</p>}
-          {facilities.map((facility) => (
-            <div
-              key={facility.id}
-              className="flex items-center justify-between border-b border-line px-5 py-[14px] last:border-b-0 hover:bg-paper-2"
-            >
-              <div className="min-w-0">
-                <div className="font-bold text-ink">{facility.name}</div>
-                <div className="mt-[3px] text-[12.5px] text-ink-soft">
-                  {TYPE_LABEL[facility.type]} · {facility.district} District, {facility.sector} Sector
-                </div>
-              </div>
-              <div className="flex flex-shrink-0 items-center gap-3">
-                <button onClick={() => openEdit(facility)} className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-teal-700">
-                  <svg width="14" height="14"><use href="#i-edit" /></svg>
-                </button>
-                <button onClick={() => setDeleteTarget(facility)} className="flex h-8 w-8 items-center justify-center rounded-full border border-coral-dark text-coral-dark">
-                  <svg width="14" height="14"><use href="#i-trash" /></svg>
-                </button>
-              </div>
-            </div>
-          ))}
+        <div className="overflow-x-auto rounded-md border border-[rgba(22,48,44,0.05)] bg-white shadow-card">
+          <table className="w-full border-collapse text-[13.5px]">
+            <thead>
+              <tr>
+                {["Name", "Type", "Location", "Contact", ""].map((h) => (
+                  <th key={h} className="border-b border-line px-3.5 pb-2.5 pt-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.06em] text-ink-soft">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {facilities.length === 0 && (
+                <tr><td colSpan={5} className="px-3.5 py-6 text-center text-ink-soft">No facilities yet.</td></tr>
+              )}
+              {facilities.map((facility) => (
+                <tr key={facility.id} className="border-b border-line last:border-b-0 hover:bg-paper-2">
+                  <td className="p-3.5 font-semibold text-ink">{facility.name}</td>
+                  <td className="p-3.5">{TYPE_LABEL[facility.type]}</td>
+                  <td className="p-3.5">{facility.district} District, {facility.sector} Sector</td>
+                  <td className="p-3.5">{facility.contact || "—"}</td>
+                  <td className="p-3.5">
+                    <div className="flex items-center justify-end gap-3">
+                      <button onClick={() => openEdit(facility)} className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-teal-700">
+                        <svg width="14" height="14"><use href="#i-edit" /></svg>
+                      </button>
+                      <button onClick={() => setDeleteTarget(facility)} className="flex h-8 w-8 items-center justify-center rounded-full border border-coral-dark text-coral-dark">
+                        <svg width="14" height="14"><use href="#i-trash" /></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 

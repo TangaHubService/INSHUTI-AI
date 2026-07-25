@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireAdmin, hashPassword } from "../lib/auth.js";
 import { prisma } from "../lib/prisma.js";
 import { notifyUser } from "../lib/notifications.js";
+import { writeAuditLog } from "../lib/auditLog.js";
 import { adminRoleSchema, approvalStatusSchema, userRoleSchema } from "../lib/constants.js";
 
 export const adminUsersRouter = Router();
@@ -60,6 +61,14 @@ adminUsersRouter.patch("/:id", async (req, res) => {
     return;
   }
 
+  await writeAuditLog({
+    action: parsed.data.active ? "USER_ACTIVATED" : "USER_DEACTIVATED",
+    entityType: "user",
+    entityId: user.id,
+    adminId: req.admin!.sub,
+    adminEmail: req.admin!.email,
+  });
+
   res.json({ id: user.id, active: user.active });
 });
 
@@ -89,6 +98,15 @@ adminUsersRouter.patch("/:id/approval", async (req, res) => {
       parsed.data.approvalStatus === "APPROVED"
         ? "You're now approved to receive consultations and appointments."
         : "Your healthcare professional application was not approved. Contact support for details.",
+  });
+
+  await writeAuditLog({
+    action: "PROFESSIONAL_APPROVAL_UPDATED",
+    entityType: "healthcare_professional",
+    entityId: updated.id,
+    adminId: req.admin!.sub,
+    adminEmail: req.admin!.email,
+    details: { approvalStatus: parsed.data.approvalStatus },
   });
 
   res.json({ approvalStatus: updated.approvalStatus });
@@ -127,6 +145,15 @@ adminAdminsRouter.post("/", async (req, res) => {
     data: { email: parsed.data.email, passwordHash, name: parsed.data.name, role: parsed.data.role },
   });
 
+  await writeAuditLog({
+    action: "ADMIN_CREATED",
+    entityType: "admin_user",
+    entityId: admin.id,
+    adminId: req.admin!.sub,
+    adminEmail: req.admin!.email,
+    details: { email: admin.email, role: admin.role },
+  });
+
   res.status(201).json({ id: admin.id, email: admin.email, name: admin.name, role: admin.role, active: admin.active });
 });
 
@@ -157,6 +184,15 @@ adminAdminsRouter.patch("/:id", async (req, res) => {
     res.status(404).json({ error: "Admin not found" });
     return;
   }
+
+  await writeAuditLog({
+    action: "ADMIN_UPDATED",
+    entityType: "admin_user",
+    entityId: admin.id,
+    adminId: req.admin!.sub,
+    adminEmail: req.admin!.email,
+    details: parsed.data,
+  });
 
   res.json({ id: admin.id, email: admin.email, name: admin.name, role: admin.role, active: admin.active });
 });

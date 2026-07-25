@@ -17,10 +17,15 @@ export function SiteFooter({ disclaimer }: { disclaimer?: string }) {
           <Logo size={24} />
           <span className="font-display text-[17px] font-bold text-teal-900">Inshuti</span>
         </div>
-        <div className="flex gap-[22px] text-[13.5px] font-semibold text-ink-soft">
-          <a href="#" className="hover:text-teal-700">{footer.privacy}</a>
-          <a href="#" className="hover:text-teal-700">{footer.terms}</a>
-          <Link href="/admin/login" className="hover:text-teal-700">{footer.login}</Link>
+        <div className="flex flex-wrap gap-x-[22px] gap-y-2 text-[13.5px] font-semibold text-ink-soft">
+          <Link href="/about" className="transition-colors duration-150 hover:text-teal-700">{footer.about}</Link>
+          <Link href="/services" className="transition-colors duration-150 hover:text-teal-700">{footer.services}</Link>
+          <Link href="/library" className="transition-colors duration-150 hover:text-teal-700">{footer.library}</Link>
+          <Link href="/faq" className="transition-colors duration-150 hover:text-teal-700">{footer.faq}</Link>
+          <Link href="/privacy" className="transition-colors duration-150 hover:text-teal-700">{footer.privacy}</Link>
+          <Link href="/terms" className="transition-colors duration-150 hover:text-teal-700">{footer.terms}</Link>
+          <Link href="/contact" className="transition-colors duration-150 hover:text-teal-700">{footer.contact}</Link>
+          <Link href="/admin/login" className="transition-colors duration-150 hover:text-teal-700">{footer.login}</Link>
         </div>
       </div>
       {disclaimer && <p className="mt-4 max-w-[640px] text-[12.5px] leading-[1.6] text-ink-soft">{disclaimer}</p>}

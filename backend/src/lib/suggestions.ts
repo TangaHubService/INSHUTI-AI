@@ -205,7 +205,8 @@ export interface SuggestionResult extends Suggestion {
 }
 
 function pickByLang(map: LangSuggestionMap, language: Language): Suggestion {
-  return map[language] ?? map.en;
+  const lang = language.toLowerCase();
+  return map[lang] ?? map.en;
 }
 
 export function getSuggestionsForTopics(topicSlugs: string[], language: Language): SuggestionResult[] {

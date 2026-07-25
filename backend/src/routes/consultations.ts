@@ -7,10 +7,11 @@ import { requireUser, type AuthenticatedUserRequest } from "../lib/userAuth.js";
 import { routeConsultation, reassignConsultation, escalateConsultation } from "../lib/consultationRouter.js";
 import { requireAdmin } from "../lib/auth.js";
 import { FLAG_REASONS } from "../lib/constants.js";
+import { env } from "../lib/env.js";
 
 const router = Router();
 
-const ENCRYPTION_KEY = process.env.MESSAGE_ENCRYPTION_KEY ?? "dev-only-32-char-key-default-xxxxx";
+const ENCRYPTION_KEY = env.MESSAGE_ENCRYPTION_KEY;
 
 function encrypt(text: string): string {
   const iv = crypto.randomBytes(16);

@@ -21,7 +21,9 @@
     "admin:reset-password": "tsx scripts/reset-admin-password.ts",
     "admin:check-login": "tsx scripts/check-admin-login.ts",
     "test:chat": "tsx scripts/test-chat.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [],
   "author": "",
@@ -37,7 +39,9 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.6.0",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.2.0",
     "nodemailer": "^9.0.3",
     "openai": "^6.48.0",
     "zod": "^4.4.3"
@@ -49,14 +53,18 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.2.0",
     "@types/node": "^26.1.1",
     "@types/nodemailer": "^8.0.1",
+    "@types/supertest": "^7.2.1",
     "eslint": "^10.7.0",
     "globals": "^17.7.0",
     "prettier": "^3.9.5",
     "prisma": "^5.22.0",
+    "supertest": "^7.2.2",
     "tsx": "^4.23.1",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.64.0"
+    "typescript-eslint": "^8.64.0",
+    "vitest": "^4.1.10"
   }
 }

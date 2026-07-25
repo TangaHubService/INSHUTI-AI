@@ -7,10 +7,6 @@ module.exports = {
   ],
   theme: {
     extend: {
-      // Mapped onto the CSS custom properties in app/globals.css (the design
-      // prototype's tokens), so Tailwind utilities (bg-teal-700, font-display,
-      // rounded-md, ...) stay pixel-identical to the prototype instead of
-      // reintroducing a second, drifting color/spacing system.
       colors: {
         paper: "var(--paper)",
         "paper-2": "var(--paper-2)",
@@ -49,8 +45,26 @@ module.exports = {
         soft: "var(--shadow-soft)",
         card: "var(--shadow-card)",
       },
+      keyframes: {
+        "slide-in": {
+          from: { transform: "translateX(100%)", opacity: "0" },
+          to: { transform: "translateX(0)", opacity: "1" },
+        },
+        "slide-up": {
+          from: { transform: "translateY(8px)", opacity: "0" },
+          to: { transform: "translateY(0)", opacity: "1" },
+        },
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+      },
+      animation: {
+        "slide-in": "slide-in 0.25s ease-out",
+        "slide-up": "slide-up 0.3s ease-out",
+        "fade-in": "fade-in 0.2s ease-out",
+      },
     },
   },
   plugins: [],
-}
-
+};

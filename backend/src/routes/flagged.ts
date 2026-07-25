@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireAdmin } from "../lib/auth.js";
 import { FLAG_STATUSES, flagReasonSchema, flagStatusSchema } from "../lib/constants.js";
 import { prisma } from "../lib/prisma.js";
+import { writeAuditLog } from "../lib/auditLog.js";
 
 const router = Router();
 const [, , RESOLVED] = FLAG_STATUSES; // ["FLAGGED", "PENDING", "RESOLVED"]
@@ -118,6 +119,16 @@ router.patch("/:id", async (req, res) => {
       ...(becomingResolved ? { resolvedBy: req.admin!.email, resolvedAt: new Date() } : {}),
     },
   });
+
+  await writeAuditLog({
+    action: becomingResolved ? "FLAG_RESOLVED" : "FLAG_UPDATED",
+    entityType: "flagged_item",
+    entityId: item.id,
+    adminId: req.admin!.sub,
+    adminEmail: req.admin!.email,
+    details: { status: item.status, reviewerNotes: reviewerNotes ?? undefined },
+  });
+
   res.json({ item });
 });
 

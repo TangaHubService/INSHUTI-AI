@@ -151,3 +151,61 @@ export async function getFacilities(filters?: { type?: FacilityType; district?: 
   if (!res.ok) throw new Error(`Facilities request failed (${res.status})`);
   return res.json();
 }
+
+export interface ContactInquiryResult {
+  id: string;
+  createdAt: string;
+}
+
+export async function sendContactInquiry(input: { name: string; email: string; message: string }): Promise<ContactInquiryResult> {
+  const res = await apiFetch("/api/contact", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to send message");
+  }
+  const data: { inquiry: ContactInquiryResult } = await res.json();
+  return data.inquiry;
+}
+
+export interface PublicLibraryTopic {
+  id: string;
+  slug: string;
+  nameEn: string;
+  nameRw: string;
+  nameFr: string;
+  nameSw: string;
+  icon: string;
+  colorToken: string;
+  articleCount: number;
+}
+
+export interface PublicLibraryArticle {
+  id: string;
+  topicId: string;
+  topic: { id: string; slug: string; nameEn: string; nameRw: string };
+  title: string;
+  body: string;
+  tags: string[];
+  externalUrl: string | null;
+  reviewedAt: string | null;
+  updatedAt: string;
+}
+
+export async function getPublicLibraryTopics(): Promise<PublicLibraryTopic[]> {
+  const res = await apiFetch("/api/library/topics");
+  if (!res.ok) throw new Error(`Failed to load library topics (${res.status})`);
+  const data: { topics: PublicLibraryTopic[] } = await res.json();
+  return data.topics;
+}
+
+export async function getPublicLibraryArticles(language: string, topicId?: string): Promise<PublicLibraryArticle[]> {
+  const params = new URLSearchParams({ language });
+  if (topicId) params.set("topicId", topicId);
+  const res = await apiFetch(`/api/library/articles?${params.toString()}`);
+  if (!res.ok) throw new Error(`Failed to load library articles (${res.status})`);
+  const data: { articles: PublicLibraryArticle[] } = await res.json();
+  return data.articles;
+}

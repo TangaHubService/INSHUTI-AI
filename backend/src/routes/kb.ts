@@ -5,6 +5,7 @@ import { requireAdmin } from "../lib/auth.js";
 import { ARTICLE_STATUSES, articleStatusSchema } from "../lib/constants.js";
 import { decodeJsonColumn, encodeJsonColumn } from "../lib/jsonColumn.js";
 import { prisma } from "../lib/prisma.js";
+import { writeAuditLog } from "../lib/auditLog.js";
 
 const router = Router();
 const [REVIEWED, NEEDS_REVIEW] = ARTICLE_STATUSES; // ["REVIEWED", "NEEDS_REVIEW"]
@@ -93,6 +94,16 @@ router.post("/articles", async (req, res) => {
   const article = await prisma.article.create({
     data: { ...rest, tags: encodeJsonColumn(tags), status: NEEDS_REVIEW },
   });
+
+  await writeAuditLog({
+    action: "ARTICLE_CREATED",
+    entityType: "article",
+    entityId: article.id,
+    adminId: req.admin!.sub,
+    adminEmail: req.admin!.email,
+    details: { titleEn: article.titleEn, topicId: article.topicId },
+  });
+
   res.status(201).json({ article: serializeArticle(article) });
 });
 
@@ -148,6 +159,16 @@ router.patch("/articles/:id", async (req, res) => {
         : {}),
     },
   });
+
+  await writeAuditLog({
+    action: becomingReviewed ? "ARTICLE_REVIEWED" : "ARTICLE_UPDATED",
+    entityType: "article",
+    entityId: article.id,
+    adminId: req.admin!.sub,
+    adminEmail: req.admin!.email,
+    details: { status: article.status, titleEn: article.titleEn },
+  });
+
   res.json({ article: serializeArticle(article) });
 });
 
@@ -158,6 +179,16 @@ router.delete("/articles/:id", async (req, res) => {
     return;
   }
   await prisma.article.delete({ where: { id: req.params.id } });
+
+  await writeAuditLog({
+    action: "ARTICLE_DELETED",
+    entityType: "article",
+    entityId: req.params.id,
+    adminId: req.admin!.sub,
+    adminEmail: req.admin!.email,
+    details: { titleEn: existing.titleEn },
+  });
+
   res.status(204).send();
 });
 

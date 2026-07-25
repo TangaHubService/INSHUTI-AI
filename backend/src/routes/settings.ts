@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireAdmin } from "../lib/auth.js";
 import { prisma } from "../lib/prisma.js";
+import { writeAuditLog } from "../lib/auditLog.js";
 
 const router = Router();
 
@@ -29,6 +30,16 @@ router.patch("/", async (req, res) => {
     return;
   }
   const settings = await prisma.appSettings.update({ where: { id: "singleton" }, data: parsed.data });
+
+  await writeAuditLog({
+    action: "SETTINGS_UPDATED",
+    entityType: "app_settings",
+    entityId: "singleton",
+    adminId: req.admin!.sub,
+    adminEmail: req.admin!.email,
+    details: parsed.data,
+  });
+
   res.json({ settings });
 });
 
@@ -51,6 +62,16 @@ router.post("/crisis-resources", async (req, res) => {
     return;
   }
   const resource = await prisma.crisisResource.create({ data: parsed.data });
+
+  await writeAuditLog({
+    action: "CRISIS_RESOURCE_CREATED",
+    entityType: "crisis_resource",
+    entityId: resource.id,
+    adminId: req.admin!.sub,
+    adminEmail: req.admin!.email,
+    details: { name: resource.name },
+  });
+
   res.status(201).json({ resource });
 });
 
@@ -68,6 +89,16 @@ router.patch("/crisis-resources/:id", async (req, res) => {
     return;
   }
   const resource = await prisma.crisisResource.update({ where: { id: req.params.id }, data: parsed.data });
+
+  await writeAuditLog({
+    action: "CRISIS_RESOURCE_UPDATED",
+    entityType: "crisis_resource",
+    entityId: resource.id,
+    adminId: req.admin!.sub,
+    adminEmail: req.admin!.email,
+    details: parsed.data,
+  });
+
   res.json({ resource });
 });
 
@@ -78,6 +109,16 @@ router.delete("/crisis-resources/:id", async (req, res) => {
     return;
   }
   await prisma.crisisResource.delete({ where: { id: req.params.id } });
+
+  await writeAuditLog({
+    action: "CRISIS_RESOURCE_DELETED",
+    entityType: "crisis_resource",
+    entityId: req.params.id,
+    adminId: req.admin!.sub,
+    adminEmail: req.admin!.email,
+    details: { name: existing.name },
+  });
+
   res.status(204).send();
 });
 

@@ -20,6 +20,9 @@ const ADMIN_NAV_ITEMS: { href: string; label: string; icon: string; minRole?: Ad
   { href: "/admin/flagged", label: "Flagged Content", icon: "i-flag", minRole: "MODERATOR" },
   { href: "/admin/facilities", label: "Facilities", icon: "i-building", minRole: "CONTENT_REVIEWER" },
   { href: "/admin/users", label: "Users & Admins", icon: "i-users", minRole: "SUPER_ADMIN" },
+  { href: "/admin/reports", label: "Reports", icon: "i-download", minRole: "SUPER_ADMIN" },
+  { href: "/admin/audit-logs", label: "Audit Logs", icon: "i-clock", minRole: "SUPER_ADMIN" },
+  { href: "/admin/monitoring", label: "Monitoring", icon: "i-activity", minRole: "SUPER_ADMIN" },
   { href: "/admin/settings", label: "Settings", icon: "i-gear", minRole: "SUPER_ADMIN" },
 ];
 

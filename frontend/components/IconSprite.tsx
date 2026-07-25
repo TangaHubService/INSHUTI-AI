@@ -331,6 +331,26 @@ export function IconSprite() {
           />
         </symbol>
 
+        <symbol id="i-attach" viewBox="0 0 24 24">
+          <path d="M14 5.5v9.5a3 3 0 0 1-6 0V5a4.5 4.5 0 0 1 9 0v10a6 6 0 0 1-12 0V8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </symbol>
+        <symbol id="i-download" viewBox="0 0 24 24">
+          <path d="M12 3v13M8 11l4 5 4-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </symbol>
+        <symbol id="i-activity" viewBox="0 0 24 24">
+          <path d="M4 16h4l2-8 3 12 2-6 2.5 4H20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </symbol>
+        <symbol id="i-file" viewBox="0 0 24 24">
+          <path d="M14 3v5h5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M6 3h8l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+        </symbol>
+        <symbol id="i-spinner" viewBox="0 0 24 24">
+          <path d="M12 4a8 8 0 0 0-8 8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite" />
+          </path>
+        </symbol>
+
         <symbol id="mark-knot" viewBox="0 0 64 64">
           <path
             d="M14 12c-8 0-13 6-13 13 0 5 2.5 8.8 6.5 11L6 44l9-3.4c1.3.3 2.7.4 4 .3 8-.5 12-6.5 12-13 0-7-6.5-16-17-16Z"

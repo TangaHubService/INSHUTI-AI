@@ -20,6 +20,19 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   SMTP_FROM: z.string().optional(),
+
+  // Consultation message encryption — required in production.
+  MESSAGE_ENCRYPTION_KEY: z.string().min(32, "MESSAGE_ENCRYPTION_KEY must be at least 32 characters"),
+
+  // File uploads
+  UPLOAD_DIR: z.string().default("./uploads"),
+  MAX_FILE_SIZE_MB: z.coerce.number().int().positive().default(10),
+
+  // SMS provider — "stub" (default) logs instead of sending.
+  SMS_PROVIDER: z.enum(["stub", "twilio"]).default("stub"),
+  TWILIO_ACCOUNT_SID: z.string().optional(),
+  TWILIO_AUTH_TOKEN: z.string().optional(),
+  TWILIO_FROM: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

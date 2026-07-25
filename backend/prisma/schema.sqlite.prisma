@@ -134,6 +134,7 @@ model User {
   conversations         Conversation[]
   appointments          Appointment[]
   notifications         Notification[]
+  attachments           FileAttachment[]
 
   @@index([email])
 }
@@ -176,6 +177,8 @@ model Consultation {
   resolvedAt         DateTime?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
+
+  attachments     FileAttachment[]
 
   @@index([professionalId])
   @@index([status])
@@ -241,4 +244,49 @@ model AppSettings {
   sessionTimeoutMinutes   Int     @default(60)
   maxLoginAttempts        Int     @default(5)
   lockoutDurationMinutes  Int     @default(15)
+}
+
+model ContactInquiry {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([read])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entityType  String
+  entityId    String?
+  adminId     String?
+  adminEmail  String?
+  details     String   @default("{}")
+  createdAt   DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([adminId])
+  @@index([createdAt])
+}
+
+model FileAttachment {
+  id              String         @id @default(cuid())
+  consultationId  String?
+  consultation    Consultation?  @relation(fields: [consultationId], references: [id])
+  userId          String?
+  user            User?          @relation(fields: [userId], references: [id])
+  originalName    String
+  storedName      String
+  mimeType        String
+  size            Int
+  path            String
+  uploadedBy      String
+  createdAt       DateTime       @default(now())
+
+  @@index([consultationId])
+  @@index([userId])
 }

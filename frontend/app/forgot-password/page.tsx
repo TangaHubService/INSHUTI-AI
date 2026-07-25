@@ -123,12 +123,13 @@ export default function ForgotPasswordPage() {
                   setEmail(e.target.value);
                   setError("");
                 }}
+                autoComplete="email"
               />
               <p className="mb-3.5 mt-1 min-h-[14px] text-xs font-semibold text-danger">{error}</p>
               <button
                 type="submit"
                 disabled={sending}
-                className="w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
+                className="w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition-all duration-150 hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
               >
                 {sending ? m.sending : m.send}
               </button>

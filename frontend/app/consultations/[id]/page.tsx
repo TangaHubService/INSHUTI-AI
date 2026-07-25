@@ -10,7 +10,10 @@ import { useRequireUser } from "@/lib/useUserAuth";
 import {
   getConsultationMessages,
   sendConsultationMessage,
+  uploadConsultationFile,
+  getConsultationFiles,
   type ConsultationMessage,
+  type FileAttachment,
 } from "@/lib/userApiClient";
 
 const POLL_INTERVAL_MS = 4000;
@@ -27,6 +30,9 @@ export default function ConsultationThreadPage() {
   const [messages, setMessages] = useState<ConsultationMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [files, setFiles] = useState<FileAttachment[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -35,8 +41,14 @@ export default function ConsultationThreadPage() {
 
     async function poll() {
       try {
-        const data = await getConsultationMessages(consultationId);
-        if (!cancelled) setMessages(data);
+        const [data, attachmentData] = await Promise.all([
+          getConsultationMessages(consultationId),
+          getConsultationFiles(consultationId),
+        ]);
+        if (!cancelled) {
+          setMessages(data);
+          setFiles(attachmentData);
+        }
       } catch {
         // transient poll failures aren't worth interrupting the user with a toast
       }
@@ -53,6 +65,29 @@ export default function ConsultationThreadPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      await uploadConsultationFile(consultationId, file);
+      const attachmentData = await getConsultationFiles(consultationId);
+      setFiles(attachmentData);
+      toast("File uploaded", "success");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to upload file", "error");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  function formatFileSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
 
   const myRole = user?.role === "HEALTHCARE_PROFESSIONAL" ? "ASSISTANT" : "USER";
 
@@ -119,6 +154,20 @@ export default function ConsultationThreadPage() {
       </div>
 
       <main className="mx-auto w-full max-w-[720px] flex-1 overflow-y-auto px-[30px] py-[26px]">
+        {files.length > 0 && (
+          <div className="mb-6">
+            <div className="mb-3 text-[12.5px] font-bold uppercase tracking-[0.08em] text-ink-soft">Attachments</div>
+            <div className="flex flex-wrap gap-2">
+              {files.map((file) => (
+                <div key={file.id} className="flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-[13px]">
+                  <svg width="14" height="14" className="text-ink-soft"><use href="#i-file" /></svg>
+                  <span className="font-medium text-teal-900">{file.originalName}</span>
+                  <span className="text-ink-soft">({formatFileSize(file.size)})</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {messages.length === 0 && (
           <p className="text-center text-[13.5px] text-ink-soft">No messages yet. Say hello.</p>
         )}
@@ -146,6 +195,16 @@ export default function ConsultationThreadPage() {
       </main>
 
       <form className="flex items-end gap-[10px] border-t border-line bg-white px-[30px] pb-2 pt-4" onSubmit={handleSend}>
+        <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => void handleFileUpload(e)} />
+        <button
+          type="button"
+          disabled={uploading}
+          onClick={() => fileInputRef.current?.click()}
+          className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-line bg-white hover:bg-paper-2 disabled:opacity-50"
+          title="Attach file"
+        >
+          <svg width="18" height="18" className="text-ink-soft"><use href={uploading ? "#i-spinner" : "#i-attach"} /></svg>
+        </button>
         <textarea
           ref={textareaRef}
           rows={1}

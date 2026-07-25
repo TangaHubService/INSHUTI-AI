@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Baloo_2, IBM_Plex_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { IconSprite } from "@/components/IconSprite";
@@ -10,11 +10,13 @@ const balooDisplay = Baloo_2({
   weight: ["500", "600", "700", "800"],
   variable: "--font-display",
 });
+
 const interBody = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-body",
 });
+
 const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
@@ -22,8 +24,24 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Inshuti",
-  description: "A warm, non-judgmental health assistant for young people in Rwanda.",
+  title: {
+    default: "Inshuti — Your Health Companion",
+    template: "%s — Inshuti",
+  },
+  description: "A warm, non-judgmental AI health assistant for young people in Rwanda. Free, anonymous, and bilingual.",
+  keywords: ["health", "Rwanda", "sexual health", "reproductive health", "AI assistant", "teen health", "anonymous"],
+  openGraph: {
+    title: "Inshuti — Your Health Companion",
+    description: "A warm, non-judgmental AI health assistant for young people in Rwanda. Free, anonymous, and bilingual.",
+    type: "website",
+    locale: "en_RW",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#FAF8F3",
 };
 
 export default function RootLayout({

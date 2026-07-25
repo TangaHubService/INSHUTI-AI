@@ -77,9 +77,9 @@ export const NAV: Record<Language, {
   },
 };
 
-export const FOOTER: Record<Language, { privacy: string; terms: string; login: string }> = {
-  EN: { privacy: "Privacy", terms: "Terms", login: "Log in" },
-  RW: { privacy: "Ibanga", terms: "Amabwiriza", login: "Injira" },
-  FR: { privacy: "Confidentialité", terms: "Conditions", login: "Connexion" },
-  SW: { privacy: "Faragha", terms: "Masharti", login: "Ingia" },
+export const FOOTER: Record<Language, { privacy: string; terms: string; login: string; about: string; services: string; library: string; faq: string; contact: string }> = {
+  EN: { privacy: "Privacy", terms: "Terms", login: "Log in", about: "About", services: "Services", library: "Library", faq: "FAQ", contact: "Contact" },
+  RW: { privacy: "Ibanga", terms: "Amabwiriza", login: "Injira", about: "Ibyerekeye", services: "Serivisi", library: "Ububiko", faq: "Ibibazo", contact: "Duhamagare" },
+  FR: { privacy: "Confidentialité", terms: "Conditions", login: "Connexion", about: "À propos", services: "Services", library: "Bibliothèque", faq: "FAQ", contact: "Contact" },
+  SW: { privacy: "Faragha", terms: "Masharti", login: "Ingia", about: "Kuhusu", services: "Huduma", library: "Maktaba", faq: "Maswali", contact: "Wasiliana" },
 };

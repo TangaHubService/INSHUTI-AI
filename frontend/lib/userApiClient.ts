@@ -297,6 +297,40 @@ export async function getConsultationMessages(id: string): Promise<ConsultationM
   return data.messages;
 }
 
+export interface FileAttachment {
+  id: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  createdAt: string;
+}
+
+export async function uploadConsultationFile(consultationId: string, file: File): Promise<void> {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("consultationId", consultationId);
+  const res = await fetch(`${API_URL}/api/uploads`, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to upload file");
+  }
+}
+
+export async function getConsultationFiles(consultationId: string): Promise<FileAttachment[]> {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+  const res = await fetch(`${API_URL}/api/uploads/consultation/${consultationId}`, {
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(`Failed to load files (${res.status})`);
+  const data: { attachments: FileAttachment[] } = await res.json();
+  return data.attachments;
+}
+
 export async function sendConsultationMessage(id: string, content: string): Promise<void> {
   const res = await apiFetch(`/api/consultations/${id}/messages`, { method: "POST", body: JSON.stringify({ content }) });
   if (!res.ok) {

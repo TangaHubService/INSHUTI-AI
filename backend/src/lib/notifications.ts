@@ -3,6 +3,7 @@ import nodemailer, { type Transporter } from "nodemailer";
 import { prisma } from "./prisma.js";
 import { env } from "./env.js";
 import { decodeNotificationPrefs } from "./notificationPrefs.js";
+import { sendSms } from "./sms.js";
 import type { NotificationType } from "./constants.js";
 
 interface EmailMessage {
@@ -46,21 +47,6 @@ class SmtpEmailProvider implements EmailProvider {
 
 const emailProvider: EmailProvider = env.EMAIL_PROVIDER === "smtp" ? new SmtpEmailProvider() : new ConsoleEmailProvider();
 
-// SMS: stub interface only. Wire to a real Rwandan SMS gateway once the
-// client confirms which provider they've contracted (Phase 9 spec) — do not
-// guess a vendor in the meantime.
-interface SmsProvider {
-  send(to: string, body: string): Promise<void>;
-}
-
-class StubSmsProvider implements SmsProvider {
-  async send(to: string, body: string): Promise<void> {
-    console.log(`[sms:stub] to=${to} body="${body}" (no SMS gateway configured yet)`);
-  }
-}
-
-const smsProvider: SmsProvider = new StubSmsProvider();
-
 export async function notifyUser(params: {
   userId: string;
   type: NotificationType;
@@ -88,7 +74,7 @@ export async function notifyUser(params: {
 
   if (channels.SMS && user.phone) {
     try {
-      await smsProvider.send(user.phone, `${params.title}: ${params.body}`);
+      await sendSms(user.phone, `${params.title}: ${params.body}`);
     } catch (err) {
       console.error(`[notifications] sms send failed for user ${user.id}:`, err);
     }

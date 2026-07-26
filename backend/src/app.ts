@@ -36,9 +36,19 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 export function createApp() {
   const app = express();
 
+  const allowedOrigins = [
+    env.NEXT_PUBLIC_APP_URL,
+    ...env.CORS_ALLOWED_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean),
+  ];
   app.use(
     cors({
-      origin: env.NEXT_PUBLIC_APP_URL,
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(null, false);
+        }
+      },
       credentials: true,
     }),
   );
@@ -51,9 +61,12 @@ export function createApp() {
   // Global rate limit: 100 req/min per IP
   app.use(rateLimiter({ windowMs: 60_000, max: 100 }));
 
-  // Stricter rate limit on auth and chat
-  app.use("/api/auth", rateLimiter({ windowMs: 60_000, max: 10 }));
+  // Stricter rate limit on login and chat
+  app.use("/api/auth/login", rateLimiter({ windowMs: 60_000, max: 10 }));
+  app.use("/api/users/login", rateLimiter({ windowMs: 60_000, max: 10 }));
   app.use("/api/chat", rateLimiter({ windowMs: 60_000, max: 20 }));
+  app.use("/api/v1/auth/login", rateLimiter({ windowMs: 60_000, max: 10 }));
+  app.use("/api/v1/users/login", rateLimiter({ windowMs: 60_000, max: 10 }));
   app.use("/api/users/register", rateLimiter({ windowMs: 60_000, max: 5 }));
   app.use("/api/users/forgot-password", rateLimiter({ windowMs: 60_000, max: 3 }));
 

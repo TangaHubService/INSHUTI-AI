@@ -7,7 +7,7 @@ vi.hoisted(() => { process.env.NODE_ENV = "development"; });
 
 import { rateLimiter } from "./rateLimiter.js";
 
-function mockReqRes(ip?: string): { req: Request; res: Response; statusCode: number; jsonBody: unknown } {
+function mockReqRes(ip?: string): { req: Request; res: Response; statusCode: () => number; jsonBody: () => unknown; headers: Record<string, string> } {
   let statusCode = 200;
   let jsonBody: unknown = null;
   const headers: Record<string, string> = {};

@@ -13,7 +13,7 @@ const mockUser = {
   name: "E2E User",
   role: "TEENAGER",
   preferredLanguage: "EN",
-  notificationPrefs: null,
+  notificationPrefs: "{}",
   active: true,
   loginAttempts: 0,
   lockedUntil: null,

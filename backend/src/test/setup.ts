@@ -32,7 +32,7 @@ const allModels = [
   "healthFacility", "appSettings", "contactInquiry", "auditLog", "fileAttachment",
 ];
 
-const mockPrisma = Object.fromEntries(
+const mockPrisma: any = Object.fromEntries(
   allModels.map((model) => [model, mockQueryMethods()]),
 );
 mockPrisma.$connect = vi.fn();

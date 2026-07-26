@@ -22,7 +22,9 @@ const envSchema = z.object({
   SMTP_FROM: z.string().optional(),
 
   // Consultation message encryption — required in production.
-  MESSAGE_ENCRYPTION_KEY: z.string().min(32, "MESSAGE_ENCRYPTION_KEY must be at least 32 characters"),
+  MESSAGE_ENCRYPTION_KEY: process.env.NODE_ENV === "production"
+    ? z.string().min(32, "MESSAGE_ENCRYPTION_KEY must be at least 32 characters")
+    : z.string().min(32).default("test-encryption-key-min-32-chars!!"),
 
   // File uploads
   UPLOAD_DIR: z.string().default("./uploads"),

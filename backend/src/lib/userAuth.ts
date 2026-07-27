@@ -34,7 +34,7 @@ export function setUserCookie(res: Response, userId: string, role: UserRole): vo
   res.cookie(TOKEN_COOKIE, token, {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: env.NODE_ENV === "production" ? "none" : "lax",
     maxAge: TOKEN_EXPIRY_MS,
     path: "/",
   });

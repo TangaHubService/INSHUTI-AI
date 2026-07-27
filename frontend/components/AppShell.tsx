@@ -221,8 +221,14 @@ export function AppShell({
           <div className="flex items-center gap-3">
             {session.kind === "user" && <LanguageSwitcher value={language} onChange={setLanguage} />}
             {session.kind === "user" && <NotificationBell />}
-            <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-teal-100 text-[13px] font-bold text-teal-700">
-              {initials(name)}
+            <div className="flex items-center gap-2">
+              <div className="hidden text-right text-sm sm:block">
+                <div className="font-semibold text-ink">{name}</div>
+                {roleLabel && <div className="text-[11px] text-ink-soft">{roleLabel}</div>}
+              </div>
+              <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-teal-100 text-[13px] font-bold text-teal-700">
+                {initials(name)}
+              </div>
             </div>
           </div>
         </div>

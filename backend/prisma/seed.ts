@@ -732,6 +732,271 @@ async function seedUsers(): Promise<DemoUsersResult> {
   return { password: demoPassword, seeded };
 }
 
+async function seedTestData() {
+  const teen = await prisma.user.findUnique({ where: { email: "teen@example.com" } });
+  const parent = await prisma.user.findUnique({ where: { email: "parent@example.com" } });
+  const nurseUser = await prisma.user.findUnique({ where: { email: "nurse@example.com" }, include: { healthcareProfessional: true } });
+  const govUser = await prisma.user.findUnique({ where: { email: "gov@example.com" } });
+
+  if (!teen || !parent || !nurseUser?.healthcareProfessional || !govUser) {
+    console.log("One or more demo users missing — run seedUsers first, then seedTestData.");
+    return;
+  }
+
+  const nurse = nurseUser.healthcareProfessional;
+
+  // ── Appointments ──────────────────────────────────────────────────────
+  const existingAppointments = await prisma.appointment.count();
+  if (existingAppointments === 0) {
+    const now = new Date();
+    await prisma.appointment.createMany({
+      data: [
+        {
+          userId: teen.id,
+          professionalId: nurse.id,
+          requestedTime: new Date(now.getTime() + 2 * 60 * 60 * 1000),
+          status: "REQUESTED",
+          notes: "I've been feeling tired and dizzy lately.",
+        },
+        {
+          userId: parent.id,
+          professionalId: nurse.id,
+          requestedTime: new Date(now.getTime() + 24 * 60 * 60 * 1000),
+          status: "CONFIRMED",
+          notes: "Follow-up on my son's vaccination schedule.",
+        },
+        {
+          userId: teen.id,
+          professionalId: nurse.id,
+          requestedTime: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+          status: "COMPLETED",
+          notes: "Discussed menstrual pain management.",
+          outcome: "Patient advised on heat therapy and OTC pain relief. Follow-up in 3 months if symptoms persist.",
+        },
+        {
+          userId: parent.id,
+          professionalId: nurse.id,
+          requestedTime: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
+          status: "CANCELLED",
+          notes: "Was unable to make the time.",
+        },
+      ],
+    });
+    console.log("Seeded 4 test appointments (REQUESTED, CONFIRMED, COMPLETED, CANCELLED).");
+  } else {
+    console.log("Appointments already exist, skipping.");
+  }
+
+  // ── Conversations & Messages ──────────────────────────────────────────
+  const existingConversations = await prisma.conversation.count();
+  if (existingConversations === 0) {
+    const topics = await prisma.topic.findMany();
+
+    const menstrualTopic = topics.find((t) => t.slug === "menstrual-health");
+    const mentalTopic = topics.find((t) => t.slug === "mental-health");
+    const pregTopic = topics.find((t) => t.slug === "pregnancy");
+
+    // Teen conversations
+    const conv1 = await prisma.conversation.create({
+      data: { sessionId: "seed-sess-teen-1", language: "RW", userId: teen.id },
+    });
+    await prisma.message.createMany({
+      data: [
+        { conversationId: conv1.id, role: "USER", content: "Ndashaka kumenya byinshi kubyerekeye imihango yanjye.", topicId: menstrualTopic?.id ?? null },
+        { conversationId: conv1.id, role: "ASSISTANT", content: "Mwaramutse! Nimwe mu biganiro byiza. Umuzunguruko w'imihango usanzwe umara hagati y'iminsi 21 na 35. Niba ufite ikibazo cyihariye, umva ubona umukozi w'ubuzima.", topicId: menstrualTopic?.id ?? null, sourcesUsed: "[]" },
+      ],
+    });
+
+    const conv2 = await prisma.conversation.create({
+      data: { sessionId: "seed-sess-teen-2", language: "EN", userId: teen.id },
+    });
+    await prisma.message.createMany({
+      data: [
+        { conversationId: conv2.id, role: "USER", content: "How can I manage stress before exams?", topicId: mentalTopic?.id ?? null },
+        { conversationId: conv2.id, role: "ASSISTANT", content: "That's a great question. Simple breathing exercises, taking short breaks, and talking to someone you trust can help a lot. Would you like some specific techniques to try?", topicId: mentalTopic?.id ?? null, sourcesUsed: "[]" },
+      ],
+    });
+
+    // Parent conversation
+    const conv3 = await prisma.conversation.create({
+      data: { sessionId: "seed-sess-parent-1", language: "EN", userId: parent.id },
+    });
+    await prisma.message.createMany({
+      data: [
+        { conversationId: conv3.id, role: "USER", content: "My daughter is 14 and I want to talk to her about puberty. Any advice?", topicId: menstrualTopic?.id ?? null },
+        { conversationId: conv3.id, role: "ASSISTANT", content: "It's wonderful that you're preparing for this conversation. Start by creating a comfortable, private space and let her know she can ask anything without judgment. Use simple, accurate language and ask what she already knows.", sourcesUsed: "[]" },
+      ],
+    });
+
+    // Gov user conversation
+    const conv4 = await prisma.conversation.create({
+      data: { sessionId: "seed-sess-gov-1", language: "FR", userId: govUser.id },
+    });
+    await prisma.message.createMany({
+      data: [
+        { conversationId: conv4.id, role: "USER", content: "Quels sont les sujets les plus discutés par les jeunes sur cette plateforme ?" },
+        { conversationId: conv4.id, role: "ASSISTANT", content: "Les sujets les plus populaires incluent la santé menstruelle, la planification familiale, et la santé mentale. Voulez-vous des statistiques détaillées ?", sourcesUsed: "[]" },
+      ],
+    });
+
+    console.log("Seeded 4 test conversations with messages.");
+  } else {
+    console.log("Conversations already exist, skipping.");
+  }
+
+  // ── Consultations ─────────────────────────────────────────────────────
+  const existingConsultations = await prisma.consultation.count();
+  if (existingConsultations === 0) {
+    // Create conversations linked to consultations
+    const pendingConv = await prisma.conversation.create({
+      data: { sessionId: "seed-sess-consult-pending", language: "EN", userId: teen.id },
+    });
+    await prisma.message.createMany({
+      data: [
+        { conversationId: pendingConv.id, role: "USER", content: "I think I need to speak to a professional about my menstrual health." },
+        { conversationId: pendingConv.id, role: "ASSISTANT", content: "I understand. I've requested a consultation for you. A health professional will follow up soon.", sourcesUsed: "[]" },
+      ],
+    });
+    await prisma.consultation.create({
+      data: {
+        conversationId: pendingConv.id,
+        userId: teen.id,
+        status: "PENDING",
+        priority: 1,
+      },
+    });
+
+    const assignedConv = await prisma.conversation.create({
+      data: { sessionId: "seed-sess-consult-assigned", language: "EN", userId: parent.id },
+    });
+    await prisma.message.createMany({
+      data: [
+        { conversationId: assignedConv.id, role: "USER", content: "I'm concerned about my son's development." },
+        { conversationId: assignedConv.id, role: "ASSISTANT", content: "I've connected you with a healthcare professional who can help.", sourcesUsed: "[]" },
+      ],
+    });
+    await prisma.consultation.create({
+      data: {
+        conversationId: assignedConv.id,
+        userId: parent.id,
+        professionalId: nurse.id,
+        status: "IN_PROGRESS",
+        priority: 2,
+        assignedAt: new Date(),
+      },
+    });
+
+    const resolvedConv = await prisma.conversation.create({
+      data: { sessionId: "seed-sess-consult-resolved", language: "RW", userId: teen.id },
+    });
+    await prisma.message.createMany({
+      data: [
+        { conversationId: resolvedConv.id, role: "USER", content: "Mfite ikibazo cy'inda mfite ubwoba." },
+        { conversationId: resolvedConv.id, role: "ASSISTANT", content: "Nakwerekeje kwa muganga w'abagore. Azagufasha.", sourcesUsed: "[]" },
+      ],
+    });
+    await prisma.consultation.create({
+      data: {
+        conversationId: resolvedConv.id,
+        userId: teen.id,
+        professionalId: nurse.id,
+        status: "RESOLVED",
+        priority: 0,
+        assignedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        resolvedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    console.log("Seeded 3 test consultations (PENDING, IN_PROGRESS, RESOLVED).");
+  } else {
+    console.log("Consultations already exist, skipping.");
+  }
+
+  // ── Notifications ─────────────────────────────────────────────────────
+  const existingNotifications = await prisma.notification.count();
+  if (existingNotifications === 0) {
+    await prisma.notification.createMany({
+      data: [
+        { userId: teen.id, type: "APPOINTMENT_REMINDER", title: "Appointment tomorrow", body: "You have an appointment with Alice Mukamana at 2:00 PM tomorrow.", read: false },
+        { userId: teen.id, type: "CONSULTATION_UPDATE", title: "Consultation assigned", body: "A healthcare professional has been assigned to your consultation.", read: false },
+        { userId: teen.id, type: "REGISTRATION_CONFIRMATION", title: "Welcome to Inshuti!", body: "Your account has been created successfully. Start chatting anytime.", read: true },
+        { userId: parent.id, type: "APPOINTMENT_REMINDER", title: "Appointment confirmed", body: "Your appointment for your son's vaccination has been confirmed for tomorrow.", read: false },
+        { userId: parent.id, type: "CONSULTATION_UPDATE", title: "Professional is reviewing", body: "The assigned professional is reviewing your consultation request.", read: false },
+        { userId: nurseUser.id, type: "CONSULTATION_UPDATE", title: "New consultation request", body: "A new consultation has been assigned to you.", read: false },
+        { userId: nurseUser.id, type: "APPOINTMENT_REMINDER", title: "Appointment scheduled", body: "You have a new appointment with Marie Uwimana.", read: false },
+        { userId: govUser.id, type: "REGISTRATION_CONFIRMATION", title: "Government access granted", body: "Your government account is active. You can now view platform statistics.", read: true },
+      ],
+    });
+    console.log("Seeded 8 test notifications.");
+  } else {
+    console.log("Notifications already exist, skipping.");
+  }
+
+  // ── Flagged Content ───────────────────────────────────────────────────
+  const existingFlagged = await prisma.flaggedItem.count();
+  if (existingFlagged === 0) {
+    const flagConv = await prisma.conversation.create({
+      data: { sessionId: "seed-sess-flagged", language: "EN", userId: teen.id },
+    });
+    const flagMsg = await prisma.message.create({
+      data: { conversationId: flagConv.id, role: "USER", content: "I want to hurt myself. I don't want to be here anymore." },
+    });
+    await prisma.flaggedItem.create({
+      data: { messageId: flagMsg.id, reason: "CRISIS_LANGUAGE", status: "FLAGGED" },
+    });
+    console.log("Seeded 1 flagged message (CRISIS_LANGUAGE).");
+  } else {
+    console.log("Flagged items already exist, skipping.");
+  }
+
+  // ── Additional Admins ─────────────────────────────────────────────────
+  const contentAdmin = await prisma.adminUser.findUnique({ where: { email: "content@example.com" } });
+  if (!contentAdmin) {
+    const pw = process.env.SEED_DEMO_USERS_PASSWORD ?? "test1234";
+    const hash = await bcrypt.hash(pw, 12);
+    await prisma.adminUser.create({
+      data: { email: "content@example.com", passwordHash: hash, name: "Diane Muhawenimana", role: "CONTENT_REVIEWER" },
+    });
+    console.log("Seeded content reviewer admin: content@example.com / test1234");
+  }
+
+  const modAdmin = await prisma.adminUser.findUnique({ where: { email: "moderator@example.com" } });
+  if (!modAdmin) {
+    const pw = process.env.SEED_DEMO_USERS_PASSWORD ?? "test1234";
+    const hash = await bcrypt.hash(pw, 12);
+    await prisma.adminUser.create({
+      data: { email: "moderator@example.com", passwordHash: hash, name: "Emmanuel Niyonzima", role: "MODERATOR" },
+    });
+    console.log("Seeded moderator admin: moderator@example.com / test1234");
+  }
+
+  // ── Pending-approval Healthcare Professional ──────────────────────────
+  const pendingDocUser = await prisma.user.findUnique({ where: { email: "doctor@example.com" } });
+  if (!pendingDocUser) {
+    const pw = process.env.SEED_DEMO_USERS_PASSWORD ?? "test1234";
+    const hash = await bcrypt.hash(pw, 12);
+    await prisma.user.create({
+      data: {
+        email: "doctor@example.com",
+        passwordHash: hash,
+        name: "Dr. Jean-Pierre Habimana",
+        role: "HEALTHCARE_PROFESSIONAL",
+        preferredLanguage: "EN",
+        healthcareProfessional: {
+          create: {
+            professionalType: "DOCTOR",
+            specialization: "General Practice",
+            approvalStatus: "PENDING",
+          },
+        },
+      },
+    });
+    console.log("Seeded pending-approval doctor: doctor@example.com / test1234");
+  } else {
+    console.log("Doctor user already exists, skipping.");
+  }
+}
+
 async function main() {
   await upsertTopicsAndArticles();
   await upsertCrisisResources();
@@ -739,6 +1004,7 @@ async function main() {
   await upsertAppSettings();
   const superAdmin = await upsertSuperAdmin();
   const demoUsers = await seedUsers();
+  await seedTestData();
 
   console.log("\n=== Seeded credentials ===");
   console.log("(Only accounts CREATED in this run are shown with a password —");
@@ -755,6 +1021,13 @@ async function main() {
     }
   } else {
     console.log("No demo user accounts were created this run.");
+  }
+
+  const demoPw = process.env.SEED_DEMO_USERS_PASSWORD ?? (process.env.NODE_ENV === "production" ? null : "test1234");
+  if (demoPw) {
+    for (const email of ["content@example.com", "moderator@example.com", "doctor@example.com"]) {
+      console.log(`Test account — ${email} / ${demoPw}`);
+    }
   }
 }
 

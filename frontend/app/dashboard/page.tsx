@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 import { getHistory, type ConversationSummary } from "@/lib/apiClient";
 import { AppShell } from "@/components/AppShell";
-import { PageLoading } from "@/components/Spinner";
+import { PageLoading, FullPageLoading } from "@/components/Spinner";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useRequireUser } from "@/lib/useUserAuth";
 import { getNotifications, type AppNotification } from "@/lib/userApiClient";
@@ -50,7 +50,7 @@ export default function TeenDashboardPage() {
       .finally(() => setLoading(false));
   }, [user]);
 
-  if (authLoading || !user) return null;
+  if (authLoading || !user) return <FullPageLoading />;
 
   return (
     <AppShell active="/dashboard" session={{ kind: "user", user }}>

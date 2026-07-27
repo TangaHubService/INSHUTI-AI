@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { PageLoading } from "@/components/Spinner";
+import { PageLoading, FullPageLoading } from "@/components/Spinner";
 import { useRequireUser } from "@/lib/useUserAuth";
 import { getGovernmentStats, type GovernmentStats } from "@/lib/userApiClient";
 
@@ -24,7 +24,7 @@ export default function GovernmentPortalPage() {
       .finally(() => setLoading(false));
   }, [user]);
 
-  if (authLoading || !user) return null;
+  if (authLoading || !user) return <FullPageLoading />;
 
   const langSplit = stats?.languageSplit ?? {};
   const totalLanguage = Object.values(langSplit).reduce((a, b) => a + b, 0);

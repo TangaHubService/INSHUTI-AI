@@ -7,6 +7,7 @@ import { useToast } from "@/lib/useToast";
 import { AppShell } from "@/components/AppShell";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useRequireUser } from "@/lib/useUserAuth";
+import { FullPageLoading } from "@/components/Spinner";
 import type { Language } from "@/lib/apiClient";
 import { updateProfile } from "@/lib/userApiClient";
 import { isValidPhone } from "@/lib/validation";
@@ -216,7 +217,7 @@ export default function ProfilePage() {
     }
   }
 
-  if (authLoading || !user) return null;
+  if (authLoading || !user) return <FullPageLoading />;
 
   return (
     <AppShell active="/profile" session={{ kind: "user", user }}>

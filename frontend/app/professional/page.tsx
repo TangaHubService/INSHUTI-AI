@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { PageLoading } from "@/components/Spinner";
+import { PageLoading, FullPageLoading } from "@/components/Spinner";
 import { useRequireUser } from "@/lib/useUserAuth";
 import {
   getProfessionalCalendar,
@@ -36,7 +36,7 @@ export default function ProfessionalPortalPage() {
       .finally(() => setLoading(false));
   }, [user]);
 
-  if (authLoading || !user) return null;
+  if (authLoading || !user) return <FullPageLoading />;
 
   const pendingCount = consultations.filter((c) => c.status === "PENDING" || c.status === "ASSIGNED").length;
   const resolvedCount = consultations.filter((c) => c.status === "RESOLVED").length;

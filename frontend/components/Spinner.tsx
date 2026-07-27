@@ -21,3 +21,14 @@ export function PageLoading({ label = "Loading…" }: { label?: string }) {
     </div>
   );
 }
+
+export function FullPageLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-paper-2">
+      <div className="flex flex-col items-center gap-3">
+        <Spinner className="h-8 w-8" />
+        <span className="text-sm font-semibold text-ink-soft">Loading…</span>
+      </div>
+    </div>
+  );
+}

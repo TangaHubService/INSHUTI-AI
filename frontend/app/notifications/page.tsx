@@ -7,6 +7,7 @@ import { useToast } from "@/lib/useToast";
 import { AppShell } from "@/components/AppShell";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useRequireUser } from "@/lib/useUserAuth";
+import { FullPageLoading } from "@/components/Spinner";
 import type { Language } from "@/lib/apiClient";
 import {
   getNotificationPrefs,
@@ -233,7 +234,7 @@ export default function NotificationsPage() {
     if (href) router.push(href);
   }
 
-  if (authLoading || !user) return null;
+  if (authLoading || !user) return <FullPageLoading />;
 
   return (
     <AppShell active="/notifications" session={{ kind: "user", user }}>

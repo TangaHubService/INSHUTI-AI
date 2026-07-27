@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/lib/useToast";
 import { AppShell } from "@/components/AppShell";
 import { useRequireUser } from "@/lib/useUserAuth";
+import { FullPageLoading } from "@/components/Spinner";
 import {
   getConsultationMessages,
   sendConsultationMessage,
@@ -126,7 +127,7 @@ export default function ConsultationThreadPage() {
     }
   }
 
-  if (authLoading || !user) return null;
+  if (authLoading || !user) return <FullPageLoading />;
 
   return (
     <AppShell active="/consultations" session={{ kind: "user", user }} flush>

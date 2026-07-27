@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { PageLoading } from "@/components/Spinner";
+import { PageLoading, FullPageLoading } from "@/components/Spinner";
 import { useRequireUser } from "@/lib/useUserAuth";
 import {
   getMyAppointments,
@@ -45,7 +45,7 @@ export default function ParentPortalPage() {
       .finally(() => setLoading(false));
   }, [user]);
 
-  if (authLoading || !user) return null;
+  if (authLoading || !user) return <FullPageLoading />;
 
   const upcoming = appointments.filter((a) => a.status === "CONFIRMED" || a.status === "REQUESTED" || a.status === "RESCHEDULED").slice(0, 4);
 

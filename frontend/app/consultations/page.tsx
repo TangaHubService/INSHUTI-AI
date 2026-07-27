@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 import { useToast } from "@/lib/useToast";
 import { AppShell } from "@/components/AppShell";
-import { PageLoading } from "@/components/Spinner";
+import { PageLoading, FullPageLoading } from "@/components/Spinner";
 import type { Language } from "@/lib/apiClient";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useRequireUser } from "@/lib/useUserAuth";
@@ -120,7 +120,7 @@ export default function ConsultationsPage() {
   const { user, loading: authLoading } = useRequireUser();
   const t = COPY[language];
 
-  if (authLoading || !user) return null;
+  if (authLoading || !user) return <FullPageLoading />;
 
   return (
     <AppShell active="/consultations" session={{ kind: "user", user }}>

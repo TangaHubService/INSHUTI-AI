@@ -121,7 +121,9 @@ export function AppShell({
   }
 
   const name = session.kind === "admin" ? session.admin.name : session.user.name;
-  const roleLabel = session.kind === "admin" ? ADMIN_ROLE_LABEL[session.admin.role] : undefined;
+  const roleLabel = session.kind === "admin"
+    ? ADMIN_ROLE_LABEL[session.admin.role]
+    : session.user.role.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const navItems =
     session.kind === "admin"
       ? ADMIN_NAV_ITEMS.filter(
@@ -182,12 +184,12 @@ export function AppShell({
           <div className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full bg-gold text-[13px] font-bold text-[#5A3E11]">
             {initials(name)}
           </div>
-          {!collapsed && (
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-[13.5px] font-bold text-white">{name}</div>
-              {roleLabel && <div className="text-[11.5px] text-[#7FA79F]">{roleLabel}</div>}
-            </div>
-          )}
+              {!collapsed && (
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[13.5px] font-bold text-white">{name}</div>
+                  <div className="text-[11.5px] text-[#7FA79F]">{roleLabel}</div>
+                </div>
+              )}
           <button onClick={() => void handleLogout()} title="Log out">
             <svg width="16" height="16" className="cursor-pointer text-[#7FA79F]">
               <use href="#i-logout" />
@@ -222,12 +224,12 @@ export function AppShell({
             {session.kind === "user" && <LanguageSwitcher value={language} onChange={setLanguage} />}
             {session.kind === "user" && <NotificationBell />}
             <div className="flex items-center gap-2">
-              <div className="hidden text-right text-sm sm:block">
-                <div className="font-semibold text-ink">{name}</div>
-                {roleLabel && <div className="text-[11px] text-ink-soft">{roleLabel}</div>}
-              </div>
               <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-teal-100 text-[13px] font-bold text-teal-700">
                 {initials(name)}
+              </div>
+              <div className="hidden text-left text-sm sm:block">
+                <div className="font-semibold text-ink">{name}</div>
+                <div className="text-[11px] text-ink-soft">{roleLabel}</div>
               </div>
             </div>
           </div>

@@ -18,12 +18,10 @@ export function PageLayout({
   return (
     <div className="min-h-screen bg-paper">
       <SiteHeader activeHref={activeHref} navItems={navItems} />
-      <main className="mx-auto max-w-[1160px] px-5 sm:px-8">
+      <main className="mx-auto w-full max-w-[1160px] px-5 sm:px-8">
         {children}
       </main>
-      <div className="mx-auto max-w-[1160px] px-5 sm:px-8">
-        <SiteFooter disclaimer={footerDisclaimer} />
-      </div>
+      <SiteFooter disclaimer={footerDisclaimer} />
     </div>
   );
 }

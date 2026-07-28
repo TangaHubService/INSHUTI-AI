@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "framer-motion": "^12.42.2",
     "leaflet": "^1.9.4",
     "next": "14.2.35",
     "next-intl": "^4.13.2",

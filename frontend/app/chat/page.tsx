@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import { sendChatMessage, getCrisisResources, type ChatSource, type CrisisResource, type Language } from "@/lib/apiClient";
+import { sendChatMessage, getCrisisResources, getHistory, type ChatSource, type CrisisResource, type Language, type ConversationSummary } from "@/lib/apiClient";
 import { useToast } from "@/lib/useToast";
 import { getCurrentUser, requestConsultation, type UserProfile } from "@/lib/userApiClient";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { SiteFooter } from "@/components/SiteFooter";
 import { AppShell } from "@/components/AppShell";
 import { useLanguage } from "@/lib/LanguageContext";
 
@@ -114,8 +116,8 @@ function ChatPageInner() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [sending, setSending] = useState(false);
   const [sources, setSources] = useState<ChatSource[]>([]);
+  const [showSources, setShowSources] = useState(false);
   const [quickReplies, setQuickReplies] = useState<string[]>([]);
-  const [activeTopicName, setActiveTopicName] = useState<string | null>(null);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [canRequestFollowUp, setCanRequestFollowUp] = useState(false);
@@ -125,6 +127,9 @@ function ChatPageInner() {
   const [crisisResourcesLoading, setCrisisResourcesLoading] = useState(false);
   const crisisInfoRef = useRef<HTMLDivElement>(null);
   const [requestingHelp, setRequestingHelp] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const sidebarRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -135,11 +140,20 @@ function ChatPageInner() {
     void getCurrentUser().then((loadedUser) => {
       setUser(loadedUser);
       const stored = localStorage.getItem(ANONYMOUS_MODE_KEY);
-      // Anonymous by default only for visitors who aren't logged in; a
-      // signed-in user's identity is used unless they explicitly opt out.
       setAnonymousMode(stored !== null ? stored === "true" : !loadedUser);
     });
+    void getHistory().then((h) => setConversations(h.conversations)).catch(() => {});
   }, []);
+
+  function startNewChat() {
+    setMessages([{ role: "bot", content: GREETING[language], time: nowLabel() }]);
+    setSources([]);
+    setShowSources(false);
+    setQuickReplies([]);
+    setConversationId(null);
+    setCanRequestFollowUp(false);
+    setSidebarOpen(false);
+  }
 
   function toggleAnonymousMode() {
     const next = !anonymousMode;
@@ -154,14 +168,10 @@ function ChatPageInner() {
       try {
         setCrisisResources(await getCrisisResources());
       } catch {
-        // Silent — the panel just shows its "no resources" fallback state.
       } finally {
         setCrisisResourcesLoading(false);
       }
     }
-    requestAnimationFrame(() => {
-      crisisInfoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
   }
 
   async function handleRequestFollowUp() {
@@ -194,7 +204,6 @@ function ChatPageInner() {
       setMessages((prev) => [...prev, { role: "bot", content: response.reply, time: nowLabel() }]);
       setSources(response.sources);
       setQuickReplies(response.quickReplies);
-      setActiveTopicName(response.topic ? (language === "RW" ? response.topic.nameRw : response.topic.nameEn) : null);
       setConversationId(response.conversationId ?? null);
       setCanRequestFollowUp(!!response.canRequestHumanFollowUp);
     } catch {
@@ -222,10 +231,7 @@ function ChatPageInner() {
     if (!topic) return;
     topicDeepLinkHandled.current = true;
     router.replace("/chat");
-    // Deferred so the language-context value (loaded from localStorage in a
-    // parent effect) has settled before picking which starter text to send.
     setTimeout(() => {
-      setActiveTopicName(topic.name);
       void send(topic[`starter${language.charAt(0)}${language.slice(1).toLowerCase()}` as keyof typeof topic] as string);
     }, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -250,100 +256,173 @@ function ChatPageInner() {
     }
   }
 
-  const page = (
-    <div className="flex min-h-screen flex-col bg-paper">
-      <div className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-3 border-b border-line bg-white px-4 py-3 sm:px-7 sm:py-4">
-        <div className="flex items-center gap-[14px]">
-          <Link
-            href="/"
-            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-line bg-white"
-          >
-            <svg width="16" height="16">
-              <use href="#i-back" />
-            </svg>
+  const hasMessages = messages.length > 0;
+
+  const chatContent = (
+    <div className="flex min-h-screen flex-col bg-white">
+      {/* Chat history sidebar — ChatGPT-style */}
+      <AnimatePresence>
+      {sidebarOpen && (
+        <motion.div
+          className="fixed inset-0 z-30 bg-black/30 lg:hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      </AnimatePresence>
+      <aside
+        ref={sidebarRef}
+        className={`fixed left-0 top-0 z-40 flex h-full w-[280px] flex-col bg-[#0D2B29] text-[#DCEBE8] transition-transform duration-300 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between border-b border-[#1F4A45] px-4 py-3">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="font-display text-[16px] font-bold text-white">Inshuti</span>
           </Link>
-          <div className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-full bg-teal-700">
-            <svg width="18" height="18" className="text-white">
-              <use href="#i-bot" />
-            </svg>
-          </div>
-          <div>
-            <div className="text-[14.5px] font-bold text-teal-900">Inshuti Assistant</div>
-            <div className="text-xs text-ink-soft">
-              {user && !anonymousMode ? `Signed in as ${user.name}` : "Anonymous · Private session"}
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-[#7FA79F] hover:bg-[#123934] hover:text-white"
+          >
+            <svg width="14" height="14"><use href="#i-close" /></svg>
+          </button>
         </div>
-        <div className="flex flex-wrap items-center gap-[10px] sm:gap-[14px]">
-          {user && (
+
+        <div className="px-3 py-3">
+          <button
+            type="button"
+            onClick={startNewChat}
+            className="flex w-full items-center gap-2 rounded-md border border-[#1F4A45] px-3 py-2 text-[13px] font-semibold text-[#DCEBE8] transition hover:bg-[#123934]"
+          >
+            <svg width="14" height="14"><use href="#i-plus" /></svg>
+            {language === "RW" ? "Ikiganiro Gishya" : language === "FR" ? "Nouvelle discussion" : language === "SW" ? "Mazungumzo Mapya" : "New chat"}
+          </button>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto px-3 pb-4">
+          {conversations.length === 0 && (
+            <p className="px-2 pt-4 text-[12px] text-[#7FA79F]">
+              {language === "RW" ? "Nta biganiro byabanje." : language === "FR" ? "Aucune discussion précédente." : language === "SW" ? "Hakuna mazungumzo ya awali." : "No previous conversations."}
+            </p>
+          )}
+          {conversations.map((conv) => (
+            <button
+              key={conv.id}
+              type="button"
+              onClick={() => { setSidebarOpen(false); }}
+              className="w-full rounded-md px-3 py-2.5 text-left text-[12.5px] leading-[1.4] text-[#B7D6D1] transition hover:bg-[#123934]"
+            >
+              <span className="line-clamp-2">
+                {conv.firstUserMessage || (language === "RW" ? "Ikiganiro kitangiye" : language === "FR" ? "Conversation" : language === "SW" ? "Mazungumzo" : "Conversation")}
+              </span>
+              <span className="mt-1 block text-[10px] text-[#7FA79F]">
+                {new Date(conv.createdAt).toLocaleDateString()}
+              </span>
+            </button>
+          ))}
+        </nav>
+      </aside>
+
+      {/* Minimal header — ChatGPT-style */}
+      <header className="sticky top-0 z-20 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
+        <div className="mx-auto flex h-14 max-w-[860px] items-center justify-between px-4">
+          <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={toggleAnonymousMode}
-              title="When on, this chat won't be linked to your account and you won't be offered human follow-up."
-              className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ${
-                anonymousMode ? "bg-teal-100 text-teal-700" : "bg-gold-100 text-[#8A5E1E]"
-              }`}
+              onClick={() => setSidebarOpen((o) => !o)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft transition hover:bg-gray-100"
+              aria-label="Toggle history sidebar"
             >
-              Anonymous mode: {anonymousMode ? "On" : "Off"}
+              <svg width="18" height="18"><use href="#i-menu" /></svg>
             </button>
-          )}
-          {!user && <LanguageSwitcher value={language} onChange={setLanguage} />}
-          {!user && (
-            <Link
-              href="/my-space"
-              title="My Space"
-              className="flex h-[38px] w-[38px] items-center justify-center rounded-full border border-line bg-white"
-            >
-              <svg width="16" height="16" className="text-teal-700">
-                <use href="#i-clock" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-700">
+              <svg width="16" height="16" className="text-white">
+                <use href="#i-bot" />
               </svg>
+            </div>
+            <div>
+              <div className="text-[14px] font-bold text-teal-900">Inshuti Assistant</div>
+              <div className="text-[11px] text-ink-soft">
+                {user && !anonymousMode ? `Signed in as ${user.name}` : "Anonymous · Private"}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {user && (
+              <button
+                type="button"
+                onClick={toggleAnonymousMode}
+                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                  anonymousMode ? "bg-teal-100 text-teal-700" : "bg-gold-100 text-[#8A5E1E]"
+                }`}
+              >
+                {anonymousMode ? "Anonymous" : "Identified"}
+              </button>
+            )}
+            {!user && <LanguageSwitcher value={language} onChange={setLanguage} />}
+            <Link
+              href="/"
+              className="rounded-full px-3 py-1.5 text-[12px] font-semibold text-ink-soft transition hover:bg-gray-100"
+            >
+              Home
             </Link>
-          )}
-          <Link href="/" className="rounded-full px-4 py-[9px] text-[13px] font-semibold text-ink-soft">
-            End chat
-          </Link>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="bg-gold-100 py-[9px] text-center text-[12.5px] font-semibold text-[#8A5E1E]">
-        {language === "RW" ? "Uri mu kaga cyangwa ukeneye ubufasha vuba? " : language === "FR" ? "En crise ou besoin d'aide urgente ? " : language === "SW" ? "Katika hatari au unahitaji msaada wa dharura? " : "In crisis or need urgent help? "}
-        <a
-          href="#crisis-info"
-          className="underline"
-          onClick={(e) => {
-            e.preventDefault();
-            void openCrisisInfo();
-          }}
-        >
-          {language === "RW" ? "Kanda hano ubone ubufasha" : language === "FR" ? "Appuyez ici pour des ressources d'aide immédiate" : language === "SW" ? "Bonyeza hapa kwa usaidizi wa haraka" : "Tap here for immediate support resources"}
-        </a>
-      </div>
+      {/* Crisis bar with immediate call */}
+      {!showCrisisInfo && (
+        <div className="flex flex-wrap items-center justify-center gap-2 bg-gold-100/80 py-[7px] text-center text-[12px] font-semibold text-[#8A5E1E]">
+          <span>
+            {language === "RW" ? "Uri mu kaga? " : language === "FR" ? "En crise ? " : language === "SW" ? "Katika hatari? " : "In crisis? "}
+          </span>
+          <a
+            href="tel:116"
+            className="inline-flex items-center gap-1 rounded-full bg-coral px-3 py-1 text-[11px] text-white shadow-sm transition hover:bg-coral-dark"
+          >
+            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1v3.5c0 .6-.4 1-1 1C9.1 21 3 14.9 3 7.5c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
+            {language === "RW" ? "Hamagara 116" : language === "FR" ? "Appelez le 116" : language === "SW" ? "Piga 116" : "Call 116"}
+          </a>
+          <span className="hidden sm:inline">&middot;</span>
+          <button
+            type="button"
+            onClick={() => void openCrisisInfo()}
+            className="underline hover:no-underline"
+          >
+            {language === "RW" ? "Kanda hano ubone ubufasha" : language === "FR" ? "Appuyez ici pour de l'aide" : language === "SW" ? "Bonyeza hapa kwa msaada" : "Tap here for immediate support"}
+          </button>
+        </div>
+      )}
 
       {showCrisisInfo && (
-        <div id="crisis-info" ref={crisisInfoRef} className="border-b border-line bg-gold-100/40 px-4 py-4 sm:px-7">
-          <div className="mx-auto flex max-w-2xl items-start justify-between gap-3">
+        <div id="crisis-info" ref={crisisInfoRef} className="border-b border-line bg-gold-100/60 px-4 py-3">
+          <div className="mx-auto flex max-w-[720px] items-start justify-between gap-3">
             <div className="flex-1">
-              <div className="text-[13.5px] font-bold text-[#8A5E1E]">
+              <div className="text-[13px] font-bold text-[#8A5E1E]">
                 {language === "RW" ? "Ubufasha bwihutirwa" : language === "FR" ? "Ressources d'urgence" : language === "SW" ? "Rasilimali za dharura" : "Immediate support resources"}
               </div>
               {crisisResourcesLoading ? (
-                <p className="mt-2 text-[13px] text-[#8A5E1E]">
+                <p className="mt-1 text-[12px] text-[#8A5E1E]">
                   {language === "RW" ? "Turimo gutegura…" : language === "FR" ? "Chargement…" : language === "SW" ? "Inapakia…" : "Loading…"}
                 </p>
               ) : crisisResources.length === 0 ? (
-                <p className="mt-2 text-[13px] text-[#8A5E1E]">
+                <p className="mt-1 text-[12px] text-[#8A5E1E]">
                   {language === "RW"
                     ? "Nta bufasha buboneka ubu. Nyabona vugana n'ivuriro riri hafi."
                     : language === "FR"
-                      ? "Aucune ressource disponible pour le moment. Contactez un établissement de santé proche."
+                      ? "Aucune ressource disponible. Contactez un établissement de santé proche."
                       : language === "SW"
-                        ? "Hakuna rasilimali zinazopatikana kwa sasa. Wasiliana na kituo cha afya kilicho karibu."
-                        : "No resources available right now. Please contact a nearby health facility."}
+                        ? "Hakuna rasilimali zinazopatikana. Wasiliana na kituo cha afya."
+                        : "No resources available. Please contact a nearby health facility."}
                 </p>
               ) : (
-                <ul className="mt-2 flex flex-col gap-1.5">
+                <ul className="mt-1 flex flex-col gap-1">
                   {crisisResources.map((r) => (
-                    <li key={r.id} className="text-[13px] text-[#8A5E1E]">
+                    <li key={r.id} className="text-[12px] text-[#8A5E1E]">
                       <span className="font-semibold">{r.name}</span> — {r.contact}
                       <span className="text-[#8A5E1E]/70"> ({r.region})</span>
                     </li>
@@ -354,208 +433,230 @@ function ChatPageInner() {
             <button
               type="button"
               onClick={() => setShowCrisisInfo(false)}
-              className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[#8A5E1E] hover:bg-gold-100"
-              aria-label="Close"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[#8A5E1E] hover:bg-gold-100"
             >
-              <svg width="14" height="14">
-                <use href="#i-close" />
-              </svg>
+              <svg width="12" height="12"><use href="#i-close" /></svg>
             </button>
           </div>
         </div>
       )}
 
-      <div className="grid flex-1 grid-cols-1 md:grid-cols-[250px_1fr_280px]">
-        <aside className="hidden border-r border-line p-4 px-4 py-[22px] md:block">
-          <div className="px-2 pb-[10px] font-mono text-[11px] uppercase tracking-[0.08em] text-ink-soft">
-            {language === "RW" ? "Ingingo zihuse" : language === "FR" ? "Sujets rapides" : language === "SW" ? "Mada za haraka" : "Quick topics"}
-          </div>
-          {QUICK_TOPICS.map((topic) => (
-            <div
-              key={topic.name}
-              className={`flex cursor-pointer items-center gap-[10px] rounded-xl px-[10px] py-[11px] text-sm font-semibold ${
-                activeTopicName === topic.name ? "bg-teal-100 text-teal-700" : "text-ink-soft"
-              }`}
-              onClick={() => void send(topic[`starter${language.charAt(0) + language.slice(1).toLowerCase()}` as keyof typeof topic])}
-            >
-              <div className={`flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-lg ${topic.bg} ${topic.fg}`}>
-                <svg width="14" height="14">
-                  <use href={`#${topic.icon}`} />
-                </svg>
-              </div>
-              {topic.name}
-            </div>
-          ))}
-        </aside>
-
-        <main className="flex flex-col overflow-y-auto px-[30px] py-[26px]">
-          {messages.map((message, i) => (
-            <div
-              className={`mb-[18px] flex max-w-[62%] gap-[10px] ${message.role === "user" ? "ml-auto flex-row-reverse" : ""}`}
-              key={i}
-            >
-              <div
-                className={`flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-full ${
-                  message.role === "bot" ? "bg-teal-700" : "bg-gold"
-                }`}
-              >
-                {message.role === "bot" && (
-                  <svg width="15" height="15" className="text-white">
-                    <use href="#i-bot" />
-                  </svg>
-                )}
-              </div>
-              <div>
-                <div
-                  className={`rounded-2xl px-[17px] py-[14px] text-[14.5px] leading-[1.6] ${
-                    message.role === "bot"
-                      ? "rounded-bl-[4px] border border-line bg-white"
-                      : "rounded-br-[4px] bg-teal-700 text-white"
-                  }`}
+      {/* Messages area — ChatGPT centered layout */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-[860px] px-4 py-6">
+          {/* Quick topics as horizontal chips — shown only at start */}
+          {!hasMessages && (
+            <div className="mb-8 flex flex-wrap justify-center gap-2">
+              {QUICK_TOPICS.map((topic) => (
+                <button
+                  key={topic.name}
+                  type="button"
+                  onClick={() => void send(topic[`starter${language.charAt(0) + language.slice(1).toLowerCase()}` as keyof typeof topic])}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12px] font-semibold transition hover:opacity-80 ${topic.bg} ${topic.fg}`}
                 >
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      p: ({ children }) => <span className="block last:mb-0">{children}</span>,
-                      ul: ({ children }) => <ul className="my-1 list-disc pl-5">{children}</ul>,
-                      ol: ({ children }) => <ol className="my-1 list-decimal pl-5">{children}</ol>,
-                      li: ({ children }) => <li className="mb-0.5">{children}</li>,
-                      strong: ({ children }) => <strong className="font-bold">{children}</strong>,
-                    }}
-                  >
-                    {message.content}
-                  </ReactMarkdown>
-                </div>
-                <div className="mt-[6px] font-mono text-[11px] text-ink-soft">{message.time}</div>
-              </div>
-            </div>
-          ))}
-          {sending && (
-            <div className="mb-[18px] flex max-w-[62%] gap-[10px]">
-              <div className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-full bg-teal-700">
-                <svg width="15" height="15" className="text-white">
-                  <use href="#i-bot" />
-                </svg>
-              </div>
-              <div>
-                <div className="rounded-2xl rounded-bl-[4px] border border-line bg-white px-[17px] py-[14px] text-[14.5px] leading-[1.6]">
-                  {language === "RW" ? "Inshuti irandika…" : language === "FR" ? "Inshuti écrit…" : language === "SW" ? "Inshuti anaandika…" : "Inshuti is typing…"}
-                </div>
-              </div>
-            </div>
-          )}
-          {quickReplies.length > 0 && (
-            <div className="ml-10 mb-1 mt-1.5 flex flex-wrap gap-2">
-              {quickReplies.map((reply) => (
-                <div
-                  className="cursor-pointer rounded-full border border-teal-700 bg-white px-[14px] py-2 text-[12.5px] font-semibold text-teal-700"
-                  key={reply}
-                  onClick={() => void send(reply)}
-                >
-                  {reply}
-                </div>
+                  <svg width="12" height="12"><use href={`#${topic.icon}`} /></svg>
+                  {topic.name}
+                </button>
               ))}
             </div>
           )}
+
+          <AnimatePresence>
+          {messages.map((message, i) => (
+            <motion.div
+              key={i}
+              className="mb-6"
+              initial={{ opacity: 0, y: 20, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <div className={`flex items-start gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}>
+                <div
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
+                    message.role === "bot" ? "bg-teal-700" : "bg-gray-200"
+                  }`}
+                >
+                  {message.role === "bot" ? (
+                    <svg width="14" height="14" className="text-white"><use href="#i-bot" /></svg>
+                  ) : (
+                    <svg width="14" height="14" className="text-ink"><use href="#i-user-check" /></svg>
+                  )}
+                </div>
+                <div className={`min-w-0 ${message.role === "user" ? "max-w-[75%]" : "max-w-[85%]"}`}>
+                  <div
+                    className={`rounded-2xl px-[16px] py-[12px] text-[14.5px] leading-[1.65] ${
+                      message.role === "bot"
+                        ? "rounded-bl-[4px] bg-gray-50 text-ink"
+                        : "rounded-br-[4px] bg-teal-700 text-white"
+                    }`}
+                  >
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ children }) => <span className="block last:mb-0">{children}</span>,
+                        ul: ({ children }) => <ul className="my-1 list-disc pl-5">{children}</ul>,
+                        ol: ({ children }) => <ol className="my-1 list-decimal pl-5">{children}</ol>,
+                        li: ({ children }) => <li className="mb-0.5">{children}</li>,
+                        strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
+                  <div className={`mt-[4px] flex items-center gap-3 font-mono text-[10px] text-gray-400 ${message.role === "user" ? "justify-end" : ""}`}>
+                    <span>{message.time}</span>
+                    {message.role === "bot" && sources.length > 0 && i === messages.length - 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowSources(!showSources)}
+                        className="text-teal-700 underline hover:no-underline"
+                      >
+                        {showSources ? "Hide sources" : "View sources"}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Inline sources */}
+                  {message.role === "bot" && showSources && sources.length > 0 && i === messages.length - 1 && (
+                    <div className="mt-2 rounded-xl border border-line bg-white p-3">
+                      <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-soft">
+                        {language === "RW" ? "Inkomoko" : language === "FR" ? "Sources" : language === "SW" ? "Vyanzo" : "Sources"}
+                      </div>
+                      {sources.map((source) => (
+                        <div key={source.id} className="mb-2 last:mb-0">
+                          <div className="text-[13px] font-bold text-teal-900">
+                            {language === "RW" ? source.titleRw : source.titleEn}
+                          </div>
+                          {source.bodySnippet && (
+                            <div className="mt-0.5 text-[12px] leading-[1.5] text-ink-soft">{source.bodySnippet}</div>
+                          )}
+                          {source.externalUrl && (
+                            <a
+                              href={source.externalUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[11px] text-teal-700 underline"
+                            >
+                              {language === "RW" ? "Reba inkomoko" : language === "FR" ? "Voir la source" : language === "SW" ? "Ona chanzo" : "View source"}
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Quick replies after bot message */}
+              {message.role === "bot" && quickReplies.length > 0 && i === messages.length - 1 && (
+                <div className="mt-2 flex flex-wrap gap-1.5 pl-10">
+                  {quickReplies.map((reply) => (
+                    <button
+                      key={reply}
+                      type="button"
+                      onClick={() => void send(reply)}
+                      className="cursor-pointer rounded-full border border-teal-700 bg-white px-3 py-1.5 text-[12px] font-semibold text-teal-700 transition hover:bg-teal-50"
+                    >
+                      {reply}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          ))}
+          </AnimatePresence>
+
+          {/* Typing indicator */}
+          {sending && (
+            <motion.div
+              className="mb-6 flex items-start gap-3"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-700">
+                <svg width="14" height="14" className="text-white"><use href="#i-bot" /></svg>
+              </div>
+              <div className="rounded-2xl rounded-bl-[4px] bg-gray-50 px-[16px] py-[12px] text-[14px] text-ink-soft">
+                {language === "RW" ? "Inshuti irandika…" : language === "FR" ? "Inshuti écrit…" : language === "SW" ? "Inshuti anaandika…" : "Inshuti is typing…"}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Follow-up CTA */}
           {canRequestFollowUp && user && !anonymousMode && conversationId && (
-            <div className="ml-10 mb-1 mt-2 flex items-center gap-2 rounded-2xl border border-teal-700 bg-teal-100 px-4 py-3">
+            <div className="mb-6 ml-10 flex items-center gap-3 rounded-2xl border border-teal-700 bg-teal-100 px-4 py-3">
               <span className="flex-1 text-[13px] font-semibold text-teal-900">
-                Would you like to talk to a health worker about this?
+                {language === "RW" ? "Wifuza kuvugana n'umukozi w'ubuzima?" : language === "FR" ? "Vous souhaitez parler à un professionnel de santé ?" : language === "SW" ? "Ungependa kuzungumza na mtaalamu wa afya?" : "Would you like to talk to a health worker?"}
               </span>
               <button
                 type="button"
                 onClick={() => void handleRequestFollowUp()}
                 disabled={requestingHelp}
-                className="flex-shrink-0 rounded-full bg-teal-700 px-4 py-2 text-[12.5px] font-semibold text-white disabled:opacity-50"
+                className="rounded-full bg-teal-700 px-4 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
               >
-                {requestingHelp ? "Requesting…" : "Talk to a health worker"}
+                {requestingHelp ? "Requesting…" : language === "RW" ? "Kanda" : language === "FR" ? "Parler" : language === "SW" ? "Ongea" : "Talk"}
               </button>
             </div>
           )}
+
           <div ref={bottomRef} />
-        </main>
+        </div>
+      </main>
 
-        <aside className="hidden border-l border-line p-[22px] lg:block">
-          <div className="pb-[10px] font-mono text-[11px] uppercase tracking-[0.08em] text-ink-soft">
-            {language === "RW" ? "Inkomoko z'iki gisubizo" : language === "FR" ? "Sources de cette réponse" : language === "SW" ? "Vyanzo vya jibu hili" : "Sources for this answer"}
-          </div>
-          {sources.length === 0 && (
-            <p className="text-[12.5px] text-ink-soft">
-              {language === "RW" ? "Nta nkomoko zabonetse kuri iki gisubizo." : language === "FR" ? "Pas de sources spécifiques pour cette réponse." : language === "SW" ? "Hakuna vyanzo maalum vya jibu hili." : "No specific sources for this answer yet."}
-            </p>
-          )}
-          {sources.map((source) => (
-            <div className="mb-3 rounded-[14px] border border-line p-[14px]" key={source.id}>
-              <div className="text-[13.5px] font-bold text-teal-900">
-                {language === "RW" ? source.titleRw : source.titleEn}
-              </div>
-              {source.bodySnippet && (
-                <div className="mt-1.5 text-[12px] leading-[1.5] text-ink-soft">
-                  {source.bodySnippet}
-                </div>
-              )}
-              <div className="mt-2 flex items-center gap-2">
-                <span className="font-mono text-[11px] text-ink-soft">
-                  {language === "RW" ? "Inshuti" : language === "FR" ? "Inshuti" : language === "SW" ? "Inshuti" : "Inshuti"} KB
-                </span>
-                {source.externalUrl && (
-                  <a
-                    href={source.externalUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-mono text-[11px] text-teal-700 underline"
-                  >
-                    {language === "RW" ? "Reba inkomoko" : language === "FR" ? "Voir la source" : language === "SW" ? "Ona chanzo" : "View source"}
-                  </a>
-                )}
-              </div>
-            </div>
-          ))}
-        </aside>
-      </div>
-
-      <form
-        className="flex items-end gap-[10px] border-t border-line bg-white px-[30px] pb-2 pt-4"
-        onSubmit={handleSubmit}
-      >
-        <textarea
-          ref={textareaRef}
-          rows={1}
-          className="max-h-[120px] min-h-[48px] flex-1 resize-none overflow-y-auto rounded-[22px] border border-line bg-paper-2 px-[18px] py-[13px] font-body text-[14.5px] leading-[1.4]"
-          placeholder={
-            language === "RW"
-              ? "Andika ikibazo cyawe…"
-              : language === "FR"
-                ? "Écrivez votre question…"
-                : language === "SW"
-                  ? "Andika swali lako…"
-                  : "Type your question in English or Kinyarwanda…"
-          }
-          value={input}
-          onChange={handleInputChange}
-          onKeyDown={handleInputKeyDown}
-          disabled={sending}
-        />
-        <button
-          className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-coral disabled:opacity-50"
-          type="submit"
-          disabled={sending || !input.trim()}
+      {/* Input bar — ChatGPT-style */}
+      <div className="border-t border-gray-100 bg-white pb-3 pt-2">
+        <form
+          onSubmit={handleSubmit}
+          className="mx-auto flex max-w-[860px] items-end gap-2 px-4"
         >
-          <svg width="18" height="18">
-            <use href="#i-send" />
-          </svg>
-        </button>
-      </form>
+          <textarea
+            ref={textareaRef}
+            rows={1}
+            className="max-h-[120px] min-h-[44px] flex-1 resize-none overflow-y-auto rounded-2xl border border-gray-200 bg-gray-50 px-[16px] py-[11px] font-body text-[14.5px] leading-[1.4] outline-none transition focus:border-teal-400 focus:bg-white focus:shadow-sm"
+            placeholder={
+              language === "RW"
+                ? "Andika ikibazo cyawe…"
+                : language === "FR"
+                  ? "Écrivez votre question…"
+                  : language === "SW"
+                    ? "Andika swali lako…"
+                    : "Type your question in English or Kinyarwanda…"
+            }
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={handleInputKeyDown}
+            disabled={sending}
+          />
+          <button
+            type="submit"
+            disabled={sending || !input.trim()}
+            className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-xl bg-teal-700 text-white transition hover:bg-teal-600 disabled:opacity-40"
+          >
+            <svg width="18" height="18">
+              <use href="#i-send" />
+            </svg>
+          </button>
+        </form>
+        <p className="mx-auto mt-2 max-w-[860px] px-4 text-[10px] text-gray-400">
+          {language === "RW" ? "Ibi byifashishijwe na AI. Ongera ugerageze amakuru y'abaganga." : language === "FR" ? "Alimenté par l'IA. Vérifiez toujours auprès d'un professionnel de santé." : language === "SW" ? "Inaendeshwa na AI. Thibitisha na mtaalamu wa afya." : "AI-powered. Always verify with a healthcare professional."}
+        </p>
+      </div>
     </div>
   );
 
   if (user) {
     return (
       <AppShell active="/chat" session={{ kind: "user", user }} flush>
-        {page}
+        {chatContent}
       </AppShell>
     );
   }
 
-  return page;
+  return (
+    <>
+      {chatContent}
+      <SiteFooter />
+    </>
+  );
 }

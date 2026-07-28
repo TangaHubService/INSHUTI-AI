@@ -1,18 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useLanguage } from "@/lib/LanguageContext";
 import { NAV } from "@/lib/i18nCommon";
 import type { Language } from "@/lib/apiClient";
 
-type Copy = { eyebrow: string; title: string; lead: string; items: { q: string; a: string }[] };
+type Copy = { eyebrow: string; title: string; lead: string; free: { heading: string; body: string; cta: string }; items: { q: string; a: string }[] };
 
 const COPY: Record<Language, Copy> = {
   EN: {
     eyebrow: "FAQ", title: "Frequently Asked Questions",
     lead: "Quick answers to common questions about Inshuti, privacy, and how to make the most of the service.",
+    free: { heading: "Inshuti is completely free", body: "Chat, consultations, appointments — every feature is available at no cost. No hidden charges, no subscriptions, no surprises.", cta: "Start chatting free" },
     items: [
       { q: "What is Inshuti?", a: "Inshuti is a free, anonymous AI health assistant for young people in Rwanda. It provides honest, judgment-free answers to questions about sexual and reproductive health in English and Kinyarwanda." },
       { q: "Is Inshuti really anonymous?", a: "Yes. When using the chat without signing in, no personally identifying information is collected. Conversations are tied only to a device-level session ID. If you create an account, you can enable anonymous mode in your profile settings to keep chats unlinked from your identity." },
@@ -29,6 +31,7 @@ const COPY: Record<Language, Copy> = {
   RW: {
     eyebrow: "Ibibazo", title: "Ibibazo Bikunze Kubazwa",
     lead: "Ibisubizo byihuse ku bibazo bikunze kubazwa kuri Inshuti, ibanga, n'uburyo bwo gukoresha neza serivisi.",
+    free: { heading: "Inshuti ni ubuntu", body: "Ikiganiro, ubujyanama, gahunda — buri kintu kiraboneka ku buntu. Nta mafaranga yihishe, nta kwiyandikisha, nta gitangaza.", cta: "Tangira kuganira ku buntu" },
     items: [
       { q: "Inshuti ni iki?", a: "Inshuti ni umufasha wa AI utazwi, ku buntu, w'urubyiruko mu Rwanda. Utanga ibisubizo by'ukuri, bitagira urubanza, ku bibazo by'ubuzima bw'imyororokere mu Cyongereza no mu Kinyarwanda." },
       { q: "Inshuti irihisha by'ukuri?", a: "Yego. Iyo ukoresha chat utinjiriye, nta makuru y'umwirondoro atanzwe. Ibiganiro bihuzwa gusa na sesiyo ya gikoresho cyawe. Niba ufite konti, ushobora gukoresha uburyo butazwi mu mitwarire yawe." },
@@ -45,6 +48,7 @@ const COPY: Record<Language, Copy> = {
   FR: {
     eyebrow: "FAQ", title: "Questions Fréquentes",
     lead: "Réponses rapides aux questions courantes sur Inshuti, la confidentialité et la façon de tirer le meilleur parti du service.",
+    free: { heading: "Inshuti est entièrement gratuit", body: "Chat, consultations, rendez-vous — chaque fonctionnalité est disponible sans frais. Pas de frais cachés, pas d'abonnement, pas de surprises.", cta: "Commencez à discuter gratuitement" },
     items: [
       { q: "Qu'est-ce qu'Inshuti ?", a: "Inshuti est un assistant de santé IA gratuit et anonyme pour les jeunes au Rwanda. Il fournit des réponses honnêtes et sans jugement aux questions sur la santé sexuelle et reproductive." },
       { q: "Inshuti est-il vraiment anonyme ?", a: "Oui. Lorsque vous utilisez le chat sans vous connecter, aucune information d'identification personnelle n'est collectée." },
@@ -61,6 +65,7 @@ const COPY: Record<Language, Copy> = {
   SW: {
     eyebrow: "Maswali", title: "Maswali Yanayoulizwa Mara kwa Mara",
     lead: "Majibu ya haraka kwa maswali ya kawaida kuhusu Inshuti, faragha, na jinsi ya kutumia huduma vyema.",
+    free: { heading: "Inshuti ni bure kabisa", body: "Gumzo, mashauriano, miadi — kila kipengele kinapatikana bila gharama. Hakuna malipo ya siri, hakuna usajili, hakuna mshangao.", cta: "Anza kuongea bure" },
     items: [
       { q: "Inshuti ni nini?", a: "Inshuti ni msaidizi wa afya wa AI bure na asiyejulikana kwa vijana nchini Rwanda. Hutoa majibu ya kweli na yasiyo na hukumu kuhusu afya ya uzazi na ngono." },
       { q: "Je, Inshuti haina jina kweli?", a: "Ndiyo. Unapotumia gumzo bila kuingia, hakuna taarifa za kibinafsi zinazokusanywa." },
@@ -122,7 +127,23 @@ export default function FaqPage() {
         <h1 className="mt-3 font-display text-[34px] text-teal-900">{t.title}</h1>
         <p className="mt-3 max-w-[520px] text-[14.5px] leading-[1.6] text-ink-soft">{t.lead}</p>
 
-        <div className="mt-10 rounded-md border border-[rgba(22,48,44,0.05)] bg-white shadow-card">
+        <div className="mt-8 rounded-md border border-teal-100 bg-gradient-to-br from-teal-50 to-white p-6 shadow-card sm:p-8">
+          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-display text-xl font-bold text-teal-900">{t.free.heading}</h2>
+              <p className="mt-1 text-[14px] leading-[1.5] text-ink-soft">{t.free.body}</p>
+            </div>
+            <Link
+              href="/chat"
+              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-coral px-5 py-2.5 text-[14px] font-semibold text-white shadow-[0_6px_16px_rgba(232,115,92,0.3)] transition-all duration-150 hover:-translate-y-px hover:bg-coral-dark"
+            >
+              {t.free.cta}
+              <svg width="14" height="14"><use href="#i-arrow" /></svg>
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-8 rounded-md border border-[rgba(22,48,44,0.05)] bg-white shadow-card">
           {t.items.map((item, i) => (
             <ToggleSection key={i} q={item.q} a={item.a} open={openIndex === i} onToggle={() => setOpenIndex(openIndex === i ? null : i)} />
           ))}

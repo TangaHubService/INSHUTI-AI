@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Logo } from "@/components/Logo";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
+import { SiteFooter } from "@/components/SiteFooter";
 import { useLanguage } from "@/lib/LanguageContext";
 import { NAV } from "@/lib/i18nCommon";
 import { logout as logoutAdmin, type AdminRole, type AdminUser } from "@/lib/adminApiClient";
@@ -235,6 +236,7 @@ export function AppShell({
           </div>
         </div>
         {flush ? <div className="flex flex-1 flex-col">{children}</div> : <div className="px-5 pb-[60px] pt-7 sm:px-8">{children}</div>}
+        <SiteFooter />
       </div>
     </div>
   );

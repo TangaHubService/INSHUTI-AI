@@ -237,7 +237,7 @@ export function SiteHeader({
                     key={item.href}
                     href={item.href}
                     onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors duration-150 hover:bg-teal-100/50 hover:text-teal-700"
+                    className="flex items-center gap-2.5 rounded-lg bg-white px-3 py-2.5 shadow-sm transition-colors duration-150 hover:bg-teal-100/50 hover:text-teal-700"
                   >
                     {content}
                   </Link>

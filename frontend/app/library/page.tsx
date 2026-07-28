@@ -135,7 +135,7 @@ export default function LibraryPage() {
                 return (
                   <Link
                     key={article.id}
-                    href={`/chat?topic=${slug}`}
+                    href={`/library/${article.id}`}
                     className="group flex cursor-pointer flex-col gap-[14px] rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[26px] shadow-card transition-all duration-150 hover:-translate-y-1 hover:shadow-soft"
                   >
                     <div className={`flex h-[46px] w-[46px] items-center justify-center rounded-[14px] ${TOPIC_BG[slug] ?? "bg-teal-100"} ${TOPIC_FG[slug] ?? "text-teal-700"}`}>

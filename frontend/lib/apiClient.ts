@@ -201,6 +201,13 @@ export async function getPublicLibraryTopics(): Promise<PublicLibraryTopic[]> {
   return data.topics;
 }
 
+export async function getPublicLibraryArticle(id: string, language: string): Promise<PublicLibraryArticle> {
+  const res = await apiFetch(`/api/library/articles/${id}?language=${language}`);
+  if (!res.ok) throw new Error(`Failed to load article (${res.status})`);
+  const data: { article: PublicLibraryArticle } = await res.json();
+  return data.article;
+}
+
 export async function getPublicLibraryArticles(language: string, topicId?: string): Promise<PublicLibraryArticle[]> {
   const params = new URLSearchParams({ language });
   if (topicId) params.set("topicId", topicId);

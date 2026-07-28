@@ -56,4 +56,32 @@ router.get("/articles", async (req, res) => {
   });
 });
 
+router.get("/articles/:id", async (req, res) => {
+  const language = z.enum(["EN", "RW", "FR", "SW"]).catch("EN").parse(req.query.language);
+
+  const article = await prisma.article.findFirst({
+    where: { id: req.params.id, status: REVIEWED },
+    include: { topic: true },
+  });
+
+  if (!article) {
+    res.status(404).json({ error: "Article not found" });
+    return;
+  }
+
+  res.json({
+    article: {
+      id: article.id,
+      topicId: article.topicId,
+      topic: { id: article.topic.id, slug: article.topic.slug, nameEn: article.topic.nameEn, nameRw: article.topic.nameRw },
+      title: article[`title${language}` as keyof typeof article] as string || article.titleEn,
+      body: article[`body${language}` as keyof typeof article] as string || article.bodyEn,
+      tags: decodeJsonColumn(article.tags),
+      externalUrl: article.externalUrl,
+      reviewedAt: article.reviewedAt,
+      updatedAt: article.updatedAt,
+    },
+  });
+});
+
 export default router;

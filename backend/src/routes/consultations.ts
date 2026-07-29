@@ -164,7 +164,13 @@ router.post("/:id/messages", requireUser, async (req: AuthenticatedUserRequest, 
 });
 
 router.get("/:id/messages", requireUser, async (req: AuthenticatedUserRequest, res) => {
-  const consultation = await prisma.consultation.findUnique({ where: { id: req.params.id as string } });
+  const consultation = await prisma.consultation.findUnique({
+    where: { id: req.params.id as string },
+    include: {
+      user: { select: { id: true, name: true, role: true } },
+      professional: { include: { user: { select: { id: true, name: true, role: true } } } },
+    },
+  });
   if (!consultation) {
     res.status(404).json({ error: "Consultation not found" });
     return;
@@ -189,8 +195,110 @@ router.get("/:id/messages", requireUser, async (req: AuthenticatedUserRequest, r
       role: m.role,
       content: decrypt(m.content),
       createdAt: m.createdAt,
+      readAt: m.readAt,
+      senderId: m.role === "USER" ? consultation.user.id : (consultation.professional?.user.id ?? null),
+      senderName: m.role === "USER" ? consultation.user.name : (consultation.professional?.user.name ?? "Professional"),
     })),
   });
+});
+
+router.get("/chat-list", requireUser, async (req: AuthenticatedUserRequest, res) => {
+  const userId = req.user!.userId;
+  const professional = await prisma.healthcareProfessional.findUnique({ where: { userId } });
+  const isPro = !!professional;
+
+  const consultations = isPro
+    ? await prisma.consultation.findMany({
+        where: { professionalId: professional.id },
+        orderBy: { updatedAt: "desc" },
+        include: {
+          user: { select: { id: true, name: true, role: true } },
+          conversation: {
+            include: {
+              messages: {
+                orderBy: { createdAt: "desc" },
+                take: 1,
+              },
+            },
+          },
+        },
+      })
+    : await prisma.consultation.findMany({
+        where: { userId },
+        orderBy: { updatedAt: "desc" },
+        include: {
+          professional: { include: { user: { select: { id: true, name: true, role: true } } } },
+          conversation: {
+            include: {
+              messages: {
+                orderBy: { createdAt: "desc" },
+                take: 1,
+              },
+            },
+          },
+        },
+      });
+
+  const chatList = await Promise.all(
+    consultations.map(async (c) => {
+      const cAny = c as any;
+      const otherParty = isPro
+        ? { id: cAny.user.id, name: cAny.user.name, role: cAny.user.role }
+        : cAny.professional
+          ? { id: cAny.professional.user.id, name: cAny.professional.user.name, role: cAny.professional.user.role }
+          : null;
+
+      const lastMsg = c.conversation.messages[0] ?? null;
+
+      const unreadCount = isPro
+        ? await prisma.message.count({
+            where: { consultationId: c.id, role: "USER", readAt: null },
+          })
+        : await prisma.message.count({
+            where: { consultationId: c.id, role: "ASSISTANT", readAt: null },
+          });
+
+      return {
+        id: c.id,
+        status: c.status,
+        priority: c.priority,
+        otherParty,
+        lastMessage: lastMsg
+          ? { content: lastMsg.content.slice(0, 100), createdAt: lastMsg.createdAt, role: lastMsg.role }
+          : null,
+        unreadCount,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      };
+    }),
+  );
+
+  res.json({ chats: chatList });
+});
+
+router.patch("/:id/read", requireUser, async (req: AuthenticatedUserRequest, res) => {
+  const userId = req.user!.userId;
+  const consultation = await prisma.consultation.findUnique({ where: { id: req.params.id as string } });
+  if (!consultation) {
+    res.status(404).json({ error: "Consultation not found" });
+    return;
+  }
+
+  const professional = await prisma.healthcareProfessional.findUnique({ where: { userId } });
+  const isUser = consultation.userId === userId;
+  const isProfessional = !!professional && consultation.professionalId === professional.id;
+  if (!isUser && !isProfessional) {
+    res.status(403).json({ error: "Not authorized" });
+    return;
+  }
+
+  const roleToMark = isUser ? "ASSISTANT" : "USER";
+  await prisma.message.updateMany({
+    where: { consultationId: consultation.id, role: roleToMark, readAt: null },
+    data: { readAt: new Date() },
+  });
+
+  res.json({ success: true });
 });
 
 export default router;

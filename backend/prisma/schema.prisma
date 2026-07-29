@@ -80,6 +80,7 @@ model Message {
   topic          Topic?         @relation(fields: [topicId], references: [id])
   sourcesUsed    String         @default("[]")
   confidence     Float?
+  readAt         DateTime?
   flaggedItem    FlaggedItem?
   createdAt      DateTime       @default(now())
 

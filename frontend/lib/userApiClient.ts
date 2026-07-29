@@ -265,6 +265,9 @@ export interface ConsultationMessage {
   role: "USER" | "ASSISTANT";
   content: string;
   createdAt: string;
+  senderId?: string;
+  senderName?: string;
+  readAt?: string | null;
 }
 
 export async function requestConsultation(conversationId: string): Promise<{ consultationId: string; assignedTo: string | null; status: string }> {
@@ -288,6 +291,29 @@ export async function getProfessionalConsultations(): Promise<ProfessionalConsul
   if (!res.ok) throw new Error(`Failed to load consultation queue (${res.status})`);
   const data: { consultations: ProfessionalConsultation[] } = await res.json();
   return data.consultations;
+}
+
+export interface ChatListItem {
+  id: string;
+  status: ConsultationStatus;
+  priority: number;
+  otherParty: { id: string; name: string; role: string } | null;
+  lastMessage: { content: string; createdAt: string; role: string } | null;
+  unreadCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getChatList(): Promise<ChatListItem[]> {
+  const res = await apiFetch("/api/consultations/chat-list");
+  if (!res.ok) throw new Error(`Failed to load chat list (${res.status})`);
+  const data: { chats: ChatListItem[] } = await res.json();
+  return data.chats;
+}
+
+export async function markConsultationRead(id: string): Promise<void> {
+  const res = await apiFetch(`/api/consultations/${id}/read`, { method: "PATCH" });
+  if (!res.ok) throw new Error(`Failed to mark read (${res.status})`);
 }
 
 export async function getConsultationMessages(id: string): Promise<ConsultationMessage[]> {

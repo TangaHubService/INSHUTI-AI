@@ -107,6 +107,35 @@ export async function getSuggestions(language: Language): Promise<Suggestion[]> 
   return data.suggestions;
 }
 
+export interface ConversationMessage {
+  id: string;
+  role: string;
+  content: string;
+  createdAt: string;
+  topic: {
+    id: string;
+    slug: string;
+    nameEn: string;
+    nameRw: string;
+  } | null;
+}
+
+export interface ConversationDetail {
+  id: string;
+  language: Language;
+  createdAt: string;
+  messages: ConversationMessage[];
+}
+
+export async function getConversationMessages(conversationId: string): Promise<ConversationDetail> {
+  const res = await apiFetch(`/api/chat/conversations/${conversationId}`);
+  if (!res.ok) {
+    throw new Error(`Failed to load conversation (${res.status})`);
+  }
+  const data: { conversation: ConversationDetail } = await res.json();
+  return data.conversation;
+}
+
 export interface CrisisResource {
   id: string;
   name: string;

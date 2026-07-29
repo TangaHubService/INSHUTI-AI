@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import { sendChatMessage, getCrisisResources, getHistory, type ChatSource, type CrisisResource, type Language, type ConversationSummary } from "@/lib/apiClient";
+import { sendChatMessage, getCrisisResources, getHistory, getConversationMessages, type ChatSource, type CrisisResource, type Language, type ConversationSummary } from "@/lib/apiClient";
 import { useToast } from "@/lib/useToast";
 import { getCurrentUser, requestConsultation, type UserProfile } from "@/lib/userApiClient";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -144,6 +144,27 @@ function ChatPageInner() {
     });
     void getHistory().then((h) => setConversations(h.conversations)).catch(() => {});
   }, []);
+
+  async function loadConversation(convId: string) {
+    setSidebarOpen(false);
+    try {
+      const conversation = await getConversationMessages(convId);
+      setConversationId(conversation.id);
+      setMessages(
+        conversation.messages.map((m) => ({
+          role: m.role === "USER" ? ("user" as const) : ("bot" as const),
+          content: m.content,
+          time: new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        })),
+      );
+      setSources([]);
+      setShowSources(false);
+      setQuickReplies([]);
+      setCanRequestFollowUp(false);
+    } catch {
+      toast("Failed to load conversation", "error");
+    }
+  }
 
   function startNewChat() {
     setMessages([{ role: "bot", content: GREETING[language], time: nowLabel() }]);
@@ -313,7 +334,7 @@ function ChatPageInner() {
             <button
               key={conv.id}
               type="button"
-              onClick={() => { setSidebarOpen(false); }}
+              onClick={() => void loadConversation(conv.id)}
               className="w-full rounded-md px-3 py-2.5 text-left text-[12.5px] leading-[1.4] text-[#B7D6D1] transition hover:bg-[#123934]"
             >
               <span className="line-clamp-2">

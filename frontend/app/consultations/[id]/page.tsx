@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { io, type Socket } from "socket.io-client";
 
 import { useToast } from "@/lib/useToast";
 import { AppShell } from "@/components/AppShell";
@@ -17,7 +18,7 @@ import {
   type FileAttachment,
 } from "@/lib/userApiClient";
 
-const POLL_INTERVAL_MS = 4000;
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 function timeLabel(iso: string): string {
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -37,10 +38,13 @@ export default function ConsultationThreadPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const socketRef = useRef<Socket | null>(null);
+
   useEffect(() => {
     let cancelled = false;
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
 
-    async function poll() {
+    async function fetchMessages() {
       try {
         const [data, attachmentData] = await Promise.all([
           getConsultationMessages(consultationId),
@@ -51,15 +55,48 @@ export default function ConsultationThreadPage() {
           setFiles(attachmentData);
         }
       } catch {
-        // transient poll failures aren't worth interrupting the user with a toast
+        // transient failures aren't worth a toast
       }
     }
 
-    void poll();
-    const interval = setInterval(poll, POLL_INTERVAL_MS);
+    async function init() {
+      await fetchMessages();
+      if (cancelled) return;
+
+      socketRef.current = io(`${API_URL}/consultation/${consultationId}`, {
+        withCredentials: true,
+        transports: ["websocket", "polling"],
+      });
+
+      socketRef.current.on("message:new", (msg: ConsultationMessage) => {
+        if (!cancelled) {
+          setMessages((prev) => [...prev, msg]);
+        }
+      });
+
+      socketRef.current.on("connect_error", () => {
+        if (!cancelled && !pollInterval) {
+          pollInterval = setInterval(fetchMessages, 4000);
+        }
+      });
+
+      socketRef.current.on("connect", () => {
+        if (pollInterval) {
+          clearInterval(pollInterval);
+          pollInterval = null;
+        }
+      });
+    }
+
+    void init();
+
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      if (pollInterval) clearInterval(pollInterval);
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
     };
   }, [consultationId]);
 
@@ -96,11 +133,17 @@ export default function ConsultationThreadPage() {
     const trimmed = input.trim();
     if (!trimmed || sending) return;
     setSending(true);
+    setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
+
     try {
-      await sendConsultationMessage(consultationId, trimmed);
-      setInput("");
-      if (textareaRef.current) textareaRef.current.style.height = "auto";
-      setMessages(await getConsultationMessages(consultationId));
+      if (socketRef.current?.connected) {
+        socketRef.current.emit("message:send", trimmed);
+      } else {
+        await sendConsultationMessage(consultationId, trimmed);
+        const data = await getConsultationMessages(consultationId);
+        setMessages(data);
+      }
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to send message", "error");
     } finally {

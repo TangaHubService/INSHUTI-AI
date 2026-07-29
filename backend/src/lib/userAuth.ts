@@ -16,7 +16,7 @@ function serializeToken(payload: { userId: string; role: string }): string {
   return `${header}.${body}.${signature}`;
 }
 
-function deserializeToken(token: string): { userId: string; role: string } | null {
+export function deserializeToken(token: string): { userId: string; role: string } | null {
   const parts = token.split(".");
   if (parts.length !== 3) return null;
   const [header, body, signature] = parts;

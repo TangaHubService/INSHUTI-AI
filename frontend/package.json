@@ -17,7 +17,8 @@
     "react-dom": "^18",
     "react-leaflet": "^4.2.1",
     "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.15.12",

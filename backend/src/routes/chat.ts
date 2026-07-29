@@ -35,6 +35,43 @@ async function getOrCreateConversation(sessionId: string, language: Language) {
   return prisma.conversation.create({ data: { sessionId, language } });
 }
 
+router.get("/conversations/:id", async (req, res) => {
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: req.params.id as string },
+    include: {
+      messages: {
+        orderBy: { createdAt: "asc" },
+        include: { topic: true },
+      },
+    },
+  });
+  if (!conversation) {
+    res.status(404).json({ error: "Conversation not found" });
+    return;
+  }
+  const sessionId = getOrCreateSessionId(req, res);
+  if (conversation.sessionId !== sessionId) {
+    res.status(403).json({ error: "Not authorized" });
+    return;
+  }
+  res.json({
+    conversation: {
+      id: conversation.id,
+      language: conversation.language,
+      createdAt: conversation.createdAt,
+      messages: conversation.messages.map((m) => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        createdAt: m.createdAt,
+        topic: m.topic
+          ? { id: m.topic.id, slug: m.topic.slug, nameEn: m.topic.nameEn, nameRw: m.topic.nameRw }
+          : null,
+      })),
+    },
+  });
+});
+
 router.get("/crisis-resources", async (_req, res) => {
   const resources = await prisma.crisisResource.findMany({ orderBy: { order: "asc" } });
   res.json({ resources });

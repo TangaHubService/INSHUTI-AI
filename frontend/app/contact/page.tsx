@@ -38,7 +38,7 @@ const COPY: Record<Language, Copy> = {
   },
   FR: {
     eyebrow: "Contact", title: "Prenez Contact",
-    lead: "Nous aimerions avoir de vos nouvelles. Que vous ayez des commentaires, des questions ou besoin d'aide — contactez-nous et nous vous répondrons dès que possible.",
+    lead: "Nous aimerions avoir de nouvelles de vous. Que vous ayez des commentaires, des questions ou besoin d'aide — contactez-nous et nous vous répondrons dès que possible.",
     contactTitle: "Autres moyens de nous joindre",
     contactBody: "Pour les problèmes de santé urgents, veuillez contacter directement un établissement de santé local ou les services d'urgence.",
     email: "hello@inshuti.rw",
@@ -103,20 +103,20 @@ export default function ContactPage() {
 
       <section className="grid grid-cols-1 gap-8 pb-16 lg:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[26px] shadow-card">
+          <div className="card p-6">
             <h2 className="mb-6 font-display text-2xl text-teal-900">{t.formTitle}</h2>
             {sent ? (
               <div className="rounded-xl bg-teal-100 p-5 text-center text-[15px] font-semibold text-teal-700">{t.sent}</div>
             ) : (
               <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
                 <label className="text-[12.5px] font-bold text-ink-soft">{t.nameLabel}</label>
-                <input className="w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm transition-colors duration-150 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-100" value={name} onChange={(e) => setName(e.target.value)} required />
+                <input className="w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm transition focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-100" value={name} onChange={(e) => setName(e.target.value)} required />
                 <label className="text-[12.5px] font-bold text-ink-soft">{t.emailLabel}</label>
-                <input className="w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm transition-colors duration-150 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-100" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <input className="w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm transition focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-100" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                 <label className="text-[12.5px] font-bold text-ink-soft">{t.messageLabel}</label>
-                <textarea className="w-full resize-y rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm transition-colors duration-150 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-100" rows={5} value={message} onChange={(e) => setMessage(e.target.value)} required />
+                <textarea className="w-full resize-y rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm transition focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-100" rows={5} value={message} onChange={(e) => setMessage(e.target.value)} required />
                 {error && <div className="rounded-xl bg-red-100 p-3 text-[13px] text-red-700">{error}</div>}
-                <button type="submit" disabled={sending} className="w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition-all duration-150 hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50">
+                <button type="submit" disabled={sending} className="w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50">
                   {sending ? t.sending : t.send}
                 </button>
               </form>
@@ -124,7 +124,7 @@ export default function ContactPage() {
           </div>
         </div>
         <div>
-          <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[26px] shadow-card">
+          <div className="card p-6">
             <h2 className="mb-4 font-display text-xl text-teal-900">{t.contactTitle}</h2>
             <p className="mb-4 text-[14px] leading-[1.6] text-ink-soft">{t.contactBody}</p>
             <a href={`mailto:${t.email}`} className="inline-flex items-center gap-2 rounded-full bg-teal-100 px-5 py-3 text-[14px] font-semibold text-teal-700 transition-all duration-150 hover:bg-teal-200">

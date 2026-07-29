@@ -4,16 +4,18 @@ export function Card({
   className = "",
   children,
   hover = false,
+  padding = true,
   ...props
 }: {
   className?: string;
   children: ReactNode;
   hover?: boolean;
+  padding?: boolean;
 } & HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`rounded-md border border-[rgba(22,48,44,0.05)] bg-white shadow-card ${
-        hover ? "transition-all duration-150 ease-out hover:-translate-y-1 hover:shadow-soft" : ""
+      className={`card ${padding ? "p-[22px]" : ""} ${
+        hover ? "card-hover" : ""
       } ${className}`}
       {...props}
     >

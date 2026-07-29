@@ -90,7 +90,7 @@ export default function FacilityLocatorPage() {
         <h1 className="mt-2 font-display text-2xl text-teal-900">Health facilities near you</h1>
 
         <div className="mt-4 flex gap-2">
-          <div className="flex flex-1 items-center gap-2 rounded-[10px] bg-paper-2 px-3.5 py-2.5 text-[13.5px] text-ink-soft">
+          <div className="flex flex-1 items-center gap-2 rounded-[var(--radius-md)] bg-paper-2 px-3.5 py-2.5 text-[13.5px] text-ink-soft">
             <svg width="16" height="16">
               <use href="#i-search" />
             </svg>
@@ -134,7 +134,7 @@ export default function FacilityLocatorPage() {
             <div
               key={facility.id}
               onClick={() => setSelectedId(facility.id)}
-              className={`cursor-pointer rounded-[14px] border p-4 transition ${
+              className={`cursor-pointer rounded-[var(--radius-lg)] border p-4 transition ${
                 selectedId === facility.id ? "border-teal-700" : "border-line hover:border-teal-700"
               }`}
             >

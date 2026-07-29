@@ -96,7 +96,7 @@ export default function ServicesPage() {
             <Link
               key={s.title}
               href={s.href}
-              className="group flex flex-col rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-6 shadow-card transition-all duration-150 hover:-translate-y-1 hover:shadow-soft"
+              className="card p-6 transition-all duration-150 hover:-translate-y-1 hover:shadow-soft"
             >
               <div className="mb-[14px] flex h-10 w-10 items-center justify-center rounded-xl bg-teal-100 text-teal-700">
                 <svg width="20" height="20"><use href={`#${s.icon}`} /></svg>
@@ -113,7 +113,7 @@ export default function ServicesPage() {
       </section>
 
       <section className="pb-16">
-        <div className="rounded-[32px] border border-line bg-white p-8 shadow-soft">
+        <div className="card p-8">
           <h2 className="font-display text-2xl text-teal-900">{t.bottom.heading}</h2>
           <p className="mt-4 text-[15px] leading-[1.6] text-ink-soft">{t.bottom.body}</p>
         </div>

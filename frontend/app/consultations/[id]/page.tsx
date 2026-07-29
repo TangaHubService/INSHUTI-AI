@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";

@@ -51,15 +51,15 @@ export default function AdminReportsPage() {
       </p>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {REPORTS.map((report) => (
-          <div key={report.endpoint} className="flex flex-col rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[26px] shadow-card">
-            <div className="mb-4 flex h-[46px] w-[46px] items-center justify-center rounded-[14px] bg-teal-100 text-teal-700">
+          <div key={report.endpoint} className="card flex flex-col p-[26px]">
+            <div className="mb-4 flex h-[46px] w-[46px] items-center justify-center rounded-[var(--radius-md)] bg-teal-100 text-teal-700">
               <svg width="22" height="22"><use href={`#${report.icon}`} /></svg>
             </div>
             <h3 className="mb-2 text-lg font-bold text-teal-900">{report.title}</h3>
             <p className="mb-5 flex-1 text-[13.5px] leading-[1.5] text-ink-soft">{report.description}</p>
             <button
               onClick={() => downloadReport(report.endpoint, report.filename)}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-[11px] text-[14px] font-semibold text-white transition hover:bg-coral-dark"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-[11px] text-[14px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark"
             >
               <svg width="16" height="16"><use href="#i-download" /></svg>
               Download CSV

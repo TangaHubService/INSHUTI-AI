@@ -26,6 +26,19 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function StatusCard({ label, value, status }: { label: string; value: string; status: "ok" | "degraded" | "error" }) {
+  const dotColor = status === "ok" ? "bg-green-500" : status === "degraded" ? "bg-yellow-500" : "bg-red-500";
+  return (
+    <div className="card p-[22px]">
+      <div className="mb-2 flex items-center gap-2">
+        <span className={`h-2.5 w-2.5 rounded-full ${dotColor}`} />
+        <span className="text-[12.5px] font-bold uppercase tracking-[0.06em] text-ink-soft">{label}</span>
+      </div>
+      <div className="text-[20px] font-bold text-teal-900">{value}</div>
+    </div>
+  );
+}
+
 export default function AdminMonitoringPage() {
   const { admin, loading: authLoading } = useRequireAdmin();
   const [health, setHealth] = useState<HealthData | null>(null);
@@ -40,7 +53,6 @@ export default function AdminMonitoringPage() {
         const data = await res.json();
         if (!cancelled) setHealth(data);
       } catch {
-        // silent
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -61,10 +73,18 @@ export default function AdminMonitoringPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-teal-200 border-t-teal-700" />
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-md)] bg-teal-100">
+              <svg className="animate-spin h-6 w-6 text-teal-700" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" opacity="0.2" />
+                <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
+            </div>
+            <span className="text-sm font-semibold text-ink-soft">Loading metrics\u2026</span>
+          </div>
         </div>
       ) : !health ? (
-        <div className="rounded-xl bg-red-100 p-8 text-center text-[15px] font-semibold text-red-700">
+        <div className="rounded-[var(--radius-md)] bg-coral-100 p-8 text-center text-[15px] font-semibold text-coral-dark">
           Failed to load monitoring data. Check that the server is running.
         </div>
       ) : (
@@ -84,18 +104,5 @@ export default function AdminMonitoringPage() {
         </div>
       )}
     </AppShell>
-  );
-}
-
-function StatusCard({ label, value, status }: { label: string; value: string; status: "ok" | "degraded" | "error" }) {
-  const dotColor = status === "ok" ? "bg-green-500" : status === "degraded" ? "bg-yellow-500" : "bg-red-500";
-  return (
-    <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[22px] shadow-card">
-      <div className="mb-2 flex items-center gap-2">
-        <span className={`h-2.5 w-2.5 rounded-full ${dotColor}`} />
-        <span className="text-[12.5px] font-bold uppercase tracking-[0.06em] text-ink-soft">{label}</span>
-      </div>
-      <div className="text-[20px] font-bold text-teal-900">{value}</div>
-    </div>
   );
 }

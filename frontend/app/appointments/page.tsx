@@ -436,7 +436,7 @@ function UserView({ toast, language }: { toast: (message: string, type?: "succes
   return (
     <section className="pb-16 pt-5">
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1.2fr_1fr]">
-        <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white py-1.5 shadow-card">
+        <div className="card py-1.5">
           <div className="flex items-center justify-between px-5 pb-1.5 pt-[14px]">
             <h3 className="text-base text-teal-900">{t.upcoming}</h3>
           </div>
@@ -516,7 +516,7 @@ function UserView({ toast, language }: { toast: (message: string, type?: "succes
           <div className="px-1 pb-2 font-mono text-[11px] uppercase tracking-[0.08em] text-ink-soft">
             {t.requestNewTime}
           </div>
-          <form onSubmit={(e) => void handleRequest(e)} className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
+          <form onSubmit={(e) => void handleRequest(e)} className="card p-5">
             <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">{t.professionalType}</label>
             <select
               className="mb-3.5 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm"
@@ -563,7 +563,7 @@ function UserView({ toast, language }: { toast: (message: string, type?: "succes
             <button
               type="submit"
               disabled={submitting || !professionalId}
-              className="w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
+              className="w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
             >
               {submitting ? t.requesting : t.requestAppointment}
             </button>
@@ -638,7 +638,7 @@ function ProfessionalView({ language }: { language: Language }) {
 
   return (
     <section className="pb-16 pt-5">
-      <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white py-1.5 shadow-card">
+      <div className="card py-1.5">
         <div className="flex items-center justify-between px-5 pb-1.5 pt-[14px]">
           <h3 className="text-base text-teal-900">{t.calendar}</h3>
         </div>

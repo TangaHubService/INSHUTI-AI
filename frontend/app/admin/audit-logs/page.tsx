@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { PageLoading } from "@/components/Spinner";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
@@ -62,7 +63,6 @@ export default function AdminAuditLogsPage() {
           setPagination(data.pagination);
         }
       } catch {
-        // silent
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -83,16 +83,14 @@ export default function AdminAuditLogsPage() {
       </p>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-teal-200 border-t-teal-700" />
-        </div>
+        <PageLoading />
       ) : logs.length === 0 ? (
-        <div className="rounded-xl bg-teal-100 p-8 text-center text-[15px] font-semibold text-teal-700">
+        <div className="card p-8 text-center text-[15px] text-ink-soft">
           No audit logs yet. Actions will appear here as admins perform them.
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-md border border-line">
+          <div className="card overflow-x-auto">
             <table className="w-full text-left text-[13.5px]">
               <thead>
                 <tr className="border-b border-line bg-paper-2">
@@ -105,7 +103,7 @@ export default function AdminAuditLogsPage() {
               </thead>
               <tbody>
                 {logs.map((log) => (
-                  <tr key={log.id} className="border-b border-line last:border-b-0 hover:bg-paper-2">
+                  <tr key={log.id} className="border-b border-line last:border-b-0 transition hover:bg-paper-2">
                     <td className="px-4 py-3">
                       <span className="font-semibold text-teal-900">{actionLabel(log.action)}</span>
                     </td>
@@ -114,9 +112,9 @@ export default function AdminAuditLogsPage() {
                         {log.entityType.replace(/_/g, " ")}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-ink-soft">{log.adminEmail ?? "—"}</td>
+                    <td className="px-4 py-3 text-ink-soft">{log.adminEmail ?? "\u2014"}</td>
                     <td className="max-w-[200px] truncate px-4 py-3 text-ink-soft">
-                      {Object.keys(log.details).length > 0 ? JSON.stringify(log.details) : "—"}
+                      {Object.keys(log.details).length > 0 ? JSON.stringify(log.details) : "\u2014"}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-ink-soft">
                       {new Date(log.createdAt).toLocaleString()}
@@ -132,7 +130,7 @@ export default function AdminAuditLogsPage() {
               <button
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="rounded-full border border-line px-4 py-2 text-[13px] font-semibold text-teal-700 disabled:opacity-30"
+                className="rounded-full border border-line px-4 py-2 text-[13px] font-semibold text-teal-700 transition hover:bg-teal-100 disabled:opacity-30"
               >
                 Previous
               </button>
@@ -142,7 +140,7 @@ export default function AdminAuditLogsPage() {
               <button
                 disabled={page >= pagination.totalPages}
                 onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-                className="rounded-full border border-line px-4 py-2 text-[13px] font-semibold text-teal-700 disabled:opacity-30"
+                className="rounded-full border border-line px-4 py-2 text-[13px] font-semibold text-teal-700 transition hover:bg-teal-100 disabled:opacity-30"
               >
                 Next
               </button>

@@ -134,7 +134,7 @@ export default function MySpacePage() {
 
         <section className="pb-16 pt-5">
           <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1.2fr_1fr]">
-            <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white py-1.5 shadow-card">
+            <div className="card py-1.5">
               <div className="flex items-center justify-between px-5 pb-1.5 pt-[14px]">
                 <h3 className="text-base text-teal-900">Recent conversations</h3>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-line px-[14px] py-1.5 text-[13px] font-semibold text-ink-soft">
@@ -215,7 +215,7 @@ export default function MySpacePage() {
 
               {suggestions.map((suggestion) => (
                 <div
-                  className="flex flex-col gap-[10px] rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card"
+                  className="card p-5 flex flex-col gap-[10px]"
                   key={suggestion.title}
                 >
                   <span className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-coral-dark">
@@ -235,7 +235,7 @@ export default function MySpacePage() {
                 </div>
               ))}
 
-              <div className="flex items-start gap-[14px] rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
+              <div className="flex items-start gap-[14px] card p-5">
                 <div className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-xl bg-teal-100 text-teal-700">
                   <svg width="18" height="18">
                     <use href="#i-lock" />
@@ -301,7 +301,7 @@ export default function MySpacePage() {
         extraActions={
           <Link
             href="/chat"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark"
           >
             {nav.startChatting}
           </Link>

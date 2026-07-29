@@ -127,7 +127,7 @@ export default function FaqPage() {
         <h1 className="mt-3 font-display text-[34px] text-teal-900">{t.title}</h1>
         <p className="mt-3 max-w-[520px] text-[14.5px] leading-[1.6] text-ink-soft">{t.lead}</p>
 
-        <div className="mt-8 rounded-md border border-teal-100 bg-gradient-to-br from-teal-50 to-white p-6 shadow-card sm:p-8">
+        <div className="mt-8 card p-6 sm:p-8 bg-gradient-to-br from-teal-50 to-white">
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="font-display text-xl font-bold text-teal-900">{t.free.heading}</h2>
@@ -135,7 +135,7 @@ export default function FaqPage() {
             </div>
             <Link
               href="/chat"
-              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-coral px-5 py-2.5 text-[14px] font-semibold text-white shadow-[0_6px_16px_rgba(232,115,92,0.3)] transition-all duration-150 hover:-translate-y-px hover:bg-coral-dark"
+              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-coral px-5 py-2.5 text-[14px] font-semibold text-white shadow-btn transition-all duration-150 hover:-translate-y-px hover:bg-coral-dark"
             >
               {t.free.cta}
               <svg width="14" height="14"><use href="#i-arrow" /></svg>
@@ -143,7 +143,7 @@ export default function FaqPage() {
           </div>
         </div>
 
-        <div className="mt-8 rounded-md border border-[rgba(22,48,44,0.05)] bg-white shadow-card">
+        <div className="mt-8 card py-1.5">
           {t.items.map((item, i) => (
             <ToggleSection key={i} q={item.q} a={item.a} open={openIndex === i} onToggle={() => setOpenIndex(openIndex === i ? null : i)} />
           ))}

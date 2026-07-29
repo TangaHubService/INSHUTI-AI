@@ -161,7 +161,7 @@ export default function KnowledgeBasePage() {
         </div>
         <button
           onClick={openNewArticle}
-          className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)]"
+          className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark hover:shadow-lg"
         >
           <svg width="15" height="15"><use href="#i-plus" /></svg>
           New article
@@ -171,10 +171,10 @@ export default function KnowledgeBasePage() {
       {loading && <PageLoading />}
 
       {!loading && topics.map((topic) => (
-        <div key={topic.id} className="mb-4 rounded-md border border-[rgba(22,48,44,0.05)] bg-white shadow-card">
+        <div key={topic.id} className="card mb-4">
           <div className="flex items-center justify-between border-b border-line px-5 py-[14px]">
             <div className="flex items-center gap-3.5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[11px] bg-teal-100 text-teal-700">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-teal-100 text-teal-700">
                 <svg width="18" height="18"><use href={`#${topic.icon}`} /></svg>
               </div>
               <div>
@@ -193,7 +193,7 @@ export default function KnowledgeBasePage() {
                   <tr
                     key={article.id}
                     onClick={() => void openEditor(article.id)}
-                    className="cursor-pointer border-b border-line last:border-b-0 hover:bg-paper-2"
+                    className="cursor-pointer border-b border-line last:border-b-0 transition hover:bg-paper-2"
                   >
                     <td className="px-5 py-[14px] font-semibold text-ink">{article.titleEn}</td>
                     <td className="px-5 py-[14px] text-right">
@@ -212,23 +212,23 @@ export default function KnowledgeBasePage() {
       <Drawer open={newDrawerOpen} onClose={() => setNewDrawerOpen(false)} title="New Article">
         <div className="flex flex-col gap-4">
           <label className="text-[12.5px] font-bold text-ink-soft">Topic</label>
-          <select className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={newArticle.topicId} onChange={(e) => setNewArticle({ ...newArticle, topicId: e.target.value })}>
+          <select className="rounded-[var(--radius-sm)] border border-line bg-white px-[14px] py-3 text-sm" value={newArticle.topicId} onChange={(e) => setNewArticle({ ...newArticle, topicId: e.target.value })}>
             {topics.map((t) => <option key={t.id} value={t.id}>{t.nameEn}</option>)}
           </select>
 
           <label className="text-[12.5px] font-bold text-ink-soft">Title (English)</label>
-          <input className={`rounded-[10px] border bg-white px-[14px] py-3 text-sm ${newArticleErrors.titleEn ? "border-danger" : "border-line"}`} value={newArticle.titleEn} onChange={(e) => setNewArticle({ ...newArticle, titleEn: e.target.value })} />
+          <input className={`rounded-[var(--radius-sm)] border bg-white px-[14px] py-3 text-sm ${newArticleErrors.titleEn ? "border-danger" : "border-line"}`} value={newArticle.titleEn} onChange={(e) => setNewArticle({ ...newArticle, titleEn: e.target.value })} />
 
           <label className="text-[12.5px] font-bold text-ink-soft">Title (Kinyarwanda)</label>
-          <input className={`rounded-[10px] border bg-white px-[14px] py-3 text-sm ${newArticleErrors.titleRw ? "border-danger" : "border-line"}`} value={newArticle.titleRw} onChange={(e) => setNewArticle({ ...newArticle, titleRw: e.target.value })} />
+          <input className={`rounded-[var(--radius-sm)] border bg-white px-[14px] py-3 text-sm ${newArticleErrors.titleRw ? "border-danger" : "border-line"}`} value={newArticle.titleRw} onChange={(e) => setNewArticle({ ...newArticle, titleRw: e.target.value })} />
 
           <label className="text-[12.5px] font-bold text-ink-soft">Title (French)</label>
-          <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={newArticle.titleFr} onChange={(e) => setNewArticle({ ...newArticle, titleFr: e.target.value })} />
+          <input className="rounded-[var(--radius-sm)] border border-line bg-white px-[14px] py-3 text-sm" value={newArticle.titleFr} onChange={(e) => setNewArticle({ ...newArticle, titleFr: e.target.value })} />
 
           <label className="text-[12.5px] font-bold text-ink-soft">Title (Kiswahili)</label>
-          <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={newArticle.titleSw} onChange={(e) => setNewArticle({ ...newArticle, titleSw: e.target.value })} />
+          <input className="rounded-[var(--radius-sm)] border border-line bg-white px-[14px] py-3 text-sm" value={newArticle.titleSw} onChange={(e) => setNewArticle({ ...newArticle, titleSw: e.target.value })} />
 
-          <button onClick={() => void handleCreate()} className="mt-2 w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)]">
+          <button onClick={() => void handleCreate()} className="mt-2 w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark">
             Create &amp; edit
           </button>
         </div>
@@ -243,7 +243,7 @@ export default function KnowledgeBasePage() {
                 <button
                   key={l}
                   onClick={() => setLang(l)}
-                  className={`rounded-[9px] border px-3 py-2 text-[12px] font-bold ${lang === l ? "border-teal-700 bg-teal-700 text-white" : "border-line text-ink-soft"}`}
+                  className={`rounded-[var(--radius-sm)] border px-3 py-2 text-[12px] font-bold transition ${lang === l ? "border-teal-700 bg-teal-700 text-white" : "border-line text-ink-soft hover:bg-paper-2"}`}
                 >
                   {l === "EN" ? "English" : l === "RW" ? "Kinyarwanda" : l === "FR" ? "French" : "Kiswahili"}
                 </button>
@@ -253,40 +253,40 @@ export default function KnowledgeBasePage() {
             {lang === "EN" && (
               <>
                 <label className="text-[12.5px] font-bold text-ink-soft">Title (English)</label>
-                <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={titleEn} onChange={(e) => setTitleEn(e.target.value)} />
+                <input className="rounded-[var(--radius-sm)] border border-line bg-white px-[14px] py-3 text-sm" value={titleEn} onChange={(e) => setTitleEn(e.target.value)} />
                 <label className="text-[12.5px] font-bold text-ink-soft">Body (English)</label>
-                <textarea className="w-full resize-y rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" rows={8} value={bodyEn} onChange={(e) => setBodyEn(e.target.value)} />
+                <textarea className="w-full resize-y rounded-[var(--radius-sm)] border border-line bg-white px-[14px] py-3 text-sm" rows={8} value={bodyEn} onChange={(e) => setBodyEn(e.target.value)} />
               </>
             )}
             {lang === "RW" && (
               <>
                 <label className="text-[12.5px] font-bold text-ink-soft">Title (Kinyarwanda)</label>
-                <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={titleRw} onChange={(e) => setTitleRw(e.target.value)} />
+                <input className="rounded-[var(--radius-sm)] border border-line bg-white px-[14px] py-3 text-sm" value={titleRw} onChange={(e) => setTitleRw(e.target.value)} />
                 <label className="text-[12.5px] font-bold text-ink-soft">Body (Kinyarwanda)</label>
-                <textarea className="w-full resize-y rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" rows={8} value={bodyRw} onChange={(e) => setBodyRw(e.target.value)} />
+                <textarea className="w-full resize-y rounded-[var(--radius-sm)] border border-line bg-white px-[14px] py-3 text-sm" rows={8} value={bodyRw} onChange={(e) => setBodyRw(e.target.value)} />
               </>
             )}
             {lang === "FR" && (
               <>
                 <label className="text-[12.5px] font-bold text-ink-soft">Title (French)</label>
-                <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={titleFr} onChange={(e) => setTitleFr(e.target.value)} />
+                <input className="rounded-[var(--radius-sm)] border border-line bg-white px-[14px] py-3 text-sm" value={titleFr} onChange={(e) => setTitleFr(e.target.value)} />
                 <label className="text-[12.5px] font-bold text-ink-soft">Body (French)</label>
-                <textarea className="w-full resize-y rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" rows={8} value={bodyFr} onChange={(e) => setBodyFr(e.target.value)} />
+                <textarea className="w-full resize-y rounded-[var(--radius-sm)] border border-line bg-white px-[14px] py-3 text-sm" rows={8} value={bodyFr} onChange={(e) => setBodyFr(e.target.value)} />
               </>
             )}
             {lang === "SW" && (
               <>
                 <label className="text-[12.5px] font-bold text-ink-soft">Title (Kiswahili)</label>
-                <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={titleSw} onChange={(e) => setTitleSw(e.target.value)} />
+                <input className="rounded-[var(--radius-sm)] border border-line bg-white px-[14px] py-3 text-sm" value={titleSw} onChange={(e) => setTitleSw(e.target.value)} />
                 <label className="text-[12.5px] font-bold text-ink-soft">Body (Kiswahili)</label>
-                <textarea className="w-full resize-y rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" rows={8} value={bodySw} onChange={(e) => setBodySw(e.target.value)} />
+                <textarea className="w-full resize-y rounded-[var(--radius-sm)] border border-line bg-white px-[14px] py-3 text-sm" rows={8} value={bodySw} onChange={(e) => setBodySw(e.target.value)} />
               </>
             )}
 
             <label className="text-[12.5px] font-bold text-ink-soft">Tags (comma-separated)</label>
-            <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} />
+            <input className="rounded-[var(--radius-sm)] border border-line bg-white px-[14px] py-3 text-sm" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} />
 
-            <div className="rounded-xl border border-[rgba(22,48,44,0.05)] bg-white p-4 shadow-card">
+            <div className="card p-4">
               <div className="mb-2 text-[12.5px] font-bold text-ink-soft">Status</div>
               <span className={`inline-flex items-center gap-1.5 text-[12.5px] font-semibold before:h-2 before:w-2 before:rounded-full before:content-[''] ${article.status === "REVIEWED" ? "text-[#1E7A5A] before:bg-[#2E9E76]" : "text-[#8A5E1E] before:bg-gold"}`}>
                 {article.status === "REVIEWED" ? "Reviewed" : "Needs review"}
@@ -297,11 +297,11 @@ export default function KnowledgeBasePage() {
             </div>
 
             <div className="flex gap-2.5">
-              <button onClick={() => void save()} disabled={saving} className="rounded-full border-[1.5px] border-teal-700 px-4 py-[9px] text-[13px] font-semibold text-teal-700 disabled:opacity-50">
-                {saving ? "Saving…" : "Save draft"}
+              <button onClick={() => void save()} disabled={saving} className="rounded-full border-[1.5px] border-teal-700 px-4 py-[9px] text-[13px] font-semibold text-teal-700 transition hover:bg-teal-100 disabled:opacity-50">
+                {saving ? "Saving\u2026" : "Save draft"}
               </button>
-              <button onClick={() => void save("REVIEWED")} disabled={saving} className="rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] disabled:opacity-50">
-                {article.status === "REVIEWED" ? "Reviewed ✓" : "Mark as Reviewed"}
+              <button onClick={() => void save("REVIEWED")} disabled={saving} className="rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50">
+                {article.status === "REVIEWED" ? "Reviewed \u2713" : "Mark as Reviewed"}
               </button>
             </div>
           </div>

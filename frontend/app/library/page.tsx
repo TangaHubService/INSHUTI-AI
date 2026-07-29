@@ -136,7 +136,7 @@ export default function LibraryPage() {
                   <Link
                     key={article.id}
                     href={`/library/${article.id}`}
-                    className="group flex cursor-pointer flex-col gap-[14px] rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[26px] shadow-card transition-all duration-150 hover:-translate-y-1 hover:shadow-soft"
+                    className="group flex cursor-pointer flex-col gap-[14px] card p-6 transition-all duration-150 hover:-translate-y-1 hover:shadow-soft"
                   >
                     <div className={`flex h-[46px] w-[46px] items-center justify-center rounded-[14px] ${TOPIC_BG[slug] ?? "bg-teal-100"} ${TOPIC_FG[slug] ?? "text-teal-700"}`}>
                       <svg width="22" height="22"><use href={`#${TOPIC_ICONS[slug] ?? "i-book"}`} /></svg>
@@ -156,7 +156,7 @@ export default function LibraryPage() {
       </section>
 
       <section className="pb-16">
-        <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-gold-100 p-5 text-center text-[13px] leading-[1.6] text-[#8A5E1E]">
+        <div className="rounded-xl bg-gold-100 p-5 text-center text-[13px] leading-[1.6] text-[#8A5E1E]">
           All content in this library has been reviewed by healthcare professionals. This information is for educational purposes and is not a substitute for professional medical advice.
         </div>
       </section>

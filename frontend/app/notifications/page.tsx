@@ -59,9 +59,6 @@ const CHANNEL_LABEL: Record<Language, Record<NotificationChannel, string>> = {
   SW: { IN_APP: "Ndani ya programu", EMAIL: "Barua pepe", SMS: "SMS" },
 };
 
-// Where clicking a notification should take the user, keyed by its type.
-// PASSWORD_RESET is left out: its action is the reset link inside the body
-// text itself, not a page in the app.
 const NOTIFICATION_LINK: Partial<Record<NotificationType, string>> = {
   APPOINTMENT_REMINDER: "/appointments",
   CONSULTATION_UPDATE: "/consultations",
@@ -92,11 +89,11 @@ const COPY: Record<Language, {
     subtitle: "Choose how you'd like to hear about appointments, consultations, and account updates.",
     loginGate: "Log in to manage your notifications.",
     logIn: "Log in",
-    loading: "Loading…",
+    loading: "Loading\u2026",
     preferences: "Preferences",
     savePreferences: "Save preferences",
-    saving: "Saving…",
-    smsNote: "SMS delivery isn't connected to a carrier yet — turning it on won't send a text until that's set up.",
+    saving: "Saving\u2026",
+    smsNote: "SMS delivery isn't connected to a carrier yet \u2014 turning it on won't send a text until that's set up.",
     recent: "Recent",
     markAllRead: "Mark all read",
     noNotifications: "No notifications yet.",
@@ -109,11 +106,11 @@ const COPY: Record<Language, {
     subtitle: "Hitamo uburyo ushaka kumenyeshwa ku gahunda, ubujyanama, n'amakuru ya konti yawe.",
     loginGate: "Injira kugira ngo ucunge amamenyesha yawe.",
     logIn: "Injira",
-    loading: "Turimo gutegura…",
+    loading: "Turimo gutegura\u2026",
     preferences: "Uburyo wifuza",
     savePreferences: "Bika uburyo wifuza",
-    saving: "Turimo kubika…",
-    smsNote: "Kohereza ubutumwa bugufi ntibirakorwa n'uwatanga serivisi — kubyemeza ntibizohereza ubutumwa kugeza bishyizweho.",
+    saving: "Turimo kubika\u2026",
+    smsNote: "Kohereza ubutumwa bugufi ntibirakorwa n'uwatanga serivisi \u2014 kubyemeza ntibizohereza ubutumwa kugeza bishyizweho.",
     recent: "Ibiheruka",
     markAllRead: "Byose byasomwe",
     noNotifications: "Nta mamenyesha arahari.",
@@ -122,20 +119,20 @@ const COPY: Record<Language, {
   },
   FR: {
     eyebrow: "Notifications",
-    title: "Restez informé·e",
-    subtitle: "Choisissez comment être informé·e des rendez-vous, consultations et mises à jour de compte.",
-    loginGate: "Connectez-vous pour gérer vos notifications.",
+    title: "Restez inform\u00e9\u00b7e",
+    subtitle: "Choisissez comment \u00eatre inform\u00e9\u00b7e des rendez-vous, consultations et mises \u00e0 jour de compte.",
+    loginGate: "Connectez-vous pour g\u00e9rer vos notifications.",
     logIn: "Connexion",
-    loading: "Chargement…",
-    preferences: "Préférences",
-    savePreferences: "Enregistrer les préférences",
-    saving: "Enregistrement…",
-    smsNote: "L'envoi de SMS n'est pas encore connecté à un opérateur — l'activer n'enverra pas de message tant que ce n'est pas configuré.",
-    recent: "Récent",
+    loading: "Chargement\u2026",
+    preferences: "Pr\u00e9f\u00e9rences",
+    savePreferences: "Enregistrer les pr\u00e9f\u00e9rences",
+    saving: "Enregistrement\u2026",
+    smsNote: "L'envoi de SMS n'est pas encore connect\u00e9 \u00e0 un op\u00e9rateur \u2014 l'activer n'enverra pas de message tant que ce n'est pas configur\u00e9.",
+    recent: "R\u00e9cent",
     markAllRead: "Tout marquer comme lu",
     noNotifications: "Aucune notification pour le moment.",
-    saved: "Préférences enregistrées",
-    saveFailed: "Échec de l'enregistrement des préférences",
+    saved: "Pr\u00e9f\u00e9rences enregistr\u00e9es",
+    saveFailed: "\u00c9chec de l'enregistrement des pr\u00e9f\u00e9rences",
   },
   SW: {
     eyebrow: "Arifa",
@@ -143,11 +140,11 @@ const COPY: Record<Language, {
     subtitle: "Chagua jinsi unavyotaka kufahamishwa kuhusu miadi, mashauriano, na masasisho ya akaunti.",
     loginGate: "Ingia ili kudhibiti arifa zako.",
     logIn: "Ingia",
-    loading: "Inapakia…",
+    loading: "Inapakia\u2026",
     preferences: "Mapendeleo",
     savePreferences: "Hifadhi mapendeleo",
-    saving: "Inahifadhi…",
-    smsNote: "Utumaji wa SMS bado haujaunganishwa na mtoa huduma — kuwasha hakutatuma ujumbe hadi hilo liwe tayari.",
+    saving: "Inahifadhi\u2026",
+    smsNote: "Utumaji wa SMS bado haujaunganishwa na mtoa huduma \u2014 kuwasha hakutatuma ujumbe hadi hilo liwe tayari.",
     recent: "Hivi karibuni",
     markAllRead: "Weka zote kama zimesomwa",
     noNotifications: "Hakuna arifa bado.",
@@ -250,7 +247,7 @@ export default function NotificationsPage() {
         </section>
 
         <section className="grid grid-cols-1 items-start gap-4 pb-16 pt-5 lg:grid-cols-[1fr_1.1fr]">
-            <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
+            <div className="card p-5">
               <h3 className="mb-4 text-base text-teal-900">{t.preferences}</h3>
               {prefs && (
                 <>
@@ -266,7 +263,7 @@ export default function NotificationsPage() {
                           <span key={`${type}-${channel}`} className="flex justify-center">
                             <input
                               type="checkbox"
-                              className="h-4 w-4 accent-teal-700"
+                              className="h-4 w-4 rounded accent-teal-700 transition"
                               checked={prefs[type][channel]}
                               onChange={() => toggle(type, channel)}
                             />
@@ -278,7 +275,7 @@ export default function NotificationsPage() {
                   <button
                     onClick={() => void handleSave()}
                     disabled={saving}
-                    className="mt-5 w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
+                    className="mt-5 w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
                   >
                     {saving ? t.saving : t.savePreferences}
                   </button>
@@ -289,11 +286,11 @@ export default function NotificationsPage() {
               )}
             </div>
 
-            <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white py-1.5 shadow-card">
+            <div className="card py-1.5">
               <div className="flex items-center justify-between px-5 pb-1.5 pt-[14px]">
                 <h3 className="text-base text-teal-900">{t.recent}</h3>
                 {notifications.some((n) => !n.read) && (
-                  <button onClick={() => void handleMarkAll()} className="text-[13px] font-semibold text-ink-soft hover:text-teal-700">
+                  <button onClick={() => void handleMarkAll()} className="text-[13px] font-semibold text-ink-soft transition hover:text-teal-700">
                     {t.markAllRead}
                   </button>
                 )}
@@ -307,7 +304,7 @@ export default function NotificationsPage() {
                 <button
                   key={n.id}
                   onClick={() => void handleNotificationClick(n)}
-                  className={`block w-full border-b border-line px-5 py-4 text-left last:border-b-0 ${n.read ? "" : "bg-teal-100/30"}`}
+                  className={`block w-full border-b border-line px-5 py-4 text-left last:border-b-0 transition ${n.read ? "hover:bg-paper-2" : "bg-teal-100/30 hover:bg-teal-100/50"}`}
                 >
                   <div className="text-sm font-semibold text-ink">{n.title}</div>
                   <div className="mt-1 text-[13px] text-ink-soft">{n.body}</div>

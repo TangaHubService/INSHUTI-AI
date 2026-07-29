@@ -176,7 +176,7 @@ export default function RegisterPage() {
           ))}
         </div>
 
-        <form onSubmit={(e) => void handleSubmit(e)} className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[26px] shadow-card">
+        <form onSubmit={(e) => void handleSubmit(e)} className="card p-6">
           <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">{m.name}</label>
           <input
             className={`${INPUT_BASE} ${errors.name ? "border-danger focus:ring-danger/20" : "border-line focus:border-teal-600"}`}
@@ -247,7 +247,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={sending}
-            className="w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
+            className="w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
           >
             {sending ? m.creating : m.create}
           </button>

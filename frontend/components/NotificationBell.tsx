@@ -49,7 +49,6 @@ export function NotificationBell() {
       setNotifications(data.notifications);
       setUnreadCount(data.unreadCount);
     } catch {
-      // Silent — the bell just shows nothing new rather than surfacing an error toast.
     } finally {
       setLoading(false);
     }
@@ -75,13 +74,13 @@ export function NotificationBell() {
           void refresh();
         }}
         title="Notifications"
-        className="relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-line bg-white"
+        className="relative flex h-[38px] w-[38px] items-center justify-center rounded-[var(--radius-sm)] border border-line bg-white transition hover:bg-paper-2"
       >
         <svg width="16" height="16" className="text-teal-700">
           <use href="#i-bell" />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-coral px-1 text-[10px] font-bold text-white">
+          <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-coral px-1 text-[10px] font-bold text-white shadow-sm">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -89,11 +88,11 @@ export function NotificationBell() {
 
       <Drawer open={open} onClose={() => setOpen(false)} title="Notifications">
         <div className="mb-4 flex items-center justify-between">
-          <Link href="/notifications" className="text-[13px] font-semibold text-teal-700" onClick={() => setOpen(false)}>
+          <Link href="/notifications" className="text-[13px] font-semibold text-teal-700 transition hover:text-teal-900" onClick={() => setOpen(false)}>
             Manage preferences
           </Link>
           {unreadCount > 0 && (
-            <button onClick={() => void handleMarkAll()} className="text-[13px] font-semibold text-ink-soft hover:text-teal-700">
+            <button onClick={() => void handleMarkAll()} className="text-[13px] font-semibold text-ink-soft transition hover:text-teal-700">
               Mark all read
             </button>
           )}
@@ -106,8 +105,10 @@ export function NotificationBell() {
             <button
               key={n.id}
               onClick={() => !n.read && void handleMarkOne(n.id)}
-              className={`rounded-md border px-4 py-3 text-left text-[13.5px] transition ${
-                n.read ? "border-line bg-white" : "border-teal-100 bg-teal-100/40 hover:bg-teal-100/60"
+              className={`rounded-[var(--radius-sm)] border px-4 py-3.5 text-left text-[13.5px] transition-all ${
+                n.read
+                  ? "border-line bg-white"
+                  : "border-teal-100 bg-teal-100/40 hover:bg-teal-100/60"
               }`}
             >
               <div className="font-semibold text-ink">{n.title}</div>

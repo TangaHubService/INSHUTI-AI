@@ -67,31 +67,31 @@ export default function ProfessionalPortalPage() {
           <PageLoading />
         ) : (
           <section className="grid grid-cols-1 gap-4 pb-16 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
+            <div className="card p-5">
               <div className="text-[12.5px] font-semibold text-ink-soft">Waiting on you</div>
               <div className="mt-2 font-display text-[30px] text-teal-900">{pendingCount}</div>
               <Link href="/consultations" className="mt-2 inline-block text-[12.5px] font-semibold text-teal-700">
                 Open queue →
               </Link>
             </div>
-            <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
+            <div className="card p-5">
               <div className="text-[12.5px] font-semibold text-ink-soft">Resolved consultations</div>
               <div className="mt-2 font-display text-[30px] text-teal-900">{resolvedCount}</div>
             </div>
-            <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
+            <div className="card p-5">
               <div className="text-[12.5px] font-semibold text-ink-soft">Upcoming appointments</div>
               <div className="mt-2 font-display text-[30px] text-teal-900">{upcomingAppointments.length}</div>
               <Link href="/appointments" className="mt-2 inline-block text-[12.5px] font-semibold text-teal-700">
                 Open calendar →
               </Link>
             </div>
-            <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
+            <div className="card p-5">
               <div className="text-[12.5px] font-semibold text-ink-soft">Completed appointments</div>
               <div className="mt-2 font-display text-[30px] text-teal-900">{completedAppointments}</div>
             </div>
 
             <div className="sm:col-span-2 lg:col-span-4">
-              <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white py-1.5 shadow-card">
+              <div className="card py-1.5">
                 <div className="px-5 pb-1.5 pt-[14px] text-base text-teal-900">Next up</div>
                 {upcomingAppointments.length === 0 && (
                   <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">Nothing scheduled yet.</p>

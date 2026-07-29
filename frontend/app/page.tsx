@@ -350,7 +350,7 @@ export default function Home() {
       ]}
       footerDisclaimer={t.footer.disclaimer}
     >
-      {/* ── Hero ── */}
+      {/* Hero */}
       <FadeUp>
         <section className="py-20 md:py-28">
           <div className="mx-auto max-w-[880px] text-center">
@@ -379,7 +379,7 @@ export default function Home() {
             >
               <Link
                 href="/chat"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-[28px] py-[14px] text-[15.5px] font-semibold text-white shadow-[0_8px_24px_rgba(232,115,92,0.4)] transition-all duration-150 hover:-translate-y-px hover:bg-coral-dark"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-[28px] py-[14px] text-[15.5px] font-semibold text-white shadow-btn transition-all duration-150 hover:-translate-y-px hover:bg-coral-dark hover:shadow-lg"
               >
                 {t.hero.ctaChat}
                 <svg width="16" height="16">
@@ -394,7 +394,7 @@ export default function Home() {
               </a>
             </motion.div>
 
-            {/* Agent avatars row — like atoms.dev */}
+            {/* Agent avatars row */}
             <motion.div
               className="mt-16 flex flex-wrap justify-center gap-x-6 gap-y-5"
               initial="hidden"
@@ -409,7 +409,7 @@ export default function Home() {
                   transition={{ duration: 0.4, ease: "easeOut" }}
                 >
                   <div
-                    className={`flex h-[56px] w-[56px] items-center justify-center rounded-full bg-gradient-to-br ${agent.gradient} text-[18px] font-bold text-white shadow-md`}
+                    className={`flex h-[56px] w-[56px] items-center justify-center rounded-full bg-gradient-to-br ${agent.gradient} text-[18px] font-bold text-white shadow-md transition-transform duration-200 hover:scale-110`}
                   >
                     {initials[i]}
                   </div>
@@ -422,7 +422,7 @@ export default function Home() {
         </section>
       </FadeUp>
 
-      {/* ── The Inshuti System (AI Team) ── */}
+      {/* The Inshuti System */}
       <FadeUp>
         <section className="py-16">
           <div className="mx-auto mb-12 max-w-[600px] text-center">
@@ -434,9 +434,9 @@ export default function Home() {
           <StaggerGrid className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-4">
             {t.agents.items.map((agent, i) => (
               <StaggerItem key={agent.role}>
-                <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-6 shadow-card transition-all duration-150 hover:-translate-y-1 hover:shadow-soft">
+                <div className="card p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
                   <div
-                    className={`flex h-[44px] w-[44px] items-center justify-center rounded-full bg-gradient-to-br ${agent.gradient} text-[16px] font-bold text-white`}
+                    className={`flex h-[44px] w-[44px] items-center justify-center rounded-full bg-gradient-to-br ${agent.gradient} text-[16px] font-bold text-white shadow-sm`}
                   >
                     {initials[i]}
                   </div>
@@ -450,7 +450,7 @@ export default function Home() {
         </section>
       </FadeUp>
 
-      {/* ── Everything you need (Features) ── */}
+      {/* Features */}
       <FadeUp>
         <section className="py-16">
           <div className="mx-auto mb-12 max-w-[600px] text-center">
@@ -464,9 +464,9 @@ export default function Home() {
               <StaggerItem key={feature.title}>
                 <Link
                   href={feature.icon === "i-map-pin" ? "/facility-locator" : feature.icon === "i-calendar" ? "/appointments" : "/chat"}
-                  className="group block rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-6 text-left shadow-card transition-all duration-150 hover:-translate-y-1 hover:shadow-soft"
+                  className="group card block p-6 text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
                 >
-                  <div className="mb-[14px] flex h-10 w-10 items-center justify-center rounded-xl bg-teal-100 text-teal-700">
+                  <div className="mb-[14px] flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-teal-100 text-teal-700">
                     <svg width="20" height="20"><use href={`#${feature.icon}`} /></svg>
                   </div>
                   <h3 className="text-base font-bold text-teal-900">{feature.title}</h3>
@@ -478,7 +478,7 @@ export default function Home() {
         </section>
       </FadeUp>
 
-      {/* ── Popular Topics ── */}
+      {/* Popular Topics */}
       <FadeUp>
         <section className="py-16" id="topics">
           <div className="mx-auto mb-10 max-w-[560px] text-center">
@@ -493,9 +493,9 @@ export default function Home() {
               <StaggerItem key={topic.name}>
                 <Link
                   href={`/chat?topic=${topic.icon}`}
-                  className="group flex h-full cursor-pointer flex-col gap-[14px] rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[26px] shadow-card transition-all duration-150 hover:-translate-y-1 hover:shadow-soft"
+                  className="group card flex h-full cursor-pointer flex-col gap-[14px] p-[26px] transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
                 >
-                  <div className={`flex h-[46px] w-[46px] items-center justify-center rounded-[14px] ${topic.bg} ${topic.fg}`}>
+                  <div className={`flex h-[46px] w-[46px] items-center justify-center rounded-[var(--radius-md)] ${topic.bg} ${topic.fg}`}>
                     <svg width="22" height="22"><use href={`#${topic.icon}`} /></svg>
                   </div>
                   <h3 className="text-lg font-bold text-teal-900">{topic.name}</h3>
@@ -511,7 +511,7 @@ export default function Home() {
         </section>
       </FadeUp>
 
-      {/* ── FAQ ── */}
+      {/* FAQ */}
       <FadeUp>
         <section className="py-16">
           <div className="mx-auto mb-10 max-w-[560px] text-center">

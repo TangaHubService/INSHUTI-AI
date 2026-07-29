@@ -106,7 +106,7 @@ export default function AboutPage() {
           <div>
             <p className="text-[15.5px] leading-[1.7] text-ink-soft">{t.story}</p>
           </div>
-          <div className="rounded-[32px] border border-line bg-white p-8 shadow-soft">
+          <div className="card p-8">
             <h2 className="font-display text-2xl text-teal-900">{t.missionTitle}</h2>
             <p className="mt-4 text-[15px] leading-[1.6] text-ink-soft">{t.mission}</p>
           </div>
@@ -117,7 +117,7 @@ export default function AboutPage() {
         <h2 className="font-display text-3xl text-teal-900">{t.valuesTitle}</h2>
         <div className="mt-8 grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-4">
           {t.values.map((v) => (
-            <div key={v.title} className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-6 shadow-card transition-all duration-150 hover:-translate-y-1 hover:shadow-soft">
+            <div key={v.title} className="card p-6 transition-all duration-150 hover:-translate-y-1 hover:shadow-soft">
               <div className="mb-[14px] flex h-10 w-10 items-center justify-center rounded-xl bg-teal-100 text-teal-700">
                 <svg width="20" height="20"><use href={`#${v.icon}`} /></svg>
               </div>
@@ -129,7 +129,7 @@ export default function AboutPage() {
       </section>
 
       <section className="pb-16">
-        <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-8 shadow-card">
+        <div className="card p-8">
           <h2 className="font-display text-2xl text-teal-900">{t.teamTitle}</h2>
           <p className="mt-4 text-[15px] leading-[1.6] text-ink-soft">{t.team}</p>
         </div>

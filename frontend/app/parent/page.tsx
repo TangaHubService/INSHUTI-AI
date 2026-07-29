@@ -69,7 +69,7 @@ export default function ParentPortalPage() {
         ) : (
           <section className="grid grid-cols-1 gap-4 pb-16 lg:grid-cols-[1.2fr_1fr]">
             <div>
-              <div className="mb-4 rounded-md border border-[rgba(22,48,44,0.05)] bg-white py-1.5 shadow-card">
+              <div className="mb-4 card py-1.5">
                 <div className="flex items-center justify-between px-5 pb-1.5 pt-[14px]">
                   <h3 className="text-base text-teal-900">Upcoming appointments</h3>
                   <Link href="/appointments" className="text-[12.5px] font-semibold text-teal-700">Manage →</Link>
@@ -88,7 +88,7 @@ export default function ParentPortalPage() {
                 ))}
               </div>
 
-              <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[22px] shadow-card">
+              <div className="card p-5">
                 <h3 className="mb-4 text-base text-teal-900">Educational resources</h3>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {RESOURCE_TOPICS.map((topic) => (
@@ -107,7 +107,7 @@ export default function ParentPortalPage() {
               </div>
             </div>
 
-            <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white py-1.5 shadow-card">
+            <div className="card py-1.5">
               <div className="px-5 pb-1.5 pt-[14px] text-base text-teal-900">Recent notifications</div>
               {notifications.length === 0 && (
                 <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">Nothing new.</p>

@@ -24,10 +24,10 @@ function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className={`relative h-6 w-[42px] flex-shrink-0 rounded-full transition-colors ${on ? "bg-teal-700" : "bg-line"}`}
+      className={`relative h-6 w-[42px] flex-shrink-0 rounded-full transition-colors duration-200 ${on ? "bg-teal-700" : "bg-line"}`}
     >
       <span
-        className={`absolute top-[3px] h-[18px] w-[18px] rounded-full bg-white transition-all ${on ? "left-[21px]" : "left-[3px]"}`}
+        className={`absolute top-[3px] h-[18px] w-[18px] rounded-full bg-white shadow-sm transition-all duration-200 ${on ? "left-[21px]" : "left-[3px]"}`}
       />
     </button>
   );
@@ -138,28 +138,28 @@ export default function AdminSettingsPage() {
 
       {!loading && settings && (
         <div className="flex flex-col gap-4">
-          <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-6 shadow-card">
+          <div className="card p-6">
             <h3 className="mb-4 text-base text-teal-900">AI behavior</h3>
 
-            <label className="mb-1.5 block text-[12.5px] font-bold text-ink-soft">AI provider</label>
+            <label className="mb-1.5 block text-[13px] font-semibold text-ink-soft">AI provider</label>
             <input
-              className="mb-4 w-full max-w-[320px] rounded-[10px] border border-line bg-paper-2 px-[14px] py-3 text-sm"
+              className="mb-4 w-full max-w-[320px] rounded-[var(--radius-sm)] border border-line bg-paper-2 px-[14px] py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-100"
               value={settings.aiProvider}
               onChange={(e) => setSettings({ ...settings, aiProvider: e.target.value })}
               onBlur={() => void saveSettings({ aiProvider: settings.aiProvider })}
             />
 
-            <label className="mb-1.5 block text-[12.5px] font-bold text-ink-soft">AI model</label>
+            <label className="mb-1.5 block text-[13px] font-semibold text-ink-soft">AI model</label>
             <input
-              className="mb-4 w-full max-w-[320px] rounded-[10px] border border-line bg-paper-2 px-[14px] py-3 text-sm"
+              className="mb-4 w-full max-w-[320px] rounded-[var(--radius-sm)] border border-line bg-paper-2 px-[14px] py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-100"
               value={settings.aiModel}
               onChange={(e) => setSettings({ ...settings, aiModel: e.target.value })}
               onBlur={() => void saveSettings({ aiModel: settings.aiModel })}
             />
 
-            <label className="mb-1.5 block text-[12.5px] font-bold text-ink-soft">Response style note</label>
+            <label className="mb-1.5 block text-[13px] font-semibold text-ink-soft">Response style note</label>
             <textarea
-              className="mb-5 w-full resize-y rounded-[10px] border border-line bg-paper-2 px-[14px] py-3 text-sm"
+              className="mb-5 w-full resize-y rounded-[var(--radius-sm)] border border-line bg-paper-2 px-[14px] py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-100"
               rows={3}
               value={settings.responseStyleNote}
               onChange={(e) => setSettings({ ...settings, responseStyleNote: e.target.value })}
@@ -206,10 +206,10 @@ export default function AdminSettingsPage() {
                 />
               </div>
             </div>
-            {saving && <p className="mt-3 text-[12.5px] text-ink-soft">Saving…</p>}
+            {saving && <p className="mt-3 text-[12.5px] text-ink-soft">Saving\u2026</p>}
           </div>
 
-          <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-6 shadow-card">
+          <div className="card p-6">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-base text-teal-900">Crisis resources</h3>
@@ -219,14 +219,14 @@ export default function AdminSettingsPage() {
               </div>
               <button
                 onClick={openNewResource}
-                className="inline-flex flex-shrink-0 items-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)]"
+                className="inline-flex flex-shrink-0 items-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark"
               >
                 <svg width="15" height="15"><use href="#i-plus" /></svg>
                 Add resource
               </button>
             </div>
 
-            <div className="overflow-x-auto rounded-md border border-line">
+            <div className="overflow-x-auto rounded-[var(--radius-md)] border border-line">
               <table className="w-full border-collapse text-[13.5px]">
                 <thead>
                   <tr>
@@ -240,16 +240,16 @@ export default function AdminSettingsPage() {
                     <tr><td colSpan={4} className="px-3.5 py-6 text-center text-ink-soft">No crisis resources yet.</td></tr>
                   )}
                   {resources.map((resource) => (
-                    <tr key={resource.id} className="border-b border-line last:border-b-0 hover:bg-paper-2">
+                    <tr key={resource.id} className="border-b border-line last:border-b-0 transition hover:bg-paper-2">
                       <td className="p-3.5 font-semibold text-ink">{resource.name}</td>
                       <td className="p-3.5">{resource.contact}</td>
                       <td className="p-3.5">{resource.region}</td>
                       <td className="p-3.5">
                         <div className="flex items-center justify-end gap-3">
-                          <button onClick={() => openEditResource(resource)} className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-teal-700">
+                          <button onClick={() => openEditResource(resource)} className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-teal-700 transition hover:bg-teal-100">
                             <svg width="14" height="14"><use href="#i-edit" /></svg>
                           </button>
-                          <button onClick={() => setDeleteTarget(resource)} className="flex h-8 w-8 items-center justify-center rounded-full border border-coral-dark text-coral-dark">
+                          <button onClick={() => setDeleteTarget(resource)} className="flex h-8 w-8 items-center justify-center rounded-full border border-coral-dark text-coral-dark transition hover:bg-coral-100">
                             <svg width="14" height="14"><use href="#i-trash" /></svg>
                           </button>
                         </div>
@@ -267,21 +267,21 @@ export default function AdminSettingsPage() {
         <div className="flex flex-col gap-4">
           <label className="text-[12.5px] font-bold text-ink-soft">Name</label>
           <input
-            className={`rounded-[10px] border bg-white px-[14px] py-3 text-sm ${resourceErrors.name ? "border-danger" : "border-line"}`}
+            className={`rounded-[var(--radius-sm)] border bg-white px-[14px] py-3 text-sm ${resourceErrors.name ? "border-danger" : "border-line"}`}
             value={resourceForm.name}
             onChange={(e) => setResourceForm({ ...resourceForm, name: e.target.value })}
           />
 
           <label className="text-[12.5px] font-bold text-ink-soft">Contact</label>
           <input
-            className={`rounded-[10px] border bg-white px-[14px] py-3 text-sm ${resourceErrors.contact ? "border-danger" : "border-line"}`}
+            className={`rounded-[var(--radius-sm)] border bg-white px-[14px] py-3 text-sm ${resourceErrors.contact ? "border-danger" : "border-line"}`}
             value={resourceForm.contact}
             onChange={(e) => setResourceForm({ ...resourceForm, contact: e.target.value })}
           />
 
           <label className="text-[12.5px] font-bold text-ink-soft">Region</label>
           <input
-            className={`rounded-[10px] border bg-white px-[14px] py-3 text-sm ${resourceErrors.region ? "border-danger" : "border-line"}`}
+            className={`rounded-[var(--radius-sm)] border bg-white px-[14px] py-3 text-sm ${resourceErrors.region ? "border-danger" : "border-line"}`}
             value={resourceForm.region}
             onChange={(e) => setResourceForm({ ...resourceForm, region: e.target.value })}
           />
@@ -289,9 +289,9 @@ export default function AdminSettingsPage() {
           <button
             onClick={() => void handleSaveResource()}
             disabled={savingResource}
-            className="mt-2 w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] disabled:opacity-50"
+            className="mt-2 w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
           >
-            {savingResource ? "Saving…" : editingResource ? "Save changes" : "Add resource"}
+            {savingResource ? "Saving\u2026" : editingResource ? "Save changes" : "Add resource"}
           </button>
         </div>
       </Drawer>

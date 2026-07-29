@@ -138,7 +138,7 @@ export default function AdminUsersPage() {
         </div>
         <button
           onClick={openNewAdmin}
-          className="inline-flex flex-shrink-0 items-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)]"
+          className="inline-flex flex-shrink-0 items-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark"
         >
           <svg width="15" height="15"><use href="#i-plus" /></svg>
           Add admin
@@ -149,7 +149,7 @@ export default function AdminUsersPage() {
 
       {!loading && (
         <>
-          <div className="mb-6 rounded-md border border-[rgba(22,48,44,0.05)] bg-white shadow-card">
+          <div className="card mb-6">
             <div className="px-5 pb-1.5 pt-[14px] text-base text-teal-900">App users</div>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-[13.5px]">
@@ -165,25 +165,25 @@ export default function AdminUsersPage() {
                     <tr><td colSpan={5} className="px-3.5 py-6 text-center text-ink-soft">No users yet.</td></tr>
                   )}
                   {users.map((u) => (
-                    <tr key={u.id} className="border-b border-line last:border-b-0 hover:bg-paper-2">
+                    <tr key={u.id} className="border-b border-line last:border-b-0 transition hover:bg-paper-2">
                       <td className="p-3.5">
                         <div className="text-sm font-semibold text-ink">{u.name}</div>
                         <div className="text-xs text-ink-soft">{u.email}</div>
                       </td>
                       <td className="p-3.5">
-                        <span className="rounded-full bg-teal-100 px-2.5 py-1 text-[11px] font-bold text-teal-700">
+                        <span className="badge-green">
                           {ROLE_LABEL[u.role] ?? u.role}
                         </span>
                       </td>
                       <td className="p-3.5">
                         {u.healthcareProfessional && (
-                          <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${APPROVAL_STYLE[u.healthcareProfessional.approvalStatus]}`}>
+                          <span className={`badge ${APPROVAL_STYLE[u.healthcareProfessional.approvalStatus]}`}>
                             {u.healthcareProfessional.approvalStatus}
                           </span>
                         )}
                       </td>
                       <td className="p-3.5">
-                        <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${u.active ? "bg-teal-100 text-teal-700" : "bg-coral-100 text-coral-dark"}`}>
+                        <span className={`badge ${u.active ? "bg-teal-100 text-teal-700" : "bg-coral-100 text-coral-dark"}`}>
                           {u.active ? "Active" : "Deactivated"}
                         </span>
                       </td>
@@ -192,7 +192,7 @@ export default function AdminUsersPage() {
                           {u.healthcareProfessional && u.healthcareProfessional.approvalStatus !== "APPROVED" && (
                             <button
                               onClick={() => void handleApproval(u.id, "APPROVED")}
-                              className="rounded-full bg-teal-700 px-3 py-1.5 text-[12px] font-semibold text-white"
+                              className="rounded-full bg-teal-700 px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm transition hover:bg-teal-900"
                             >
                               Approve
                             </button>
@@ -200,14 +200,14 @@ export default function AdminUsersPage() {
                           {u.healthcareProfessional && u.healthcareProfessional.approvalStatus !== "REJECTED" && (
                             <button
                               onClick={() => void handleApproval(u.id, "REJECTED")}
-                              className="rounded-full border border-coral-dark px-3 py-1.5 text-[12px] font-semibold text-coral-dark"
+                              className="rounded-full border border-coral-dark px-3 py-1.5 text-[12px] font-semibold text-coral-dark transition hover:bg-coral-100"
                             >
                               Reject
                             </button>
                           )}
                           <button
                             onClick={() => void handleToggleActive(u.id, !u.active)}
-                            className="rounded-full border border-line px-3 py-1.5 text-[12px] font-semibold text-ink-soft hover:bg-paper-2"
+                            className="rounded-full border border-line px-3 py-1.5 text-[12px] font-semibold text-ink-soft transition hover:bg-paper-2"
                           >
                             {u.active ? "Deactivate" : "Activate"}
                           </button>
@@ -220,7 +220,7 @@ export default function AdminUsersPage() {
             </div>
           </div>
 
-          <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white shadow-card">
+          <div className="card">
             <div className="px-5 pb-1.5 pt-[14px] text-base text-teal-900">Admin team</div>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-[13.5px]">
@@ -233,16 +233,16 @@ export default function AdminUsersPage() {
                 </thead>
                 <tbody>
                   {admins.map((a) => (
-                    <tr key={a.id} className="border-b border-line last:border-b-0 hover:bg-paper-2">
+                    <tr key={a.id} className="border-b border-line last:border-b-0 transition hover:bg-paper-2">
                       <td className="p-3.5">
                         <div className="text-sm font-semibold text-ink">{a.name}</div>
                         <div className="text-xs text-ink-soft">{a.email}</div>
                       </td>
                       <td className="p-3.5">
-                        <span className="rounded-full bg-teal-100 px-2.5 py-1 text-[11px] font-bold text-teal-700">{a.role}</span>
+                        <span className="badge-green">{a.role}</span>
                       </td>
                       <td className="p-3.5">
-                        <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${a.active ? "bg-teal-100 text-teal-700" : "bg-coral-100 text-coral-dark"}`}>
+                        <span className={`badge ${a.active ? "bg-teal-100 text-teal-700" : "bg-coral-100 text-coral-dark"}`}>
                           {a.active ? "Active" : "Deactivated"}
                         </span>
                       </td>
@@ -251,7 +251,7 @@ export default function AdminUsersPage() {
                           <div className="flex justify-end">
                             <button
                               onClick={() => void handleToggleAdminActive(a.id, !a.active)}
-                              className="rounded-full border border-line px-3 py-1.5 text-[12px] font-semibold text-ink-soft hover:bg-paper-2"
+                              className="rounded-full border border-line px-3 py-1.5 text-[12px] font-semibold text-ink-soft transition hover:bg-paper-2"
                             >
                               {a.active ? "Deactivate" : "Activate"}
                             </button>
@@ -269,33 +269,33 @@ export default function AdminUsersPage() {
 
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="New Admin">
         <form onSubmit={(e) => void handleCreateAdmin(e)} className="flex flex-col gap-1">
-          <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">Name</label>
+          <label className="mb-1 block text-[13px] font-semibold text-ink-soft">Name</label>
           <input
-            className={`w-full rounded-[10px] border bg-white px-3.5 py-3 text-sm ${errors.name ? "border-danger" : "border-line"}`}
+            className={`w-full rounded-[var(--radius-sm)] border bg-white px-3.5 py-3 text-sm ${errors.name ? "border-danger" : "border-line"}`}
             value={newAdmin.name}
             onChange={(e) => setNewAdmin((prev) => ({ ...prev, name: e.target.value }))}
           />
           <p className="mb-2.5 mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.name}</p>
 
-          <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">Email</label>
+          <label className="mb-1 block text-[13px] font-semibold text-ink-soft">Email</label>
           <input
             type="email"
-            className={`w-full rounded-[10px] border bg-white px-3.5 py-3 text-sm ${errors.email ? "border-danger" : "border-line"}`}
+            className={`w-full rounded-[var(--radius-sm)] border bg-white px-3.5 py-3 text-sm ${errors.email ? "border-danger" : "border-line"}`}
             value={newAdmin.email}
             onChange={(e) => setNewAdmin((prev) => ({ ...prev, email: e.target.value }))}
           />
           <p className="mb-2.5 mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.email}</p>
 
-          <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">Temporary password</label>
+          <label className="mb-1 block text-[13px] font-semibold text-ink-soft">Temporary password</label>
           <PasswordInput
-            className={`w-full rounded-[10px] border bg-white px-3.5 py-3 text-sm ${errors.password ? "border-danger" : "border-line"}`}
+            className={`w-full rounded-[var(--radius-sm)] border bg-white px-3.5 py-3 text-sm ${errors.password ? "border-danger" : "border-line"}`}
             value={newAdmin.password}
             onChange={(e) => setNewAdmin((prev) => ({ ...prev, password: e.target.value }))}
           />
           <p className="mb-2.5 mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.password}</p>
-          <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">Role</label>
+          <label className="mb-1 block text-[13px] font-semibold text-ink-soft">Role</label>
           <select
-            className="mb-4 w-full rounded-[10px] border border-line bg-white px-3.5 py-3 text-sm"
+            className="mb-4 w-full rounded-[var(--radius-sm)] border border-line bg-white px-3.5 py-3 text-sm"
             value={newAdmin.role}
             onChange={(e) => setNewAdmin((prev) => ({ ...prev, role: e.target.value as AdminRole }))}
           >
@@ -306,9 +306,9 @@ export default function AdminUsersPage() {
           <button
             type="submit"
             disabled={creating}
-            className="w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
+            className="w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
           >
-            {creating ? "Creating…" : "Create admin"}
+            {creating ? "Creating\u2026" : "Create admin"}
           </button>
         </form>
       </Drawer>

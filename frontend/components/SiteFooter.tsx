@@ -15,15 +15,13 @@ export function SiteFooter({ disclaimer }: { disclaimer?: string }) {
   return (
     <footer className="w-full border-t border-line bg-white">
       <div className="mx-auto w-full max-w-[1160px] px-5 sm:px-8">
-        {/* Logo + tagline row */}
-        <div className="flex flex-col items-start gap-2 py-8 md:flex-row md:items-center md:justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
+        <div className="flex flex-col items-start gap-2 py-10 md:flex-row md:items-center md:justify-between">
+          <Link href="/" className="flex items-center gap-2.5 group">
             <Logo size={26} />
-            <span className="font-display text-lg font-bold text-teal-900">Inshuti</span>
+            <span className="font-display text-lg font-bold text-teal-900 transition-colors group-hover:text-teal-700">Inshuti</span>
           </Link>
         </div>
 
-        {/* Multi-column links */}
         <div className="grid grid-cols-2 gap-8 pb-8 sm:grid-cols-4">
           {columns.map((col) => (
             <div key={col.label}>
@@ -46,14 +44,12 @@ export function SiteFooter({ disclaimer }: { disclaimer?: string }) {
           ))}
         </div>
 
-        {/* Disclaimer */}
         {disclaimer && (
           <p className="border-t border-line py-5 text-[12px] leading-[1.6] text-ink-soft">
             {disclaimer}
           </p>
         )}
 
-        {/* Bottom bar */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-line py-5">
           <p className="text-[13px] font-semibold text-ink-soft">
             {f.tagline}

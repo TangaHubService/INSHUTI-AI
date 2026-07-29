@@ -70,7 +70,7 @@ export default function ConsultationsPage() {
       }
     });
 
-    socketRef.current.on("message:new", (msg: { consultationId?: string }) => {
+      socketRef.current.on("message:new", () => {
       if (!cancelled) {
         void load();
       }
@@ -101,7 +101,7 @@ export default function ConsultationsPage() {
           <h1 className="font-display text-[28px] text-teal-900">{t("eyebrow")}</h1>
         </div>
 
-        <div className="rounded-xl border border-line bg-white shadow-sm">
+        <div className="card py-1.5">
           {loading && <PageLoading />}
           {!loading && chats.length === 0 && (
             <p className="px-5 py-8 text-center text-[13.5px] text-ink-soft">{t("empty")}</p>
@@ -112,7 +112,7 @@ export default function ConsultationsPage() {
               <Link
                 key={chat.id}
                 href={`/consultations/${chat.id}`}
-                className="flex items-center gap-3 border-b border-line px-4 py-3.5 last:border-b-0 hover:bg-gray-50"
+                className="flex items-center gap-3 border-b border-line px-4 py-3.5 last:border-b-0 hover:bg-paper-2"
               >
                 <div className="relative shrink-0">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100 text-sm font-bold text-teal-700">

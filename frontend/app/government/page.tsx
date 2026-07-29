@@ -53,26 +53,26 @@ export default function GovernmentPortalPage() {
         ) : (
           <section className="pb-16">
             <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
+              <div className="card p-5">
                 <div className="text-[12.5px] font-semibold text-ink-soft">Total conversations</div>
                 <div className="mt-2 font-display text-[30px] text-teal-900">{stats.totalConversations}</div>
               </div>
-              <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
+              <div className="card p-5">
                 <div className="text-[12.5px] font-semibold text-ink-soft">Referred to a professional</div>
                 <div className="mt-2 font-display text-[30px] text-teal-900">{stats.referralCount}</div>
               </div>
-              <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
+              <div className="card p-5">
                 <div className="text-[12.5px] font-semibold text-ink-soft">Consultations resolved</div>
                 <div className="mt-2 font-display text-[30px] text-teal-900">{stats.consultationsByStatus.RESOLVED ?? 0}</div>
               </div>
-              <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
+              <div className="card p-5">
                 <div className="text-[12.5px] font-semibold text-ink-soft">Appointments completed</div>
                 <div className="mt-2 font-display text-[30px] text-teal-900">{stats.appointmentsByStatus.COMPLETED ?? 0}</div>
               </div>
             </div>
 
             <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
-              <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[22px] shadow-card">
+              <div className="card p-5">
                 <h3 className="mb-4 text-base text-teal-900">Topic engagement</h3>
                 {stats.topicEngagement.length === 0 && <p className="text-sm text-ink-soft">No topic activity yet.</p>}
                 <div className="flex h-40 items-end gap-3.5 pt-2.5">
@@ -89,7 +89,7 @@ export default function GovernmentPortalPage() {
                   ))}
                 </div>
               </div>
-              <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[22px] shadow-card">
+              <div className="card p-5">
                 <h3 className="mb-4 text-base text-teal-900">Language split</h3>
                 <div className="flex flex-col gap-2">
                   {Object.entries(langSplit).map(([lang, count]) => (
@@ -102,7 +102,7 @@ export default function GovernmentPortalPage() {
               </div>
             </div>
 
-            <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[22px] shadow-card">
+            <div className="card p-5">
               <h3 className="mb-1 text-base text-teal-900">Health facilities by district</h3>
               <p className="mb-4 text-[12.5px] text-ink-soft">The one figure below that&apos;s genuinely regional — facilities carry a real district field.</p>
               <div className="grid grid-cols-2 gap-x-8 gap-y-2 sm:grid-cols-3">

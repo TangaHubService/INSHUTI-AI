@@ -529,7 +529,7 @@ async function upsertAppSettings() {
       id: "singleton",
       aiProvider: "openai",
       aiModel: "gpt-4o-mini",
-      responseStyleNote: "Warm, non-judgmental, 8th-grade reading level, 3-5 sentences.",
+      responseStyleNote: "Warm, non-judgmental, 8th-grade reading level, comprehensive and well-structured.",
       restrictToKnowledgeBase: true,
       autoFlagCrisisLanguage: true,
       autoDetectLanguage: true,

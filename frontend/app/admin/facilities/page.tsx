@@ -23,8 +23,8 @@ import { isValidLatitude, isValidLongitude } from "@/lib/validation";
 const LocationPicker = dynamic(() => import("@/components/LocationPicker").then((m) => m.LocationPicker), {
   ssr: false,
   loading: () => (
-    <div className="flex h-[240px] w-full items-center justify-center rounded-xl border border-line bg-paper-2">
-      <PageLoading label="Loading map…" />
+    <div className="flex h-[240px] w-full items-center justify-center rounded-[var(--radius-md)] border border-line bg-paper-2">
+      <PageLoading label="Loading map\u2026" />
     </div>
   ),
 });
@@ -162,7 +162,7 @@ export default function AdminFacilitiesPage() {
         </div>
         <button
           onClick={openNew}
-          className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)]"
+          className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark"
         >
           <svg width="15" height="15"><use href="#i-plus" /></svg>
           New facility
@@ -172,7 +172,7 @@ export default function AdminFacilitiesPage() {
       {loading && <PageLoading />}
 
       {!loading && (
-        <div className="overflow-x-auto rounded-md border border-[rgba(22,48,44,0.05)] bg-white shadow-card">
+        <div className="card overflow-x-auto">
           <table className="w-full border-collapse text-[13.5px]">
             <thead>
               <tr>
@@ -186,17 +186,17 @@ export default function AdminFacilitiesPage() {
                 <tr><td colSpan={5} className="px-3.5 py-6 text-center text-ink-soft">No facilities yet.</td></tr>
               )}
               {facilities.map((facility) => (
-                <tr key={facility.id} className="border-b border-line last:border-b-0 hover:bg-paper-2">
+                <tr key={facility.id} className="border-b border-line last:border-b-0 transition hover:bg-paper-2">
                   <td className="p-3.5 font-semibold text-ink">{facility.name}</td>
                   <td className="p-3.5">{TYPE_LABEL[facility.type]}</td>
                   <td className="p-3.5">{facility.district} District, {facility.sector} Sector</td>
-                  <td className="p-3.5">{facility.contact || "—"}</td>
+                  <td className="p-3.5">{facility.contact || "\u2014"}</td>
                   <td className="p-3.5">
                     <div className="flex items-center justify-end gap-3">
-                      <button onClick={() => openEdit(facility)} className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-teal-700">
+                      <button onClick={() => openEdit(facility)} className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-teal-700 transition hover:bg-teal-100">
                         <svg width="14" height="14"><use href="#i-edit" /></svg>
                       </button>
-                      <button onClick={() => setDeleteTarget(facility)} className="flex h-8 w-8 items-center justify-center rounded-full border border-coral-dark text-coral-dark">
+                      <button onClick={() => setDeleteTarget(facility)} className="flex h-8 w-8 items-center justify-center rounded-full border border-coral-dark text-coral-dark transition hover:bg-coral-100">
                         <svg width="14" height="14"><use href="#i-trash" /></svg>
                       </button>
                     </div>
@@ -211,17 +211,17 @@ export default function AdminFacilitiesPage() {
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title={editingId ? "Edit Facility" : "New Facility"}>
         <div className="flex flex-col gap-4">
           <label className="text-[12.5px] font-bold text-ink-soft">Name</label>
-          <input className={`rounded-[10px] border bg-white px-[14px] py-3 text-sm ${errors.name ? "border-danger" : "border-line"}`} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <input className={`rounded-[var(--radius-sm)] border bg-white px-[14px] py-3 text-sm ${errors.name ? "border-danger" : "border-line"}`} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           {errors.name && <p className="-mt-2 text-xs font-semibold text-danger">{errors.name}</p>}
 
           <label className="text-[12.5px] font-bold text-ink-soft">Type</label>
-          <select className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as FacilityType })}>
+          <select className="rounded-[var(--radius-sm)] border border-line bg-white px-[14px] py-3 text-sm" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as FacilityType })}>
             {FACILITY_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABEL[t]}</option>)}
           </select>
 
           <label className="text-[12.5px] font-bold text-ink-soft">Location</label>
           <p className="-mt-3 text-[12px] text-ink-soft">Click or drag the pin to set the exact location.</p>
-          <div className="overflow-hidden rounded-xl border border-line">
+          <div className="overflow-hidden rounded-[var(--radius-md)] border border-line">
             <LocationPicker
               key={editingId ?? "new"}
               latitude={form.latitude}
@@ -236,7 +236,7 @@ export default function AdminFacilitiesPage() {
               <input
                 type="number"
                 step="any"
-                className={`mt-1 w-full rounded-[10px] border bg-white px-[14px] py-3 text-sm ${errors.latitude ? "border-danger" : "border-line"}`}
+                className={`mt-1 w-full rounded-[var(--radius-sm)] border bg-white px-[14px] py-3 text-sm ${errors.latitude ? "border-danger" : "border-line"}`}
                 value={form.latitude}
                 onChange={(e) => setForm({ ...form, latitude: Number(e.target.value) })}
               />
@@ -247,7 +247,7 @@ export default function AdminFacilitiesPage() {
               <input
                 type="number"
                 step="any"
-                className={`mt-1 w-full rounded-[10px] border bg-white px-[14px] py-3 text-sm ${errors.longitude ? "border-danger" : "border-line"}`}
+                className={`mt-1 w-full rounded-[var(--radius-sm)] border bg-white px-[14px] py-3 text-sm ${errors.longitude ? "border-danger" : "border-line"}`}
                 value={form.longitude}
                 onChange={(e) => setForm({ ...form, longitude: Number(e.target.value) })}
               />
@@ -258,28 +258,28 @@ export default function AdminFacilitiesPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-[12.5px] font-bold text-ink-soft">District</label>
-              <input className={`mt-1 w-full rounded-[10px] border bg-white px-[14px] py-3 text-sm ${errors.district ? "border-danger" : "border-line"}`} value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} />
+              <input className={`mt-1 w-full rounded-[var(--radius-sm)] border bg-white px-[14px] py-3 text-sm ${errors.district ? "border-danger" : "border-line"}`} value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} />
               {errors.district && <p className="mt-1 text-xs font-semibold text-danger">{errors.district}</p>}
             </div>
             <div>
               <label className="text-[12.5px] font-bold text-ink-soft">Sector</label>
-              <input className={`mt-1 w-full rounded-[10px] border bg-white px-[14px] py-3 text-sm ${errors.sector ? "border-danger" : "border-line"}`} value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })} />
+              <input className={`mt-1 w-full rounded-[var(--radius-sm)] border bg-white px-[14px] py-3 text-sm ${errors.sector ? "border-danger" : "border-line"}`} value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })} />
               {errors.sector && <p className="mt-1 text-xs font-semibold text-danger">{errors.sector}</p>}
             </div>
           </div>
 
           <label className="text-[12.5px] font-bold text-ink-soft">Services (comma-separated)</label>
-          <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={servicesInput} onChange={(e) => setServicesInput(e.target.value)} placeholder="Family Planning, HIV Testing" />
+          <input className="rounded-[var(--radius-sm)] border border-line bg-white px-[14px] py-3 text-sm" value={servicesInput} onChange={(e) => setServicesInput(e.target.value)} placeholder="Family Planning, HIV Testing" />
 
           <label className="text-[12.5px] font-bold text-ink-soft">Contact (optional)</label>
-          <input className="rounded-[10px] border border-line bg-white px-[14px] py-3 text-sm" value={form.contact ?? ""} onChange={(e) => setForm({ ...form, contact: e.target.value })} />
+          <input className="rounded-[var(--radius-sm)] border border-line bg-white px-[14px] py-3 text-sm" value={form.contact ?? ""} onChange={(e) => setForm({ ...form, contact: e.target.value })} />
 
           <button
             onClick={() => void handleSave()}
             disabled={saving}
-            className="mt-2 w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] disabled:opacity-50"
+            className="mt-2 w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
           >
-            {saving ? "Saving…" : editingId ? "Save changes" : "Add facility"}
+            {saving ? "Saving\u2026" : editingId ? "Save changes" : "Add facility"}
           </button>
         </div>
       </Drawer>

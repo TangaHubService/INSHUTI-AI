@@ -106,7 +106,7 @@ export function SiteHeader({
         <>
           <Link
             href={dashboardPathForRole(user.role)}
-            className="btn-outline btn-sm inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border-[1.5px] border-teal-700 px-4 py-[9px] text-[13px] font-semibold text-teal-700 transition-all duration-150 hover:-translate-y-px hover:bg-teal-100"
+            className="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-sm)] border-[1.5px] border-teal-700 px-4 py-[9px] text-[13px] font-semibold text-teal-700 transition-all duration-150 hover:-translate-y-px hover:bg-teal-100"
           >
             {user.role === "HEALTHCARE_PROFESSIONAL" || user.role === "GOVERNMENT_USER"
               ? GO_TO_DASHBOARD_LABEL[language]
@@ -115,7 +115,7 @@ export function SiteHeader({
           <button
             type="button"
             onClick={() => void handleLogout()}
-            className="btn-primary inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition-all duration-150 hover:-translate-y-px hover:bg-coral-dark"
+            className="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-sm)] bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-btn transition-all duration-150 hover:-translate-y-px hover:bg-coral-dark"
           >
             {LOG_OUT_LABEL[language]}
           </button>
@@ -124,13 +124,13 @@ export function SiteHeader({
         <>
           <Link
             href="/register"
-            className="btn-outline btn-sm inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border-[1.5px] border-teal-700 px-4 py-[9px] text-[13px] font-semibold text-teal-700 transition-all duration-150 hover:-translate-y-px hover:bg-teal-100"
+            className="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-sm)] border-[1.5px] border-teal-700 px-4 py-[9px] text-[13px] font-semibold text-teal-700 transition-all duration-150 hover:-translate-y-px hover:bg-teal-100"
           >
             {nav.register}
           </Link>
           <Link
             href="/admin/login"
-            className="btn-primary inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition-all duration-150 hover:-translate-y-px hover:bg-coral-dark"
+            className="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-sm)] bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-btn transition-all duration-150 hover:-translate-y-px hover:bg-coral-dark"
           >
             {nav.logIn}
           </Link>
@@ -140,11 +140,11 @@ export function SiteHeader({
   );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur-lg supports-[backdrop-filter]:bg-paper/80">
       <div className="mx-auto flex max-w-[1160px] items-center justify-between px-5 py-4 sm:px-8 sm:py-[22px]">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5 group">
           <Logo size={30} />
-          <span className="font-display text-lg font-bold text-teal-900 sm:text-[22px]">Inshuti</span>
+          <span className="font-display text-lg font-bold text-teal-900 sm:text-[22px] transition-colors group-hover:text-teal-700">Inshuti</span>
         </Link>
 
         <nav className="no-scrollbar hidden min-w-0 flex-1 items-center justify-center gap-5 overflow-x-auto text-[14px] font-semibold text-ink-soft lg:flex xl:gap-7 xl:text-[14.5px]">
@@ -165,7 +165,7 @@ export function SiteHeader({
                 {content}
               </span>
             ) : (
-              <Link key={item.href} href={item.href} className="flex shrink-0 items-center gap-1.5 transition-colors duration-150 hover:text-teal-700">
+              <Link key={item.href} href={item.href} className="flex shrink-0 items-center gap-1.5 transition-all duration-150 hover:text-teal-700 hover:scale-[1.02]">
                 {content}
               </Link>
             );
@@ -181,7 +181,7 @@ export function SiteHeader({
         <button
           type="button"
           onClick={() => setMenuOpen((o) => !o)}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-teal-900 transition-colors duration-150 hover:bg-teal-100 lg:hidden"
+          className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] border border-line text-teal-900 transition-colors duration-150 hover:bg-teal-100 lg:hidden"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           aria-expanded={menuOpen}
         >
@@ -207,7 +207,7 @@ export function SiteHeader({
               <button
                 type="button"
                 onClick={() => setMenuOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-teal-900 transition-colors duration-150 hover:bg-teal-100"
+                className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] border border-line text-teal-900 transition-colors duration-150 hover:bg-teal-100"
                 aria-label="Close menu"
               >
                 <svg width="18" height="18">
@@ -229,7 +229,7 @@ export function SiteHeader({
                   </>
                 );
                 return item.href === activeHref ? (
-                  <span key={item.href} className="flex items-center gap-2.5 rounded-lg bg-teal-100 px-3 py-2.5 text-teal-700">
+                  <span key={item.href} className="flex items-center gap-2.5 rounded-[var(--radius-sm)] bg-teal-100 px-3 py-2.5 text-teal-700">
                     {content}
                   </span>
                 ) : (
@@ -237,7 +237,7 @@ export function SiteHeader({
                     key={item.href}
                     href={item.href}
                     onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-2.5 rounded-lg bg-white px-3 py-2.5 shadow-sm transition-colors duration-150 hover:bg-teal-100/50 hover:text-teal-700"
+                    className="flex items-center gap-2.5 rounded-[var(--radius-sm)] bg-white px-3 py-2.5 shadow-sm transition-all duration-150 hover:bg-teal-100/50 hover:text-teal-700"
                   >
                     {content}
                   </Link>

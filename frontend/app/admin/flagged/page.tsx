@@ -111,13 +111,13 @@ export default function FlaggedContentPage() {
       </div>
 
       <div className="mb-4 flex gap-2.5">
-        <select className="rounded-[10px] border border-line bg-white px-3.5 py-2 text-[13px]" value={reasonFilter} onChange={(e) => setReasonFilter(e.target.value as FlagReason | "")}>
+        <select className="rounded-[var(--radius-sm)] border border-line bg-white px-3.5 py-2 text-[13px]" value={reasonFilter} onChange={(e) => setReasonFilter(e.target.value as FlagReason | "")}>
           <option value="">All reasons</option>
           <option value="CRISIS_LANGUAGE">Crisis language</option>
           <option value="LOW_CONFIDENCE">Low confidence</option>
           <option value="USER_REPORTED">User reported</option>
         </select>
-        <select className="rounded-[10px] border border-line bg-white px-3.5 py-2 text-[13px]" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as FlagStatus | "")}>
+        <select className="rounded-[var(--radius-sm)] border border-line bg-white px-3.5 py-2 text-[13px]" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as FlagStatus | "")}>
           <option value="">All statuses</option>
           <option value="FLAGGED">Flagged</option>
           <option value="PENDING">Pending</option>
@@ -125,7 +125,7 @@ export default function FlaggedContentPage() {
         </select>
       </div>
 
-      <div className="overflow-x-auto rounded-md border border-[rgba(22,48,44,0.05)] bg-white shadow-card">
+      <div className="card overflow-x-auto">
         <table className="w-full border-collapse text-[13.5px]">
           <thead>
             <tr>
@@ -142,8 +142,8 @@ export default function FlaggedContentPage() {
               <tr><td colSpan={5} className="px-3.5 py-6 text-center text-ink-soft">Nothing flagged right now.</td></tr>
             )}
             {!loading && items.map((item) => (
-              <tr key={item.id} className="cursor-pointer border-b border-line last:border-b-0 hover:bg-paper-2" onClick={() => void openDetail(item.id)}>
-                <td className="p-3.5 font-semibold text-ink">&#34;…{item.messagePreview}…&#34;</td>
+              <tr key={item.id} className="cursor-pointer border-b border-line last:border-b-0 transition hover:bg-paper-2" onClick={() => void openDetail(item.id)}>
+                <td className="p-3.5 font-semibold text-ink">&#34;\u2026{item.messagePreview}\u2026&#34;</td>
                 <td className="p-3.5">{item.topic?.nameEn ?? "General"}</td>
                 <td className="p-3.5">{REASON_LABEL[item.reason]}</td>
                 <td className="p-3.5">{new Date(item.createdAt).toLocaleDateString()}</td>
@@ -164,10 +164,10 @@ export default function FlaggedContentPage() {
           <div className="flex flex-col gap-4">
             <div>
               <h3 className="text-base text-teal-900">{REASON_LABEL[detail.item.reason]}</h3>
-              <p className="text-[12.5px] text-ink-soft">Conversation: {detail.conversation.language} · Flagged {new Date(detail.item.createdAt).toLocaleString()}</p>
+              <p className="text-[12.5px] text-ink-soft">Conversation: {detail.conversation.language} \u00B7 Flagged {new Date(detail.item.createdAt).toLocaleString()}</p>
             </div>
 
-            <div className="max-h-[400px] overflow-y-auto rounded-[14px] bg-paper-2 p-[18px]">
+            <div className="max-h-[400px] overflow-y-auto rounded-[var(--radius-md)] bg-paper-2 p-[18px]">
               {detail.transcript.map((message) => (
                 <div key={message.id} className={`mb-3 flex max-w-[85%] ${message.role === "USER" ? "ml-auto flex-row-reverse" : ""}`}>
                   <div className={`rounded-2xl px-4 py-3 text-[13.5px] leading-[1.5] ${message.role === "USER" ? "rounded-br-[4px] bg-teal-700 text-white" : "rounded-bl-[4px] border border-line bg-white"} ${message.id === detail.item.flaggedMessageId ? "ring-2 ring-coral" : ""}`}>
@@ -177,7 +177,7 @@ export default function FlaggedContentPage() {
               ))}
             </div>
 
-            <div className="rounded-xl border border-[rgba(22,48,44,0.05)] bg-white p-4 shadow-card">
+            <div className="card p-4">
               <div className="mb-2 text-[12.5px] font-bold text-ink-soft">Status</div>
               <p className="mb-4 text-sm font-semibold">{detail.item.status.charAt(0) + detail.item.status.slice(1).toLowerCase()}</p>
               {detail.item.resolvedBy && (
@@ -185,13 +185,13 @@ export default function FlaggedContentPage() {
               )}
 
               <label className="mb-1.5 block text-[12.5px] font-bold text-ink-soft">Reviewer notes</label>
-              <textarea className="mb-3 w-full resize-y rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" rows={5} value={notes} onChange={(e) => setNotes(e.target.value)} />
+              <textarea className="mb-3 w-full resize-y rounded-[var(--radius-sm)] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" rows={5} value={notes} onChange={(e) => setNotes(e.target.value)} />
               <div className="flex flex-col gap-2">
-                <button onClick={() => void handleSaveNotes()} disabled={saving} className="rounded-full border-[1.5px] border-teal-700 px-4 py-[9px] text-[13px] font-semibold text-teal-700 disabled:opacity-50">
-                  {saving ? "Saving…" : "Save notes"}
+                <button onClick={() => void handleSaveNotes()} disabled={saving} className="rounded-full border-[1.5px] border-teal-700 px-4 py-[9px] text-[13px] font-semibold text-teal-700 transition hover:bg-teal-100 disabled:opacity-50">
+                  {saving ? "Saving\u2026" : "Save notes"}
                 </button>
                 {detail.item.status !== "RESOLVED" && (
-                  <button onClick={() => void handleResolve()} disabled={saving} className="rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] disabled:opacity-50">
+                  <button onClick={() => void handleResolve()} disabled={saving} className="rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50">
                     Mark as resolved
                   </button>
                 )}

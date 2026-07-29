@@ -45,48 +45,28 @@ export default function AdminDashboardPage() {
       {!loading && stats && (
         <>
           <div className="mb-[22px] grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
-              <div className="flex items-center justify-between text-[12.5px] font-semibold text-ink-soft">
-                Total conversations
-                <svg width="15" height="15" className="text-ink-soft">
-                  <use href="#i-chat" />
-                </svg>
+            {[
+              { label: "Total conversations", icon: "i-chat", value: stats.totalConversations },
+              { label: "Anonymous sessions", icon: "i-users", value: stats.totalSessions },
+              { label: "Most asked topic", icon: "i-droplet", value: stats.mostAskedTopic?.nameEn ?? "\u2014", small: true },
+              { label: "Flagged for review", icon: "i-flag", value: stats.flaggedCount },
+            ].map((item) => (
+              <div key={item.label} className="card p-5">
+                <div className="flex items-center justify-between text-[12.5px] font-semibold text-ink-soft">
+                  {item.label}
+                  <svg width="15" height="15" className="text-ink-soft">
+                    <use href={`#${item.icon}`} />
+                  </svg>
+                </div>
+                <div className={`mt-2 font-display text-teal-900 ${item.small ? "text-xl" : "text-[30px]"}`}>
+                  {item.value}
+                </div>
               </div>
-              <div className="mt-2 font-display text-[30px] text-teal-900">{stats.totalConversations}</div>
-            </div>
-            <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
-              <div className="flex items-center justify-between text-[12.5px] font-semibold text-ink-soft">
-                Anonymous sessions
-                <svg width="15" height="15" className="text-ink-soft">
-                  <use href="#i-users" />
-                </svg>
-              </div>
-              <div className="mt-2 font-display text-[30px] text-teal-900">{stats.totalSessions}</div>
-            </div>
-            <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
-              <div className="flex items-center justify-between text-[12.5px] font-semibold text-ink-soft">
-                Most asked topic
-                <svg width="15" height="15" className="text-ink-soft">
-                  <use href="#i-droplet" />
-                </svg>
-              </div>
-              <div className="mt-2 font-display text-xl text-teal-900">
-                {stats.mostAskedTopic?.nameEn ?? "—"}
-              </div>
-            </div>
-            <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-5 shadow-card">
-              <div className="flex items-center justify-between text-[12.5px] font-semibold text-ink-soft">
-                Flagged for review
-                <svg width="15" height="15" className="text-ink-soft">
-                  <use href="#i-flag" />
-                </svg>
-              </div>
-              <div className="mt-2 font-display text-[30px] text-teal-900">{stats.flaggedCount}</div>
-            </div>
+            ))}
           </div>
 
           <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
-            <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[22px] shadow-card">
+            <div className="card p-[22px]">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-base text-teal-900">Topic engagement</h3>
               </div>
@@ -98,7 +78,7 @@ export default function AdminDashboardPage() {
                   <div key={entry.topic.id} className="flex flex-1 flex-col items-center gap-2">
                     <div className="flex h-full w-full items-end">
                       <div
-                        className={`w-full rounded-t-lg ${TOPIC_BAR_COLORS[i % TOPIC_BAR_COLORS.length]}`}
+                        className={`w-full rounded-t-lg transition-all ${TOPIC_BAR_COLORS[i % TOPIC_BAR_COLORS.length]}`}
                         style={{ height: `${(entry.count / maxTopicCount) * 100}%` }}
                       />
                     </div>
@@ -107,25 +87,20 @@ export default function AdminDashboardPage() {
                 ))}
               </div>
             </div>
-            <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[22px] shadow-card">
+            <div className="card p-[22px]">
               <h3 className="mb-4 text-base text-teal-900">Language split</h3>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-[13px] font-semibold text-ink-soft">
-                  <span className="h-2.5 w-2.5 rounded-[3px] bg-teal-700" />
-                  English — {enPct}%
-                </div>
-                <div className="flex items-center gap-2 text-[13px] font-semibold text-ink-soft">
-                  <span className="h-2.5 w-2.5 rounded-[3px] bg-gold" />
-                  Kinyarwanda — {rwPct}%
-                </div>
-                <div className="flex items-center gap-2 text-[13px] font-semibold text-ink-soft">
-                  <span className="h-2.5 w-2.5 rounded-[3px] bg-coral" />
-                  French — {frPct}%
-                </div>
-                <div className="flex items-center gap-2 text-[13px] font-semibold text-ink-soft">
-                  <span className="h-2.5 w-2.5 rounded-[3px] bg-[#EFE9DB]" />
-                  Kiswahili — {swPct}%
-                </div>
+              <div className="flex flex-col gap-3">
+                {[
+                  { label: "English", pct: enPct, color: "bg-teal-700" },
+                  { label: "Kinyarwanda", pct: rwPct, color: "bg-gold" },
+                  { label: "French", pct: frPct, color: "bg-coral" },
+                  { label: "Kiswahili", pct: swPct, color: "bg-[#EFE9DB]" },
+                ].map((lang) => (
+                  <div key={lang.label} className="flex items-center gap-2 text-[13px] font-semibold text-ink-soft">
+                    <span className={`h-2.5 w-2.5 rounded-[3px] ${lang.color}`} />
+                    {lang.label} — {lang.pct}%
+                  </div>
+                ))}
               </div>
             </div>
           </div>

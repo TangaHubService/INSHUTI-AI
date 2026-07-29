@@ -40,7 +40,7 @@ const MSG: Record<Language, {
     email: "Email",
     password: "Password",
     login: "Log in",
-    logging: "Logging in…",
+    logging: "Logging in\u2026",
     newHere: "New here?",
     create: "Create an account",
     fill: "Please fill in all fields.",
@@ -56,7 +56,7 @@ const MSG: Record<Language, {
     email: "Imeri",
     password: "Ijambobanga",
     login: "Injira",
-    logging: "Irinjira…",
+    logging: "Irinjira\u2026",
     newHere: "Nshya?",
     create: "Fungura konti",
     fill: "Nyabona uzuzisha imirima yose.",
@@ -72,7 +72,7 @@ const MSG: Record<Language, {
     email: "Email",
     password: "Mot de passe",
     login: "Se connecter",
-    logging: "Connexion…",
+    logging: "Connexion\u2026",
     newHere: "Nouveau ici?",
     create: "Créer un compte",
     fill: "Veuillez remplir tous les champs.",
@@ -88,7 +88,7 @@ const MSG: Record<Language, {
     email: "Barua pepe",
     password: "Neno la siri",
     login: "Ingia",
-    logging: "Inaingia…",
+    logging: "Inaingia\u2026",
     newHere: "Mgeni hapa?",
     create: "Fungua akaunti",
     fill: "Tafadhali jaza sehemu zote.",
@@ -125,17 +125,12 @@ export default function LoginPage() {
     }
     setSending(true);
     try {
-      // We don't know ahead of time whether these credentials belong to an
-      // admin or a regular user — the two live in separate tables with
-      // separate login endpoints, so try admin first and fall back to the
-      // regular user login on failure.
       try {
         await loginAdmin(email.trim(), password);
         toast(m.welcome, "success");
         router.push("/admin/dashboard");
         return;
       } catch {
-        // Not an admin (or wrong password) — fall through to user login.
       }
       const loggedInUser = await loginUser(email.trim(), password);
       toast(m.welcome, "success");
@@ -173,43 +168,55 @@ export default function LoginPage() {
           <p className="mb-7 text-sm text-ink-soft">
             {m.subtitle}
           </p>
-          <form onSubmit={(e) => void handleSubmit(e)}>
-            <div className="mb-4">
-              <label className="mb-1.5 block text-[12.5px] font-bold text-ink-soft">{m.email}</label>
+          <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
+            <div>
+              <label className="mb-1.5 block text-[13px] font-semibold text-ink-soft">{m.email}</label>
               <input
-                className={`w-full rounded-[10px] border bg-paper-2 px-[14px] py-3 text-sm transition focus:outline-none focus:ring-2 ${errors.email ? "border-danger focus:ring-danger/20" : "border-line focus:border-teal-600 focus:ring-teal-100"}`}
+                className={`w-full rounded-[var(--radius-sm)] border bg-paper-2 px-[14px] py-3 text-sm transition-all duration-150 placeholder:text-[#9CA8A4] focus:outline-none focus:ring-2 focus:ring-offset-0 ${
+                  errors.email ? "border-danger focus:ring-danger/20" : "border-line focus:border-teal-600 focus:ring-teal-100"
+                }`}
                 type="email"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-              <p className="mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.email}</p>
+              <p className="mt-1 min-h-[14px] text-[12.5px] font-semibold text-danger">{errors.email}</p>
             </div>
-            <div className="mb-2">
-              <label className="mb-1.5 block text-[12.5px] font-bold text-ink-soft">{m.password}</label>
+            <div>
+              <label className="mb-1.5 block text-[13px] font-semibold text-ink-soft">{m.password}</label>
               <PasswordInput
-                className={`w-full rounded-[10px] border bg-paper-2 px-[14px] py-3 text-sm transition focus:outline-none focus:ring-2 ${errors.password ? "border-danger focus:ring-danger/20" : "border-line focus:border-teal-600 focus:ring-teal-100"}`}
-                placeholder="••••••••••"
+                className={`w-full rounded-[var(--radius-sm)] border bg-paper-2 px-[14px] py-3 text-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-0 placeholder:text-[#9CA8A4] ${
+                  errors.password ? "border-danger focus:ring-danger/20" : "border-line focus:border-teal-600 focus:ring-teal-100"
+                }`}
+                placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              <p className="mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.password}</p>
+              <p className="mt-1 min-h-[14px] text-[12.5px] font-semibold text-danger">{errors.password}</p>
             </div>
-            <div className="mb-5 text-right">
-              <Link href="/forgot-password" className="text-xs font-semibold text-teal-700 hover:text-teal-900">
+            <div className="text-right">
+              <Link href="/forgot-password" className="text-xs font-semibold text-teal-700 transition hover:text-teal-900">
                 {m.forgot}
               </Link>
             </div>
             <button
               type="submit"
               disabled={sending}
-              className="w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
+              className="w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-btn transition-all duration-150 hover:-translate-y-px hover:bg-coral-dark hover:shadow-lg disabled:opacity-50 disabled:hover:translate-y-0"
             >
-              {sending ? m.logging : m.login}
+              {sending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" opacity="0.2" />
+                    <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                  {m.logging}
+                </span>
+              ) : m.login}
             </button>
-            <p className="mt-[18px] text-center text-xs text-ink-soft">
+            <p className="text-center text-xs text-ink-soft">
               {m.newHere}{" "}
-              <Link href="/register" className="font-bold text-teal-700 hover:text-teal-900">{m.create}</Link>
+              <Link href="/register" className="font-bold text-teal-700 transition hover:text-teal-900">{m.create}</Link>
             </p>
           </form>
         </div>

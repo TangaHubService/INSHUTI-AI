@@ -65,7 +65,7 @@ export default function TeenDashboardPage() {
           </p>
           <Link
             href="/chat"
-            className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-[10px] text-[13.5px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark"
+            className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-[10px] text-[13.5px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark hover:shadow-lg"
           >
             Start chatting
           </Link>
@@ -76,14 +76,14 @@ export default function TeenDashboardPage() {
         ) : (
           <section className="grid grid-cols-1 gap-4 pb-16 pt-8 lg:grid-cols-[1.2fr_1fr]">
             <div>
-              <div className="mb-4 rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-[22px] shadow-card">
+              <div className="card p-[22px] mb-4">
                 <h3 className="mb-4 text-base text-teal-900">Quick topics</h3>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {QUICK_TOPICS.map((topic) => (
                     <Link
                       key={topic.name}
                       href={`/chat?topic=${topic.icon}`}
-                      className="flex flex-col items-start gap-2 rounded-2xl border border-line px-3.5 py-3 hover:bg-paper-2"
+                      className="flex flex-col items-start gap-2 rounded-[var(--radius-md)] border border-line px-3.5 py-3 transition hover:bg-paper-2 hover:shadow-sm"
                     >
                       <div className={`flex h-[26px] w-[26px] items-center justify-center rounded-lg ${topic.bg} ${topic.fg}`}>
                         <svg width="14" height="14">
@@ -96,11 +96,11 @@ export default function TeenDashboardPage() {
                 </div>
               </div>
 
-              <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white py-1.5 shadow-card">
+              <div className="card py-1.5">
                 <div className="flex items-center justify-between px-5 pb-1.5 pt-[14px]">
                   <h3 className="text-base text-teal-900">Recent conversations</h3>
-                  <Link href="/my-space" className="text-[12.5px] font-semibold text-teal-700">
-                    View all →
+                  <Link href="/my-space" className="text-[12.5px] font-semibold text-teal-700 transition hover:text-teal-900">
+                    View all \u2192
                   </Link>
                 </div>
                 {conversations.length === 0 && (
@@ -115,12 +115,12 @@ export default function TeenDashboardPage() {
                 {conversations.slice(0, 5).map((conversation) => (
                   <Link
                     href="/chat"
-                    className="flex items-center gap-[14px] border-b border-line px-5 py-3 last:border-b-0 hover:bg-paper-2"
+                    className="flex items-center gap-[14px] border-b border-line px-5 py-3 last:border-b-0 transition hover:bg-paper-2"
                     key={conversation.id}
                   >
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-semibold text-ink">
-                        &quot;{conversation.firstUserMessage ?? "…"}&quot;
+                        &quot;{conversation.firstUserMessage ?? "\u2026"}&quot;
                       </div>
                       <div className="mt-[3px] text-xs text-ink-soft">
                         {conversation.topic
@@ -128,7 +128,7 @@ export default function TeenDashboardPage() {
                             ? conversation.topic.nameRw
                             : conversation.topic.nameEn
                           : "General"}{" "}
-                        · {relativeTime(conversation.createdAt)}
+                        \u00B7 {relativeTime(conversation.createdAt)}
                       </div>
                     </div>
                   </Link>
@@ -136,7 +136,7 @@ export default function TeenDashboardPage() {
               </div>
             </div>
 
-            <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white py-1.5 shadow-card">
+            <div className="card py-1.5">
               <div className="px-5 pb-1.5 pt-[14px] text-base text-teal-900">Recent notifications</div>
               {notifications.length === 0 && (
                 <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">Nothing new.</p>
@@ -148,8 +148,8 @@ export default function TeenDashboardPage() {
                 </div>
               ))}
               <div className="px-5 py-3">
-                <Link href="/notifications" className="text-[12.5px] font-semibold text-teal-700">
-                  View all →
+                <Link href="/notifications" className="text-[12.5px] font-semibold text-teal-700 transition hover:text-teal-900">
+                  View all \u2192
                 </Link>
               </div>
             </div>

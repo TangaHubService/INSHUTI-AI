@@ -93,7 +93,6 @@ export function AppShell({
   active: string;
   session: AppSession;
   children: React.ReactNode;
-  /** Skip the default content padding for pages that manage their own full-bleed layout (e.g. chat). */
   flush?: boolean;
 }) {
   const router = useRouter();
@@ -135,12 +134,12 @@ export function AppShell({
   return (
     <div className="flex min-h-screen bg-paper-2">
       {mobileOpen && (
-        <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setMobileOpen(false)} />
+        <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden" onClick={() => setMobileOpen(false)} />
       )}
       <aside
-        className={`fixed top-0 z-50 flex h-screen w-[250px] flex-shrink-0 flex-col bg-[var(--admin-bg)] px-4 py-[22px] text-[#DCEBE8] transition-transform duration-300 lg:sticky lg:translate-x-0 ${
+        className={`fixed top-0 z-50 flex h-screen w-[260px] flex-shrink-0 flex-col bg-[var(--admin-bg)] px-4 py-[22px] text-[#DCEBE8] transition-all duration-300 ease-out lg:sticky lg:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
-        } ${collapsed ? "lg:w-[76px]" : "lg:w-[250px]"}`}
+        } ${collapsed ? "lg:w-[76px]" : "lg:w-[260px]"}`}
       >
         <div
           className={`flex items-center pb-[26px] px-2 ${collapsed ? "flex-col gap-2" : "justify-between gap-2.5"}`}
@@ -153,9 +152,9 @@ export function AppShell({
             type="button"
             onClick={toggleCollapsed}
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="hidden h-7 w-7 flex-shrink-0 items-center justify-center rounded-[8px] text-[#7FA79F] hover:bg-[var(--admin-bg-2)] hover:text-white lg:flex"
+            className="hidden h-7 w-7 flex-shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[#7FA79F] hover:bg-[var(--admin-bg-2)] hover:text-white lg:flex transition-colors"
           >
-            <svg width="14" height="14" className={`transition-transform ${collapsed ? "-rotate-90" : "rotate-90"}`}>
+            <svg width="14" height="14" className={`transition-transform duration-200 ${collapsed ? "-rotate-90" : "rotate-90"}`}>
               <use href="#i-chevron-down" />
             </svg>
           </button>
@@ -169,11 +168,13 @@ export function AppShell({
                 href={item.href}
                 title={collapsed ? item.label : undefined}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-[11px] rounded-[10px] px-3 py-[10px] text-sm font-semibold ${
-                  isActive ? "bg-coral text-white" : "text-[#B7D6D1] hover:bg-[var(--admin-bg-2)] hover:text-white"
+                className={`flex items-center gap-[11px] rounded-[var(--radius-sm)] px-3 py-[10px] text-sm font-semibold transition-all duration-150 ${
+                  isActive
+                    ? "bg-coral text-white shadow-sm"
+                    : "text-[#B7D6D1] hover:bg-[var(--admin-bg-2)] hover:text-white"
                 }`}
               >
-                <svg className="h-[18px] w-[18px] flex-shrink-0 opacity-95" width="18" height="18">
+                <svg className="h-[18px] w-[18px] flex-shrink-0" width="18" height="18">
                   <use href={`#${item.icon}`} />
                 </svg>
                 {!collapsed && item.label}
@@ -191,7 +192,7 @@ export function AppShell({
                   <div className="text-[11.5px] text-[#7FA79F]">{roleLabel}</div>
                 </div>
               )}
-          <button onClick={() => void handleLogout()} title="Log out">
+          <button onClick={() => void handleLogout()} title="Log out" className="transition-opacity hover:opacity-80">
             <svg width="16" height="16" className="cursor-pointer text-[#7FA79F]">
               <use href="#i-logout" />
             </svg>
@@ -199,12 +200,12 @@ export function AppShell({
         </div>
       </aside>
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 flex flex-col">
         <div className="flex items-center justify-between border-b border-line bg-white px-5 py-4 sm:px-8">
           <button
             type="button"
             onClick={() => setMobileOpen((o) => !o)}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-teal-900 lg:hidden"
+            className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] border border-line text-teal-900 hover:bg-paper-2 transition-colors lg:hidden"
             aria-label="Menu"
           >
             <svg width="18" height="18">
@@ -212,11 +213,11 @@ export function AppShell({
             </svg>
           </button>
           {session.kind === "admin" ? (
-            <div className="hidden w-[320px] items-center gap-2 rounded-[10px] bg-paper-2 px-[14px] py-[9px] text-[13.5px] text-ink-soft lg:flex">
+            <div className="hidden w-[320px] items-center gap-2 rounded-[var(--radius-sm)] bg-paper-2 px-[14px] py-[9px] text-[13.5px] text-ink-soft lg:flex">
               <svg width="16" height="16">
                 <use href="#i-search" />
               </svg>
-              Search conversations, topics, articles…
+              Search conversations, topics, articles\u2026
             </div>
           ) : (
             <div className="hidden lg:block" />
@@ -235,7 +236,11 @@ export function AppShell({
             </div>
           </div>
         </div>
-        {flush ? <div className="flex flex-1 flex-col">{children}</div> : <div className="px-5 pb-[60px] pt-7 sm:px-8">{children}</div>}
+        {flush ? (
+          <div className="flex flex-1 flex-col">{children}</div>
+        ) : (
+          <div className="flex-1 px-5 pb-[60px] pt-7 sm:px-8">{children}</div>
+        )}
         <SiteFooter />
       </div>
     </div>

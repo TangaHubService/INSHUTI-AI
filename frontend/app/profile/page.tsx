@@ -230,7 +230,7 @@ export default function ProfilePage() {
         </section>
 
         <section className="grid grid-cols-1 gap-4 pb-16 lg:grid-cols-[1.2fr_1fr]">
-            <form onSubmit={(e) => void handleSave(e)} className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-6 shadow-card">
+            <form onSubmit={(e) => void handleSave(e)} className="card p-6">
               <div className="mb-4 flex items-center gap-3">
                 <span className="rounded-full bg-teal-100 px-3 py-1 text-[12px] font-bold text-teal-700">
                   {ROLE_LABEL[language][user.role] ?? user.role}
@@ -268,7 +268,7 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(232,115,92,0.35)] transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
+                className="rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
               >
                 {saving ? t.saving : t.saveChanges}
               </button>
@@ -276,7 +276,7 @@ export default function ProfilePage() {
 
             <div className="flex flex-col gap-4">
               {user.role === "TEENAGER" && (
-                <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-6 shadow-card">
+                <div className="card p-6">
                   <h3 className="mb-2 text-base text-teal-900">{t.anonymousMode}</h3>
                   <p className="mb-4 text-[13px] leading-[1.6] text-ink-soft">
                     {t.anonymousModeDesc}
@@ -292,7 +292,7 @@ export default function ProfilePage() {
                   </button>
                 </div>
               )}
-              <div className="rounded-md border border-[rgba(22,48,44,0.05)] bg-white p-6 shadow-card">
+              <div className="card p-6">
                 <h3 className="mb-2 text-base text-teal-900">{t.notifications}</h3>
                 <p className="mb-4 text-[13px] leading-[1.6] text-ink-soft">
                   {t.notificationsDesc}

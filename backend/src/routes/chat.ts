@@ -40,6 +40,7 @@ router.get("/conversations/:id", async (req, res) => {
     where: { id: req.params.id as string },
     include: {
       messages: {
+        where: { consultationId: null },
         orderBy: { createdAt: "asc" },
         include: { topic: true },
       },
@@ -96,7 +97,7 @@ router.post("/", async (req, res) => {
   const conversation = await getOrCreateConversation(sessionId, language);
 
   const previousMessages = await prisma.message.findMany({
-    where: { conversationId: conversation.id },
+    where: { conversationId: conversation.id, consultationId: null },
     orderBy: { createdAt: "asc" },
     take: 20,
   });

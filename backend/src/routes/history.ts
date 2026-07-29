@@ -18,6 +18,7 @@ router.get("/", async (req, res) => {
     orderBy: { createdAt: "desc" },
     include: {
       messages: {
+        where: { consultationId: null },
         orderBy: { createdAt: "asc" },
         include: { topic: true },
       },

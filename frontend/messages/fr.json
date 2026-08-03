@@ -98,8 +98,8 @@
         "body": "Pas de noms, pas de comptes. Votre vie privée est protégée par conception."
       },
       "bilingual": {
-        "title": "Bilingue",
-        "body": "Support complet en anglais et en kinyarwanda."
+        "title": "Quatre langues",
+        "body": "Anglais, kinyarwanda, français et kiswahili."
       },
       "evidenceBased": {
         "title": "Basé sur des Preuves",
@@ -118,7 +118,7 @@
   },
   "chat": {
     "greeting": "Muraho! Je suis Inshuti — vous pouvez me demander tout ce qui concerne votre corps, vos relations ou votre santé. Cette discussion est anonyme. À quoi pensez-vous aujourd'hui?",
-    "inputPlaceholder": "Tapez votre question en anglais ou en kinyarwanda…",
+    "inputPlaceholder": "Tapez votre question dans la langue de votre choix…",
     "crisisBar": "En crise ou besoin d'aide urgente? ",
     "crisisLink": "Appuyez ici pour des ressources de soutien immédiates",
     "typing": "Inshuti écrit…",

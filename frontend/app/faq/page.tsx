@@ -16,11 +16,11 @@ const COPY: Record<Language, Copy> = {
     lead: "Quick answers to common questions about Inshuti, privacy, and how to make the most of the service.",
     free: { heading: "Inshuti is completely free", body: "Chat, consultations, appointments — every feature is available at no cost. No hidden charges, no subscriptions, no surprises.", cta: "Start chatting free" },
     items: [
-      { q: "What is Inshuti?", a: "Inshuti is a free, anonymous AI health assistant for young people in Rwanda. It provides honest, judgment-free answers to questions about sexual and reproductive health in English and Kinyarwanda." },
+      { q: "What is Inshuti?", a: "Inshuti is a free, anonymous AI health assistant for young people in Rwanda. It provides honest, judgment-free health information in English, Kinyarwanda, French, and Kiswahili." },
       { q: "Is Inshuti really anonymous?", a: "Yes. When using the chat without signing in, no personally identifying information is collected. Conversations are tied only to a device-level session ID. If you create an account, you can enable anonymous mode in your profile settings to keep chats unlinked from your identity." },
       { q: "Do I need to sign up to use the chat?", a: "No. You can start chatting immediately without creating an account. Registration is optional and unlocks additional features like appointment booking, consultations with health workers, and conversation history." },
       { q: "Is the health information reliable?", a: "Yes. Every answer from Inshuti is grounded in content from our knowledge base, which is reviewed by healthcare professionals. Articles must be marked as 'Reviewed' before they are used in chat responses." },
-      { q: "What languages are supported?", a: "Inshuti currently supports English and Kinyarwanda, with French and Swahili available for the interface. The AI chat responds in the language you use." },
+      { q: "What languages are supported?", a: "Inshuti supports English, Kinyarwanda, French, and Kiswahili. Select a language or write naturally in the AI chat." },
       { q: "Can I talk to a real person?", a: "Yes. During a chat, if the AI determines you might benefit from speaking with a health worker, you'll be offered the option to request a human follow-up. You can also book appointments with health professionals directly." },
       { q: "Is there a mobile app?", a: "Inshuti is a web-based application that works on any device with a browser — phone, tablet, or computer. There is no separate app to download." },
       { q: "How much does it cost?", a: "Everything on Inshuti is completely free. There are no charges for chat, consultations, appointment booking, or any other feature." },

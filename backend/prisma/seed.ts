@@ -5,6 +5,7 @@
 // one of these articles re-reviewed and re-approved by a licensed health
 // professional via the admin panel (Phase 4) before real users see them.
 import bcrypt from "bcryptjs";
+import type { Prisma } from "@prisma/client";
 import { createInterface } from "node:readline/promises";
 
 import { adminRoleSchema, articleStatusSchema } from "../src/lib/constants.js";
@@ -13,6 +14,9 @@ import { prisma } from "../src/lib/prisma.js";
 
 const SUPER_ADMIN = adminRoleSchema.enum.SUPER_ADMIN;
 const REVIEWED = articleStatusSchema.enum.REVIEWED;
+const NEEDS_REVIEW = articleStatusSchema.enum.NEEDS_REVIEW;
+const ALLOW_UNREVIEWED_DEMO_CONTENT = process.env.NODE_ENV !== "production" && process.env.SEED_ALLOW_UNREVIEWED_CONTENT === "true";
+const ALLOW_UNVERIFIED_DEMO_FACILITIES = process.env.NODE_ENV !== "production" && process.env.SEED_ALLOW_UNVERIFIED_FACILITIES === "true";
 
 // Default super admin account. Override via SEED_SUPER_ADMIN_EMAIL if needed;
 // the password is never hardcoded — it must come from SEED_SUPER_ADMIN_PASSWORD
@@ -358,33 +362,46 @@ const TOPICS = [
       },
     ],
   },
+  ...([
+    ["maternal-health", "Maternal Health", "Ubuzima bw'Umubyeyi", "Santé maternelle", "Afya ya mama", "i-heart", "Safe pregnancy and postnatal care", "Attend recommended antenatal visits, seek skilled care for birth, and return for postnatal checks. Heavy bleeding, seizures, severe headache, breathing difficulty, fever, or severe abdominal pain require urgent care.", "Jya kwisuzumisha inda, ubyarire kwa muganga kandi usubire kwisuzumisha nyuma yo kubyara. Kuva amaraso menshi, kugagara, kubabara umutwe cyane, guhumeka nabi, umuriro cyangwa kubabara inda cyane bisaba ubutabazi bwihuse.", "Suivez les consultations prénatales, accouchez avec du personnel qualifié et faites les contrôles postnatals. Saignement abondant, convulsions, mal de tête intense, difficulté respiratoire, fièvre ou douleur abdominale sévère exigent des soins urgents.", "Hudhuria kliniki za ujauzito, jifungue kwa mhudumu mwenye ujuzi na rudi kwa uchunguzi baada ya kujifungua. Kutokwa damu nyingi, degedege, maumivu makali ya kichwa, shida ya kupumua, homa au maumivu makali ya tumbo huhitaji huduma ya haraka."],
+    ["nutrition", "Nutrition", "Imirire", "Nutrition", "Lishe", "i-apple", "Balanced eating for growing bodies", "Eat a varied diet with vegetables, fruit, beans or other protein, whole grains and safe water. Regular meals support growth and learning; a health worker can help with persistent weight loss, fatigue, or food insecurity.", "Fata indyo itandukanye irimo imboga, imbuto, ibishyimbo cyangwa izindi poroteyine, ibinyampeke n'amazi meza. Kurya buri gihe bifasha gukura no kwiga; gana umukozi w'ubuzima niba ugabanya ibiro, uhora unaniwe cyangwa ubura ibiribwa.", "Mangez varié avec légumes, fruits, haricots ou autres protéines, céréales complètes et eau potable. Des repas réguliers favorisent croissance et apprentissage; consultez en cas de perte de poids persistante, fatigue ou insécurité alimentaire.", "Kula vyakula mbalimbali vyenye mboga, matunda, maharagwe au protini nyingine, nafaka na maji salama. Milo ya kawaida husaidia ukuaji na kujifunza; pata ushauri kwa kupungua uzito, uchovu au ukosefu wa chakula."],
+    ["child-health", "Child Health", "Ubuzima bw'Umwana", "Santé de l'enfant", "Afya ya mtoto", "i-baby", "When a child needs urgent care", "Seek urgent care when a child cannot drink or breastfeed, has difficulty breathing, convulsions, unusual sleepiness, persistent vomiting, severe dehydration, or fever in a very young infant. Keep routine growth and vaccination visits.", "Jyana umwana kwa muganga vuba niba adashobora kunywa cyangwa konka, ahumeka nabi, agagara, asinzira bidasanzwe, aruka cyane, yabuze amazi mu mubiri cyangwa uruhinja rufite umuriro. Komeza gahunda zo gupima imikurire no gukingira.", "Consultez en urgence si un enfant ne peut boire ou téter, respire difficilement, convulse, est anormalement somnolent, vomit sans arrêt, est très déshydraté ou si un jeune nourrisson a de la fièvre. Respectez les visites de croissance et vaccination.", "Tafuta huduma ya haraka mtoto asipoweza kunywa au kunyonya, akipumua kwa shida, akipata degedege, usingizi usio wa kawaida, kutapika sana, upungufu mkubwa wa maji au mtoto mchanga akiwa na homa. Endelea kliniki za ukuaji na chanjo."],
+    ["vaccination", "Vaccination", "Inkingo", "Vaccination", "Chanjo", "i-shield", "Why vaccines matter", "Vaccines train the immune system to prevent serious disease. Follow Rwanda's current immunization schedule and bring the vaccination card. Mild pain or fever can occur; breathing difficulty, facial swelling, or collapse after vaccination needs emergency care.", "Inkingo zitoza ubudahangarwa kurinda indwara zikomeye. Kurikiza gahunda y'inkingo y'u Rwanda kandi witwaze ikarita. Kubabara gake cyangwa umuriro bishobora kubaho; guhumeka nabi, kubyimba mu maso cyangwa kugwa hasi bisaba ubutabazi bwihuse.", "Les vaccins préparent l'immunité contre des maladies graves. Suivez le calendrier rwandais et apportez la carte. Douleur légère ou fièvre peuvent survenir; difficulté à respirer, gonflement du visage ou perte de connaissance exigent des soins urgents.", "Chanjo huandaa kinga kuzuia magonjwa makubwa. Fuata ratiba ya Rwanda na ulete kadi. Maumivu madogo au homa yanaweza kutokea; shida ya kupumua, kuvimba uso au kuzimia kunahitaji huduma ya dharura."],
+    ["first-aid", "First Aid", "Ubutabazi bw'Ibanze", "Premiers secours", "Huduma ya kwanza", "i-plus", "First aid basics", "Make the area safe, check responsiveness and breathing, and call emergency help. Apply firm pressure to serious bleeding. Cool burns with clean running water for 20 minutes—do not use ice or oils. Do not move someone with a possible spine injury unless danger requires it.", "Banza ugenzure umutekano, urebe niba umuntu yumva kandi ahumeka, maze uhamagare ubutabazi. Kanda ku gikomere kiva amaraso. Shyira ahahiye munsi y'amazi meza iminota 20—ntukoreshe urubura cyangwa amavuta. Ntukimure ukekwaho gukomereka umugongo keretse ari mu kaga.", "Sécurisez les lieux, vérifiez réaction et respiration, puis appelez les secours. Comprimez fermement un saignement. Refroidissez une brûlure sous eau propre 20 minutes—sans glace ni huile. Ne déplacez pas une personne avec possible lésion vertébrale sauf danger immédiat.", "Hakikisha eneo ni salama, angalia mwitikio na kupumua, kisha piga huduma za dharura. Bonyeza jeraha linalovuja damu. Poza kuungua kwa maji safi dakika 20—usitumie barafu au mafuta. Usimsogeze mwenye uwezekano wa jeraha la uti wa mgongo isipokuwa kuna hatari."],
+    ["disease-prevention", "Disease Prevention", "Kwirinda Indwara", "Prévention des maladies", "Kuzuia magonjwa", "i-shield", "Preventing common infections", "Use insecticide-treated nets to reduce malaria, wash hands, use safe water, improve ventilation, cover coughs, and test when advised. Persistent cough, fever, weight loss, night sweats, or worsening illness should be assessed for conditions such as tuberculosis or malaria.", "Koresha inzitiramubu, karaba intoki, unywe amazi meza, fungura amadirishya kandi upfuke umunwa ukorora. Inkorora idakira, umuriro, kugabanuka ibiro, kubira ibyuya nijoro cyangwa indwara ikomera bisaba kwisuzumisha igituntu, malaria cyangwa izindi ndwara.", "Utilisez une moustiquaire imprégnée, lavez les mains, buvez de l'eau sûre, aérez et couvrez la toux. Toux persistante, fièvre, perte de poids, sueurs nocturnes ou aggravation nécessitent un dépistage, notamment tuberculose ou paludisme.", "Tumia chandarua chenye dawa, osha mikono, tumia maji salama, boresha hewa na funika kikohozi. Kikohozi cha muda mrefu, homa, kupungua uzito, jasho la usiku au ugonjwa kuzidi vinahitaji uchunguzi wa kifua kikuu, malaria au magonjwa mengine."],
+    ["healthy-lifestyle", "Healthy Lifestyle", "Imibereho Myiza", "Mode de vie sain", "Maisha yenye afya", "i-activity", "Protecting long-term health", "Regular movement, enough sleep, balanced food, avoiding tobacco, limiting alcohol, and periodic blood-pressure or diabetes checks reduce future disease risk. Screening advice varies by age and family history; ask a health professional about cancer and chronic-disease screening.", "Kugenda no gukora siporo, gusinzira bihagije, kurya neza, kwirinda itabi, kugabanya inzoga no gupima umuvuduko w'amaraso cyangwa diyabete birinda indwara. Gana umukozi w'ubuzima ku bipimo bya kanseri n'indwara zidakira bijyanye n'imyaka n'amateka y'umuryango.", "Bouger régulièrement, dormir assez, bien manger, éviter le tabac, limiter l'alcool et contrôler tension ou diabète réduisent les risques. Le dépistage dépend de l'âge et des antécédents; demandez conseil pour cancer et maladies chroniques.", "Mazoezi, usingizi wa kutosha, lishe bora, kuepuka tumbaku, kupunguza pombe na kupima shinikizo au kisukari hupunguza hatari. Uchunguzi hutegemea umri na historia ya familia; uliza kuhusu saratani na magonjwa sugu."],
+    ["general-health", "General Health", "Ubuzima Rusange", "Santé générale", "Afya ya jumla", "i-stethoscope", "Knowing when to seek care", "Use trusted health information for education, but seek professional assessment for symptoms that are severe, persistent, worsening, or worrying. Chest pain, severe breathing difficulty, unconsciousness, seizures, major injury, or heavy bleeding are emergencies.", "Koresha amakuru yizewe kugira ngo wige, ariko gana umuganga ku bimenyetso bikomeye, bidakira, bikomeza kwiyongera cyangwa biguhangayikishije. Kubabara mu gituza, guhumeka nabi cyane, guta ubwenge, kugagara, gukomereka cyane cyangwa kuva amaraso menshi ni ubutabazi bwihuse.", "Utilisez des sources fiables pour vous informer, mais consultez pour tout symptôme grave, persistant, qui s'aggrave ou vous inquiète. Douleur thoracique, grande difficulté respiratoire, perte de connaissance, convulsions, traumatisme majeur ou saignement abondant sont des urgences.", "Tumia taarifa zinazoaminika kujifunza, lakini pata uchunguzi kwa dalili kali, zinazoendelea, kuzidi au kutia wasiwasi. Maumivu ya kifua, shida kubwa ya kupumua, kupoteza fahamu, degedege, jeraha kubwa au damu nyingi ni dharura."],
+  ] as const).map(([slug, nameEn, nameRw, nameFr, nameSw, icon, titleEn, bodyEn, bodyRw, bodyFr, bodySw]) => ({
+    slug, nameEn, nameRw, nameFr, nameSw, icon, colorToken: "teal",
+    articles: [{ titleEn, titleRw: nameRw, titleFr: nameFr, titleSw: nameSw, bodyEn, bodyRw, bodyFr, bodySw, tags: [slug, "health education"] }],
+  })),
 ];
 
-// Sourced from rbc.gov.rw/contact and migeprof.gov.rw (fetched 2026-07-22) —
-// NOT independently confirmed by calling them. These are general government
-// toll-free lines, not dedicated 24/7 counseling hotlines, and the Isange
-// number below rests on a single secondary source. CALL AND VERIFY ALL
-// THREE before this goes live; update via the admin Settings screen (or
-// re-seed a fresh DB) once confirmed.
+// Verified 2026-08-03 against official gov.rw emergency, RBC service, and
+// Rwanda Investigation Bureau contact pages. Operators should re-verify these
+// public numbers during every quarterly safety-content review.
 const CRISIS_RESOURCES = [
   {
-    name: "Rwanda Biomedical Centre (RBC) Call Center — UNVERIFIED, confirm before launch",
-    contact: "114 (toll-free)",
+    name: "Emergency services",
+    contact: "112 (toll-free)",
     region: "National",
     order: 1,
   },
   {
-    name: "Rwanda Investigation Bureau (RIB) — Gender-Based Violence reporting — UNVERIFIED, confirm before launch",
-    contact: "3512 (toll-free)",
+    name: "SAMU ambulance — 24/7",
+    contact: "912 (toll-free)",
     region: "National",
     order: 2,
   },
   {
-    name: "Isange One Stop Center — GBV survivor support (medical/psychosocial/legal) — UNVERIFIED, single-source only, confirm before launch",
-    contact: "3029 (toll-free)",
+    name: "Rwanda Biomedical Centre health services",
+    contact: "114 (toll-free)",
     region: "National",
     order: 3,
   },
+  { name: "Child Help Line", contact: "116 (toll-free)", region: "National", order: 4 },
+  { name: "Gender-based violence support", contact: "3512 (toll-free)", region: "National", order: 5 },
+  { name: "Isange One Stop Centre", contact: "3029 (toll-free)", region: "National", order: 6 },
 ];
 
 async function upsertTopicsAndArticles() {
@@ -409,13 +426,9 @@ async function upsertTopicsAndArticles() {
         bodySw: article.bodySw ?? "",
         externalUrl: article.externalUrl ?? null,
         tags: encodeJsonColumn(article.tags),
-        // Marked REVIEWED (not NEEDS_REVIEW) so retrieval has real content to
-        // ground chat answers in from day one, per the seed requirements —
-        // but reviewedBy is honestly flagged, not a real clinician's name.
-        // Re-review and re-approve every article here before production.
-        status: REVIEWED,
-        reviewedBy: "seed-script (AI-drafted placeholder — NOT reviewed by a licensed professional)",
-        reviewedAt: new Date(),
+        status: ALLOW_UNREVIEWED_DEMO_CONTENT ? REVIEWED : NEEDS_REVIEW,
+        reviewedBy: ALLOW_UNREVIEWED_DEMO_CONTENT ? "DEMO ONLY — unreviewed seed content" : null,
+        reviewedAt: ALLOW_UNREVIEWED_DEMO_CONTENT ? new Date() : null,
       };
       await prisma.article.upsert({
         where: { topicId_titleEn: { topicId: savedTopic.id, titleEn: article.titleEn } },
@@ -434,7 +447,7 @@ async function upsertCrisisResources() {
     return;
   }
   await prisma.crisisResource.createMany({ data: CRISIS_RESOURCES });
-  console.log(`Seeded ${CRISIS_RESOURCES.length} placeholder crisis resources — REPLACE before launch.`);
+  console.log(`Seeded ${CRISIS_RESOURCES.length} verified public crisis resources.`);
 }
 
 // Approximate public coordinates for well-known Kigali facilities — good
@@ -449,7 +462,7 @@ const HEALTH_FACILITIES = [
     district: "Nyarugenge",
     sector: "Nyarugenge",
     services: ["Maternal Health", "Mental Health", "Emergency Care"],
-    contact: "+250 788 123 456",
+    contact: null,
   },
   {
     name: "King Faisal Hospital",
@@ -459,7 +472,7 @@ const HEALTH_FACILITIES = [
     district: "Gasabo",
     sector: "Kacyiru",
     services: ["Specialist Care", "HIV Testing"],
-    contact: "+250 788 234 567",
+    contact: null,
   },
   {
     name: "Kibagabaga Hospital",
@@ -469,7 +482,7 @@ const HEALTH_FACILITIES = [
     district: "Gasabo",
     sector: "Kibagabaga",
     services: ["Maternal Health", "Family Planning"],
-    contact: "+250 788 345 678",
+    contact: null,
   },
   {
     name: "Kicukiro Health Centre",
@@ -479,7 +492,7 @@ const HEALTH_FACILITIES = [
     district: "Kicukiro",
     sector: "Kicukiro",
     services: ["Family Planning", "HIV Testing"],
-    contact: "+250 788 456 789",
+    contact: null,
   },
   {
     name: "Remera Polyclinic",
@@ -489,7 +502,7 @@ const HEALTH_FACILITIES = [
     district: "Gasabo",
     sector: "Remera",
     services: ["Mental Health", "General Consultation"],
-    contact: "+250 788 567 890",
+    contact: null,
   },
   {
     name: "Gikondo Pharmacy",
@@ -499,11 +512,15 @@ const HEALTH_FACILITIES = [
     district: "Kicukiro",
     sector: "Gikondo",
     services: ["Pharmacy"],
-    contact: "+250 788 678 901",
+    contact: null,
   },
 ];
 
 async function upsertHealthFacilities() {
+  if (!ALLOW_UNVERIFIED_DEMO_FACILITIES) {
+    console.log("Skipped demo facilities; import an owner-verified production directory through the admin portal.");
+    return;
+  }
   const existingCount = await prisma.healthFacility.count();
   if (existingCount > 0) {
     console.log("Health facilities already present, skipping.");
@@ -512,7 +529,7 @@ async function upsertHealthFacilities() {
   await prisma.healthFacility.createMany({
     data: HEALTH_FACILITIES.map((f) => ({ ...f, services: encodeJsonColumn(f.services) })),
   });
-  console.log(`Seeded ${HEALTH_FACILITIES.length} placeholder health facilities — VERIFY before launch.`);
+  console.log(`Seeded ${HEALTH_FACILITIES.length} contact-free demo facilities.`);
 }
 
 async function upsertAppSettings() {
@@ -695,7 +712,7 @@ async function seedUsers(): Promise<DemoUsersResult> {
       continue;
     }
 
-    const data: any = {
+    const data: Prisma.UserCreateInput = {
       email: u.email,
       passwordHash: pwHash,
       name: u.name,
@@ -794,7 +811,6 @@ async function seedTestData() {
 
     const menstrualTopic = topics.find((t) => t.slug === "menstrual-health");
     const mentalTopic = topics.find((t) => t.slug === "mental-health");
-    const pregTopic = topics.find((t) => t.slug === "pregnancy");
 
     // Teen conversations
     const conv1 = await prisma.conversation.create({

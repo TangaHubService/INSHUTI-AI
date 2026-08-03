@@ -120,6 +120,10 @@ model User {
   name              String
   role              String
   preferredLanguage String   @default("EN")
+  province          String?
+  district          String?
+  sector            String?
+  cell              String?
   loginAttempts     Int      @default(0)
   lockedUntil       DateTime?
   lastActivityAt    DateTime @default(now())
@@ -136,8 +140,22 @@ model User {
   appointments          Appointment[]
   notifications         Notification[]
   attachments           FileAttachment[]
+  pushSubscriptions     PushSubscription[]
 
   @@index([email])
+  @@index([district])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model HealthcareProfessional {
@@ -195,6 +213,7 @@ model Appointment {
   status         String    @default("REQUESTED")
   notes          String?
   outcome        String?
+  reminderSentAt DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -267,6 +286,8 @@ model AuditLog {
   adminId     String?
   adminEmail  String?
   details     String   @default("{}")
+  previousHash String  @default("")
+  hash         String  @default("")
   createdAt   DateTime @default(now())
 
   @@index([entityType, entityId])

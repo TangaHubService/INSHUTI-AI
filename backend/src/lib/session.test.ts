@@ -14,7 +14,7 @@ function mockReqRes(cookie?: string): { req: Request; res: Response; cookies: Re
 
 describe("session", () => {
   it("creates a new session ID when none exists", () => {
-    const { req, res, cookies } = mockReqRes();
+    const { req, res } = mockReqRes();
     const id = getOrCreateSessionId(req, res);
     expect(id).toBeTruthy();
     expect(typeof id).toBe("string");
@@ -22,14 +22,19 @@ describe("session", () => {
   });
 
   it("reuses an existing session ID", () => {
-    const existingId = "550e8400-e29b-41d4-a716-446655440000";
-    const { req, res } = mockReqRes(existingId);
-    const id = getOrCreateSessionId(req, res);
-    expect(id).toBe(existingId);
+    const first = mockReqRes();
+    const existingId = getOrCreateSessionId(first.req, first.res);
+    const second = mockReqRes(first.cookies[SESSION_COOKIE_NAME]);
+    expect(getOrCreateSessionId(second.req, second.res)).toBe(existingId);
+  });
+
+  it("rejects a forged anonymous session cookie", () => {
+    const { req, res } = mockReqRes("known-id.forged-signature");
+    expect(getOrCreateSessionId(req, res)).not.toBe("known-id");
   });
 
   it("issues a new session ID via issueNewSessionId", () => {
-    const { req, res, cookies } = mockReqRes("old-session-id");
+    const { res } = mockReqRes("old-session-id");
     const newId = issueNewSessionId(res);
     expect(newId).not.toBe("old-session-id");
     expect(newId).toBeTruthy();

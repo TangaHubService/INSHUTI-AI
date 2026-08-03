@@ -10,6 +10,8 @@ import {
 } from "../lib/auth.js";
 import type { AdminRole } from "../lib/constants.js";
 import { prisma } from "../lib/prisma.js";
+import { writeAuditLog } from "../lib/auditLog.js";
+import crypto from "node:crypto";
 
 const router = Router();
 
@@ -34,6 +36,7 @@ router.post("/login", async (req, res) => {
   const passwordValid = await verifyPassword(password, passwordHash);
 
   if (!admin || !passwordValid) {
+    await writeAuditLog({ action: "ADMIN_LOGIN_FAILED", entityType: "security", entityId: crypto.createHash("sha256").update(email.toLowerCase()).digest("hex"), details: { ip: req.ip } });
     res.status(401).json({ error: "Invalid email or password" });
     return;
   }
@@ -50,6 +53,7 @@ router.post("/login", async (req, res) => {
     role: admin.role as AdminRole,
   });
   setAdminSessionCookie(res, token);
+  await writeAuditLog({ action: "ADMIN_LOGIN_SUCCEEDED", entityType: "security", adminId: admin.id, adminEmail: admin.email, details: { ip: req.ip } });
   res.json({ admin: { id: admin.id, email: admin.email, name: admin.name, role: admin.role } });
 });
 

@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { PageLoading, FullPageLoading } from "@/components/Spinner";
 import { useRequireUser } from "@/lib/useUserAuth";
+import { useLanguage } from "@/lib/LanguageContext";
+import { HEALTH_TOPIC_NAMES, PORTAL_COPY } from "@/lib/portalCopy";
 import {
   getMyAppointments,
   getNotifications,
@@ -27,6 +29,8 @@ function formatDateTime(iso: string): string {
 }
 
 export default function ParentPortalPage() {
+  const { language } = useLanguage();
+  const t = PORTAL_COPY[language];
   const { user, loading: authLoading } = useRequireUser();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
@@ -54,13 +58,13 @@ export default function ParentPortalPage() {
       <div className="mx-auto max-w-[1160px]">
         <section className="pb-3">
           <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
-            Parent & Guardian Portal
+            {t.parentPortal}
           </span>
           <h1 className="mt-3 font-display text-[34px] text-teal-900">
-            Welcome, {user.name.split(" ")[0]}
+            {t.welcome}, {user.name.split(" ")[0]}
           </h1>
           <p className="mt-[10px] max-w-[560px] text-[14.5px] leading-[1.6] text-ink-soft">
-            Resources, appointments, and updates in one place.
+            {t.parentIntro}
           </p>
         </section>
 
@@ -71,11 +75,11 @@ export default function ParentPortalPage() {
             <div>
               <div className="mb-4 card py-1.5">
                 <div className="flex items-center justify-between px-5 pb-1.5 pt-[14px]">
-                  <h3 className="text-base text-teal-900">Upcoming appointments</h3>
-                  <Link href="/appointments" className="text-[12.5px] font-semibold text-teal-700">Manage →</Link>
+                  <h3 className="text-base text-teal-900">{t.upcoming}</h3>
+                  <Link href="/appointments" className="text-[12.5px] font-semibold text-teal-700">{t.manage} →</Link>
                 </div>
                 {upcoming.length === 0 && (
-                  <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">Nothing scheduled. You can request one from Appointments.</p>
+                  <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">{t.none}</p>
                 )}
                 {upcoming.map((appt) => (
                   <div key={appt.id} className="flex items-center justify-between border-b border-line px-5 py-3 last:border-b-0">
@@ -89,7 +93,7 @@ export default function ParentPortalPage() {
               </div>
 
               <div className="card p-5">
-                <h3 className="mb-4 text-base text-teal-900">Educational resources</h3>
+                <h3 className="mb-4 text-base text-teal-900">{t.resources}</h3>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {RESOURCE_TOPICS.map((topic) => (
                     <Link
@@ -100,7 +104,7 @@ export default function ParentPortalPage() {
                       <div className={`flex h-[26px] w-[26px] items-center justify-center rounded-lg ${topic.bg} ${topic.fg}`}>
                         <svg width="14" height="14"><use href={`#${topic.icon}`} /></svg>
                       </div>
-                      <span className="text-[12.5px] font-semibold text-ink">{topic.name}</span>
+                      <span className="text-[12.5px] font-semibold text-ink">{HEALTH_TOPIC_NAMES[language][RESOURCE_TOPICS.indexOf(topic)]}</span>
                     </Link>
                   ))}
                 </div>
@@ -108,9 +112,9 @@ export default function ParentPortalPage() {
             </div>
 
             <div className="card py-1.5">
-              <div className="px-5 pb-1.5 pt-[14px] text-base text-teal-900">Recent notifications</div>
+              <div className="px-5 pb-1.5 pt-[14px] text-base text-teal-900">{t.recent}</div>
               {notifications.length === 0 && (
-                <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">Nothing new.</p>
+                <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">{t.none}</p>
               )}
               {notifications.slice(0, 6).map((n) => (
                 <div key={n.id} className="border-b border-line px-5 py-3 last:border-b-0">
@@ -119,7 +123,7 @@ export default function ParentPortalPage() {
                 </div>
               ))}
               <div className="px-5 py-3">
-                <Link href="/notifications" className="text-[12.5px] font-semibold text-teal-700">View all →</Link>
+                <Link href="/notifications" className="text-[12.5px] font-semibold text-teal-700">{t.viewAll} →</Link>
               </div>
             </div>
           </section>

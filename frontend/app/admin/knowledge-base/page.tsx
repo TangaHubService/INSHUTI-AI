@@ -63,6 +63,8 @@ export default function KnowledgeBasePage() {
   useEffect(() => {
     if (!admin) return;
     void loadAll();
+    // loadAll intentionally refreshes against the current selected topic.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [admin]);
 
   const openEditor = useCallback(async (id: string) => {
@@ -100,8 +102,8 @@ export default function KnowledgeBasePage() {
 
   async function save(status?: ArticleStatus) {
     if (!editingId) return;
-    if (status === "REVIEWED" && (!titleEn.trim() || !bodyEn.trim() || !titleRw.trim() || !bodyRw.trim())) {
-      toast("English and Kinyarwanda title and body are required before marking an article reviewed.", "error");
+    if (status === "REVIEWED" && [titleEn, titleRw, titleFr, titleSw, bodyEn, bodyRw, bodyFr, bodySw].some((value) => !value.trim())) {
+      toast("Title and body are required in English, Kinyarwanda, French, and Kiswahili before publishing.", "error");
       return;
     }
     setSaving(true);

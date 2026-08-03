@@ -42,9 +42,9 @@
   },
   "home": {
     "hero": {
-      "eyebrow": "Free · Anonymous · Bilingual",
+      "eyebrow": "Free · Anonymous · Four languages",
       "title": "Ask anything about your health. <em>Get a friend's answer.</em>",
-      "desc": "Inshuti is an AI assistant that gives young people honest, judgment-free answers on sexual and reproductive health — reviewed by professionals, available anytime, in English or Kinyarwanda.",
+      "desc": "Inshuti gives young people honest, judgment-free health information in English, Kinyarwanda, French, and Kiswahili.",
       "cta": "Chat with Inshuti",
       "browseTopics": "Browse topics",
       "trust1": "No sign-up required",
@@ -98,8 +98,8 @@
         "body": "No names, no accounts. Your privacy is protected by design."
       },
       "bilingual": {
-        "title": "Bilingual",
-        "body": "Full support in English and Kinyarwanda."
+        "title": "Four languages",
+        "body": "English, Kinyarwanda, French, and Kiswahili."
       },
       "evidenceBased": {
         "title": "Evidence Based",
@@ -118,7 +118,7 @@
   },
   "chat": {
     "greeting": "Muraho! I'm Inshuti — you can ask me anything about your body, relationships, or health. This chat is anonymous. What's on your mind today?",
-    "inputPlaceholder": "Type your question in English or Kinyarwanda…",
+    "inputPlaceholder": "Type your question in your preferred language…",
     "crisisBar": "In crisis or need urgent help? ",
     "crisisLink": "Tap here for immediate support resources",
     "typing": "Inshuti is typing…",

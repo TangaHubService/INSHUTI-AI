@@ -7,6 +7,7 @@ import fs from "node:fs";
 import { prisma } from "../lib/prisma.js";
 import { requireUser, type AuthenticatedUserRequest } from "../lib/userAuth.js";
 import { env } from "../lib/env.js";
+import { decryptFileAtRest, encryptFileAtRest } from "../lib/fileCrypto.js";
 
 const router = Router();
 
@@ -27,6 +28,11 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: { fileSize: env.MAX_FILE_SIZE_MB * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = file.mimetype.startsWith("image/") || file.mimetype.startsWith("audio/") || file.mimetype === "application/pdf";
+    if (!allowed) { cb(new Error("Only images, audio, and PDF files are permitted")); return; }
+    cb(null, true);
+  },
 });
 
 router.post("/", requireUser, upload.single("file"), async (req: AuthenticatedUserRequest, res) => {
@@ -35,8 +41,13 @@ router.post("/", requireUser, upload.single("file"), async (req: AuthenticatedUs
     return;
   }
 
+  // Multer writes first; encrypt immediately so validation/authorization
+  // failures cannot leave sensitive media readable on disk.
+  await encryptFileAtRest(req.file.path);
+
   const parsed = z.object({ consultationId: z.string().optional() }).safeParse(req.body);
   if (!parsed.success) {
+    await fs.promises.unlink(req.file.path).catch(() => undefined);
     res.status(400).json({ error: "Invalid request" });
     return;
   }
@@ -44,6 +55,7 @@ router.post("/", requireUser, upload.single("file"), async (req: AuthenticatedUs
   if (parsed.data.consultationId) {
     const consultation = await prisma.consultation.findUnique({ where: { id: parsed.data.consultationId } });
     if (!consultation) {
+      await fs.promises.unlink(req.file!.path).catch(() => undefined);
       res.status(404).json({ error: "Consultation not found" });
       return;
     }
@@ -51,6 +63,7 @@ router.post("/", requireUser, upload.single("file"), async (req: AuthenticatedUs
     const professional = await prisma.healthcareProfessional.findUnique({ where: { userId: req.user!.userId } });
     const isAssigned = professional && consultation.professionalId === professional.id;
     if (!isOwner && !isAssigned) {
+      await fs.promises.unlink(req.file!.path).catch(() => undefined);
       res.status(403).json({ error: "Not authorized to attach files to this consultation" });
       return;
     }
@@ -110,6 +123,25 @@ router.get("/consultation/:consultationId", requireUser, async (req: Authenticat
       createdAt: a.createdAt,
     })),
   });
+});
+
+router.get("/:id", requireUser, async (req: AuthenticatedUserRequest, res) => {
+  const attachment = await prisma.fileAttachment.findUnique({ where: { id: String(req.params.id) } });
+  if (!attachment || !attachment.consultationId) {
+    res.status(404).json({ error: "Attachment not found" });
+    return;
+  }
+  const consultation = await prisma.consultation.findUnique({ where: { id: attachment.consultationId } });
+  const professional = await prisma.healthcareProfessional.findUnique({ where: { userId: req.user!.userId } });
+  const authorized = consultation && (consultation.userId === req.user!.userId || consultation.professionalId === professional?.id);
+  if (!authorized) {
+    res.status(403).json({ error: "Not authorized" });
+    return;
+  }
+  res.type(attachment.mimeType);
+  res.setHeader("Content-Disposition", `inline; filename="${attachment.originalName.replace(/["\r\n]/g, "_")}"`);
+  const decrypted = await decryptFileAtRest(path.resolve(attachment.path));
+  res.send(decrypted);
 });
 
 export default router;

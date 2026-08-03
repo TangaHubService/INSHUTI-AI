@@ -80,6 +80,8 @@ export default function ConsultationsPage() {
       cancelled = true;
       if (socketRef.current) { socketRef.current.disconnect(); socketRef.current = null; }
     };
+    // toast is a stable provider callback; reconnect only when identity changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user]);
 
   if (authLoading || !user) return <FullPageLoading />;

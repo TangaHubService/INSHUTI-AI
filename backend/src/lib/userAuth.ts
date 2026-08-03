@@ -4,6 +4,7 @@ import type { Request, Response, NextFunction } from "express";
 
 import { env } from "./env.js";
 import type { UserRole } from "./constants.js";
+import { prisma } from "./prisma.js";
 
 const TOKEN_COOKIE = "inshuti_user_token";
 const TOKEN_EXPIRY_MS = 8 * 60 * 60 * 1000;
@@ -21,6 +22,7 @@ export function deserializeToken(token: string): { userId: string; role: string 
   if (parts.length !== 3) return null;
   const [header, body, signature] = parts;
   const expectedSig = crypto.createHmac("sha256", env.JWT_SECRET).update(`${header}.${body}`).digest("base64url");
+  if (signature.length !== expectedSig.length) return null;
   if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig))) return null;
   try {
     const payload = JSON.parse(Buffer.from(body, "base64url").toString());
@@ -54,13 +56,24 @@ export interface AuthenticatedUserRequest extends Request {
   user?: { userId: string; role: string };
 }
 
-export function requireUser(req: AuthenticatedUserRequest, res: Response, next: NextFunction): void {
-  const user = getUserFromRequest(req);
-  if (!user) {
+export async function requireUser(req: AuthenticatedUserRequest, res: Response, next: NextFunction): Promise<void> {
+  const tokenUser = getUserFromRequest(req);
+  if (!tokenUser) {
     res.status(401).json({ error: "Not authenticated" });
     return;
   }
-  req.user = user;
+  const [user, settings] = await Promise.all([
+    prisma.user.findUnique({ where: { id: tokenUser.userId }, select: { id: true, role: true, active: true, lastActivityAt: true } }),
+    prisma.appSettings.findUnique({ where: { id: "singleton" }, select: { sessionTimeoutMinutes: true } }),
+  ]);
+  const timeoutMs = (settings?.sessionTimeoutMinutes ?? 60) * 60_000;
+  if (!user?.active || Date.now() - user.lastActivityAt.getTime() > timeoutMs) {
+    clearUserCookie(res);
+    res.status(401).json({ error: "Session expired" });
+    return;
+  }
+  await prisma.user.update({ where: { id: user.id }, data: { lastActivityAt: new Date() } });
+  req.user = { userId: user.id, role: user.role };
   next();
 }
 

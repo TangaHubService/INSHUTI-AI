@@ -86,7 +86,7 @@ export async function retrieveArticles(message: string): Promise<RetrievedArticl
       bodyRw: article.bodyRw,
       bodyFr: article.bodyFr,
       bodySw: article.bodySw,
-      externalUrl: (article as any).externalUrl ?? null,
+      externalUrl: article.externalUrl ?? null,
       score,
       topic: article.topic,
     }));

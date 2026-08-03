@@ -16,13 +16,13 @@ const COPY: Record<Language, Copy> = {
   EN: {
     eyebrow: "About", title: "About Inshuti",
     lead: "Inshuti means 'friend' in Kinyarwanda — and that's exactly what we aim to be: a trusted, judgment-free companion for young people navigating questions about their health.",
-    story: "Inshuti was built to address a critical gap in sexual and reproductive health education for young people in Rwanda. Many young people lack access to accurate, age-appropriate information about their bodies, relationships, and health. They face barriers of stigma, privacy concerns, and limited access to healthcare providers. Inshuti removes those barriers by providing a free, anonymous, bilingual AI assistant that anyone can use from their phone, anytime, anywhere.",
+    story: "Inshuti was built to address a critical gap in sexual and reproductive health education for young people in Rwanda. Many young people lack access to accurate, age-appropriate information about their bodies, relationships, and health. Inshuti provides a free, anonymous AI assistant in four languages that anyone can use from their phone.",
     missionTitle: "Our Mission",
     mission: "To empower every young person in Rwanda with honest, evidence-based health information — in their own language, on their own terms, without fear or judgment.",
     valuesTitle: "Our Values",
     values: [
       { icon: "i-lock", title: "Privacy First", body: "We designed Inshuti to be anonymous by default. Your conversations stay private, and you're in control of your data." },
-      { icon: "i-globe", title: "Bilingual by Design", body: "Full support in English and Kinyarwanda, with French and Swahili coming soon — because everyone deserves answers in the language they're most comfortable with." },
+      { icon: "i-globe", title: "Four Languages", body: "English, Kinyarwanda, French, and Kiswahili support helps people ask in the language they are most comfortable using." },
       { icon: "i-book", title: "Clinically Reviewed", body: "Every answer is grounded in content reviewed by healthcare professionals, ensuring accuracy and reliability." },
       { icon: "i-heart", title: "Youth-Centered", body: "Built with and for young people, with input from youth health advocates, educators, and healthcare workers across Rwanda." },
     ],

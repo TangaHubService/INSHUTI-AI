@@ -1,6 +1,7 @@
 import { prisma } from "./prisma.js";
 import { notifyUser } from "./notifications.js";
 import type { ProfessionalType } from "./constants.js";
+import type { Prisma } from "@prisma/client";
 
 const TOPIC_PROFESSIONAL_MAP: Record<string, ProfessionalType> = {
   "menstrual-health": "NURSE",
@@ -26,25 +27,46 @@ function getRequiredTier(priority: number): ProfessionalType {
   return "CHW";
 }
 
+export function determineRequiredProfessional(params: {
+  topicSlug?: string | null;
+  riskFlags?: string[];
+}): { priority: number; professionalType: ProfessionalType } {
+  const priority = Math.max(
+    0,
+    ...(params.riskFlags ?? []).map((flag) => RISK_LEVEL_MAP[flag] ?? 0),
+  );
+  return {
+    priority,
+    professionalType: priority > 0
+      ? getRequiredTier(priority)
+      : (params.topicSlug ? TOPIC_PROFESSIONAL_MAP[params.topicSlug] : undefined) ?? "CHW",
+  };
+}
+
 export async function routeConsultation(params: {
   conversationId: string;
   userId: string;
   topicSlug?: string | null;
   riskFlags?: string[];
 }): Promise<{ consultationId: string; assignedTo: string | null; status: string }> {
-  const priority = Math.max(
-    0,
-    ...(params.riskFlags ?? []).map((f) => RISK_LEVEL_MAP[f] ?? 0),
-    params.topicSlug ? (TOPIC_PROFESSIONAL_MAP[params.topicSlug] ? 1 : 0) : 0,
-  );
+  const { priority, professionalType: requiredType } = determineRequiredProfessional(params);
 
-  const requiredType = getRequiredTier(priority);
+  const requestingUser = await prisma.user.findUnique({ where: { id: params.userId }, select: { district: true } });
 
-  const availableProfessional = await prisma.healthcareProfessional.findFirst({
+  const availabilityWhere: Prisma.HealthcareProfessionalWhereInput = {
+    approvalStatus: "APPROVED",
+    professionalType: requiredType,
+    consultations: { none: { status: { in: ["ASSIGNED", "IN_PROGRESS"] } } },
+  };
+  const nearbyProfessional = requestingUser?.district ? await prisma.healthcareProfessional.findFirst({
     where: {
-      approvalStatus: "APPROVED",
-      consultations: { none: { status: { in: ["ASSIGNED", "IN_PROGRESS"] } } },
+      ...availabilityWhere,
+      user: { district: { equals: requestingUser.district, mode: "insensitive" } },
     },
+    orderBy: { id: "asc" },
+  }) : null;
+  const availableProfessional = nearbyProfessional ?? await prisma.healthcareProfessional.findFirst({
+    where: availabilityWhere,
     orderBy: { id: "asc" },
   });
 

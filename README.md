@@ -13,7 +13,7 @@ This is a monorepo with the backend and frontend as separate npm projects:
 
 - `backend/` — Express + TypeScript API server, Prisma ORM (PostgreSQL in
   production, SQLite for local dev).
-- `frontend/` — Next.js 14 (App Router, TypeScript) UI, calls the backend
+- `frontend/` — Next.js 16 (App Router, TypeScript) UI, calls the backend
   over HTTP via `frontend/lib/apiClient.ts`.
 - ` test-g/` — static HTML/CSS design prototype; source of truth for the UI
   the frontend pages get ported from.
@@ -51,14 +51,17 @@ The seed script prompts interactively for the super admin's email and password
 (and optionally `SEED_SUPER_ADMIN_NAME`) to skip the prompt, e.g. in CI. Seed
 articles are AI-drafted and left as `NEEDS_REVIEW` — they must be approved by
 a real reviewer in the admin panel (Phase 4) before they're fit to cite in
-chat responses. The two seeded `CrisisResource` rows are placeholders too —
-replace the contact numbers with real, verified crisis lines before launch.
+chat responses. Seeded crisis contacts use published Rwanda emergency services;
+reconfirm them during every production review because service details can change.
 
 Run both apps together from the repo root:
 
 ```bash
 npm run dev
 ```
+
+This synchronizes the local SQLite schema before starting both servers, so new
+application columns are available after pulling an update.
 
 - Backend: http://localhost:4000 (health check at `/api/health`)
 - Frontend: http://localhost:3000

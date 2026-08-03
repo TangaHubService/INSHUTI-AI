@@ -138,10 +138,14 @@ router.patch("/articles/:id", async (req, res) => {
   const mergedBodyRw = rest.bodyRw ?? existing.bodyRw;
   const mergedBodyFr = rest.bodyFr ?? existing.bodyFr;
   const mergedBodySw = rest.bodySw ?? existing.bodySw;
+  const mergedTitleEn = rest.titleEn ?? existing.titleEn;
+  const mergedTitleRw = rest.titleRw ?? existing.titleRw;
+  const mergedTitleFr = rest.titleFr ?? existing.titleFr;
+  const mergedTitleSw = rest.titleSw ?? existing.titleSw;
 
-  if (status === REVIEWED && (!mergedBodyEn.trim() || !mergedBodyRw.trim() || !mergedBodyFr.trim() || !mergedBodySw.trim())) {
+  if (status === REVIEWED && [mergedTitleEn, mergedTitleRw, mergedTitleFr, mergedTitleSw, mergedBodyEn, mergedBodyRw, mergedBodyFr, mergedBodySw].some((value) => !value.trim())) {
     res.status(400).json({
-      error: "Cannot mark REVIEWED: body text must be filled in all 4 languages (EN, RW, FR, SW) first.",
+      error: "Cannot mark REVIEWED: title and body must be filled in all 4 languages (EN, RW, FR, SW) first.",
     });
     return;
   }

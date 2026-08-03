@@ -1,33 +1,14 @@
 import { Router } from "express";
 import { z } from "zod";
-import crypto from "node:crypto";
 
 import { prisma } from "../lib/prisma.js";
 import { requireUser, type AuthenticatedUserRequest } from "../lib/userAuth.js";
 import { routeConsultation, reassignConsultation, escalateConsultation } from "../lib/consultationRouter.js";
 import { requireAdmin } from "../lib/auth.js";
-import { FLAG_REASONS } from "../lib/constants.js";
-import { env } from "../lib/env.js";
+import { decryptMessage, encryptMessage, messagePreview } from "../lib/messageCrypto.js";
+import { SESSION_COOKIE_NAME } from "../lib/session.js";
 
 const router = Router();
-
-const ENCRYPTION_KEY = env.MESSAGE_ENCRYPTION_KEY;
-
-function encrypt(text: string): string {
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv("aes-256-cbc", crypto.createHash("sha256").update(ENCRYPTION_KEY).digest(), iv);
-  const encrypted = Buffer.concat([cipher.update(text, "utf8"), cipher.final()]);
-  return iv.toString("hex") + ":" + encrypted.toString("hex");
-}
-
-function decrypt(text: string): string {
-  const parts = text.split(":");
-  const iv = Buffer.from(parts[0], "hex");
-  const encrypted = Buffer.from(parts[1], "hex");
-  const decipher = crypto.createDecipheriv("aes-256-cbc", crypto.createHash("sha256").update(ENCRYPTION_KEY).digest(), iv);
-  const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
-  return decrypted.toString("utf8");
-}
 
 router.post("/request", requireUser, async (req: AuthenticatedUserRequest, res) => {
   const parsed = z.object({ conversationId: z.string().min(1) }).safeParse(req.body);
@@ -46,6 +27,18 @@ router.post("/request", requireUser, async (req: AuthenticatedUserRequest, res) 
   if (!conversation) {
     res.status(404).json({ error: "Conversation not found" });
     return;
+  }
+  if (conversation.userId && conversation.userId !== req.user!.userId) {
+    res.status(403).json({ error: "Not authorized to request support for this conversation" });
+    return;
+  }
+  if (!conversation.userId) {
+    const anonymousSession = req.cookies?.[SESSION_COOKIE_NAME];
+    if (!anonymousSession || conversation.sessionId !== anonymousSession) {
+      res.status(403).json({ error: "Not authorized to request support for this conversation" });
+      return;
+    }
+    await prisma.conversation.update({ where: { id: conversation.id }, data: { userId: req.user!.userId } });
   }
 
   const lastMessage = conversation.messages[0];
@@ -150,7 +143,7 @@ router.post("/:id/messages", requireUser, async (req: AuthenticatedUserRequest, 
     return;
   }
 
-  const encryptedContent = encrypt(parsed.data.content);
+  const encryptedContent = encryptMessage(parsed.data.content);
   const message = await prisma.message.create({
     data: {
       conversationId: consultation.conversationId,
@@ -193,7 +186,7 @@ router.get("/:id/messages", requireUser, async (req: AuthenticatedUserRequest, r
     messages: messages.map((m) => ({
       id: m.id,
       role: m.role,
-      content: decrypt(m.content),
+      content: decryptMessage(m.content),
       createdAt: m.createdAt,
       readAt: m.readAt,
       senderId: m.role === "USER" ? consultation.user.id : (consultation.professional?.user.id ?? null),
@@ -241,7 +234,10 @@ router.get("/chat-list", requireUser, async (req: AuthenticatedUserRequest, res)
 
   const chatList = await Promise.all(
     consultations.map(async (c) => {
-      const cAny = c as any;
+      const cAny = c as unknown as {
+        user: { id: string; name: string; role: string };
+        professional: { user: { id: string; name: string; role: string } } | null;
+      };
       const otherParty = isPro
         ? { id: cAny.user.id, name: cAny.user.name, role: cAny.user.role }
         : cAny.professional
@@ -264,7 +260,7 @@ router.get("/chat-list", requireUser, async (req: AuthenticatedUserRequest, res)
         priority: c.priority,
         otherParty,
         lastMessage: lastMsg
-          ? { content: lastMsg.content.slice(0, 100), createdAt: lastMsg.createdAt, role: lastMsg.role }
+          ? { content: messagePreview(lastMsg.content), createdAt: lastMsg.createdAt, role: lastMsg.role }
           : null,
         unreadCount,
         createdAt: c.createdAt,

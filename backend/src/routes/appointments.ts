@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { prisma } from "../lib/prisma.js";
 import { requireUser, type AuthenticatedUserRequest } from "../lib/userAuth.js";
-import { queueAppointmentReminder } from "../lib/notifications.js";
+import { notifyUser } from "../lib/notifications.js";
 import { PROFESSIONAL_TYPES, professionalTypeSchema } from "../lib/constants.js";
 
 const router = Router();
@@ -56,6 +56,18 @@ router.post("/", requireUser, async (req: AuthenticatedUserRequest, res) => {
     return;
   }
 
+  const conflicting = await prisma.appointment.findFirst({
+    where: {
+      professionalId: professional.id,
+      requestedTime: parsed.data.requestedTime,
+      status: { in: ["REQUESTED", "CONFIRMED", "RESCHEDULED"] },
+    },
+  });
+  if (conflicting) {
+    res.status(409).json({ error: "That time is no longer available. Please choose another time." });
+    return;
+  }
+
   const appointment = await prisma.appointment.create({
     data: {
       userId: req.user!.userId,
@@ -64,8 +76,6 @@ router.post("/", requireUser, async (req: AuthenticatedUserRequest, res) => {
       notes: parsed.data.notes,
     },
   });
-
-  await queueAppointmentReminder(appointment.id);
 
   res.status(201).json({ appointment });
 });
@@ -112,10 +122,8 @@ router.patch("/:id/reschedule", requireUser, async (req: AuthenticatedUserReques
 
   const updated = await prisma.appointment.update({
     where: { id: appointment.id },
-    data: { requestedTime: parsed.data.requestedTime, status: "RESCHEDULED" },
+    data: { requestedTime: parsed.data.requestedTime, status: "RESCHEDULED", reminderSentAt: null },
   });
-
-  await queueAppointmentReminder(updated.id);
 
   res.json({ appointment: updated });
 });
@@ -188,10 +196,12 @@ router.patch("/:id/respond", requireUser, async (req: AuthenticatedUserRequest, 
 
   const updated = await prisma.appointment.update({
     where: { id: appointment.id },
-    data: { status: parsed.data.accept ? "CONFIRMED" : "CANCELLED" },
+    data: { status: parsed.data.accept ? "CONFIRMED" : "CANCELLED", reminderSentAt: null },
   });
 
-  if (parsed.data.accept) await queueAppointmentReminder(updated.id);
+  if (parsed.data.accept) {
+    await notifyUser({ userId: appointment.userId, type: "CONSULTATION_UPDATE", title: "Appointment confirmed", body: `Your appointment for ${updated.requestedTime.toLocaleString()} has been confirmed.` });
+  }
 
   res.json({ appointment: updated });
 });

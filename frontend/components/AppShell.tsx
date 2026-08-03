@@ -213,12 +213,12 @@ export function AppShell({
             </svg>
           </button>
           {session.kind === "admin" ? (
-            <div className="hidden w-[320px] items-center gap-2 rounded-[var(--radius-sm)] bg-paper-2 px-[14px] py-[9px] text-[13.5px] text-ink-soft lg:flex">
+            <Link href="/admin/search" className="hidden w-[320px] items-center gap-2 rounded-[var(--radius-sm)] bg-paper-2 px-[14px] py-[9px] text-[13.5px] text-ink-soft lg:flex">
               <svg width="16" height="16">
                 <use href="#i-search" />
               </svg>
               Search conversations, topics, articles\u2026
-            </div>
+            </Link>
           ) : (
             <div className="hidden lg:block" />
           )}

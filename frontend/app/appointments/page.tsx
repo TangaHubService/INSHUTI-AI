@@ -536,7 +536,7 @@ function UserView({ toast, language }: { toast: (message: string, type?: "succes
             >
               {professionals.length === 0 && <option value="">{t.noneAvailable}</option>}
               {professionals.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}{p.specialization ? ` · ${p.specialization}` : ""}</option>
+                <option key={p.id} value={p.id}>{p.name}{p.specialization ? ` · ${p.specialization}` : ""}{p.availability ? ` — ${p.availability}` : ""}</option>
               ))}
             </select>
             <p className="mb-1 mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.professionalId}</p>

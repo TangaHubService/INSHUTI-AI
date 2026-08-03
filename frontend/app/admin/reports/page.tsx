@@ -10,29 +10,25 @@ const REPORTS = [
     title: "Conversations",
     description: "All chat conversations with message counts and flag status. Includes session IDs and languages.",
     endpoint: "/api/reports/conversations",
-    filename: "conversations.csv",
     icon: "i-chat",
   },
   {
     title: "Flagged Items",
     description: "All flagged messages with reason, status, resolution details, and message previews.",
     endpoint: "/api/reports/flagged",
-    filename: "flagged-items.csv",
     icon: "i-flag",
   },
   {
     title: "Appointments",
     description: "All appointments with patient names, professional names, status, and outcomes.",
     endpoint: "/api/reports/appointments",
-    filename: "appointments.csv",
     icon: "i-calendar",
   },
 ];
 
-function downloadReport(endpoint: string, filename: string) {
+function downloadReport(endpoint: string, format: "csv" | "xlsx" | "pdf") {
   const a = document.createElement("a");
-  a.href = `${API_URL}${endpoint}`;
-  a.download = filename;
+  a.href = `${API_URL}${endpoint}?format=${format}`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -47,7 +43,7 @@ export default function AdminReportsPage() {
     <AppShell active="/admin/reports" session={{ kind: "admin", admin }}>
       <h1 className="mb-6 font-display text-[28px] text-teal-900">Reports</h1>
       <p className="mb-8 max-w-[600px] text-[14.5px] leading-[1.6] text-ink-soft">
-        Download CSV exports of platform data. These reports include all records without filtering — use with caution on large datasets.
+        Download platform reports as CSV, Excel, or PDF. Reports may contain sensitive records and must be handled securely.
       </p>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {REPORTS.map((report) => (
@@ -57,13 +53,13 @@ export default function AdminReportsPage() {
             </div>
             <h3 className="mb-2 text-lg font-bold text-teal-900">{report.title}</h3>
             <p className="mb-5 flex-1 text-[13.5px] leading-[1.5] text-ink-soft">{report.description}</p>
-            <button
-              onClick={() => downloadReport(report.endpoint, report.filename)}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-[11px] text-[14px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark"
-            >
-              <svg width="16" height="16"><use href="#i-download" /></svg>
-              Download CSV
-            </button>
+            <div className="grid grid-cols-3 gap-2">
+              {(["csv", "xlsx", "pdf"] as const).map((format) => (
+                <button key={format} onClick={() => downloadReport(report.endpoint, format)} className="rounded-full bg-coral px-3 py-2 text-xs font-semibold uppercase text-white hover:bg-coral-dark">
+                  {format}
+                </button>
+              ))}
+            </div>
           </div>
         ))}
       </div>

@@ -1,10 +1,24 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAdmin } from "../lib/auth.js";
+import crypto from "node:crypto";
 
 const router = Router();
 
 router.use(requireAdmin("SUPER_ADMIN"));
+
+router.get("/verify", async (_req, res) => {
+  const logs = await prisma.auditLog.findMany({ orderBy: { createdAt: "asc" } });
+  let previousHash = "GENESIS";
+  for (const log of logs) {
+    // Older pre-chain records are reported rather than silently accepted.
+    if (!log.hash || log.previousHash !== previousHash) { res.json({ valid: false, failedAt: log.id }); return; }
+    const expected = crypto.createHash("sha256").update(JSON.stringify({ previousHash, createdAt: log.createdAt.toISOString(), action: log.action, entityType: log.entityType, entityId: log.entityId, adminId: log.adminId, adminEmail: log.adminEmail, details: log.details })).digest("hex");
+    if (expected !== log.hash) { res.json({ valid: false, failedAt: log.id }); return; }
+    previousHash = log.hash;
+  }
+  res.json({ valid: true, count: logs.length, head: previousHash });
+});
 
 router.get("/", async (req, res) => {
   const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10));
@@ -21,7 +35,7 @@ router.get("/", async (req, res) => {
   ]);
 
   res.json({
-    logs: logs.map((l: { id: string; action: string; entityType: string; entityId: string | null; adminId: string | null; adminEmail: string | null; details: string; createdAt: Date }) => ({ ...l, details: JSON.parse(l.details) })),
+    logs: logs.map((l) => ({ ...l, details: JSON.parse(l.details) })),
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   });
 });

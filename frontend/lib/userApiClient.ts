@@ -11,6 +11,10 @@ export interface UserProfile {
   name: string;
   role: UserRole;
   preferredLanguage: string;
+  province: string | null;
+  district: string | null;
+  sector: string | null;
+  cell: string | null;
   healthcareProfessional: {
     professionalType: ProfessionalType;
     specialization: string | null;
@@ -33,6 +37,10 @@ export async function registerUser(input: {
   specialization?: string;
   govLevel?: GovLevel;
   regionName?: string;
+  province?: string;
+  district?: string;
+  sector?: string;
+  cell?: string;
 }): Promise<UserProfile> {
   const res = await apiFetch("/api/users/register", {
     method: "POST",
@@ -83,7 +91,7 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
   return data.user;
 }
 
-export async function updateProfile(input: { name?: string; phone?: string; preferredLanguage?: string }): Promise<UserProfile> {
+export async function updateProfile(input: { name?: string; phone?: string; preferredLanguage?: string; province?: string | null; district?: string | null; sector?: string | null; cell?: string | null }): Promise<UserProfile> {
   const res = await apiFetch("/api/users/me", { method: "PATCH", body: JSON.stringify(input) });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -91,6 +99,14 @@ export async function updateProfile(input: { name?: string; phone?: string; pref
   }
   const data: { user: UserProfile } = await res.json();
   return data.user;
+}
+
+export async function deactivateMyAccount(password: string): Promise<void> {
+  const res = await apiFetch("/api/users/me", { method: "DELETE", body: JSON.stringify({ password }) });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to deactivate account");
+  }
 }
 
 export type AppointmentStatus = "REQUESTED" | "CONFIRMED" | "RESCHEDULED" | "CANCELLED" | "COMPLETED";
@@ -226,6 +242,21 @@ export async function updateNotificationPrefs(prefs: Partial<Record<Notification
   if (!res.ok) throw new Error(`Failed to update preferences (${res.status})`);
   const data: { prefs: NotificationPrefs } = await res.json();
   return data.prefs;
+}
+
+export async function getPushConfig(): Promise<{ enabled: boolean; publicKey: string | null }> {
+  const res = await apiFetch("/api/notifications/push-config");
+  if (!res.ok) throw new Error("Push notifications are unavailable");
+  return res.json();
+}
+
+export async function savePushSubscription(subscription: PushSubscription): Promise<void> {
+  const json = subscription.toJSON();
+  const res = await apiFetch("/api/notifications/push-subscriptions", {
+    method: "POST",
+    body: JSON.stringify({ endpoint: subscription.endpoint, keys: json.keys }),
+  });
+  if (!res.ok) throw new Error("Could not enable push notifications");
 }
 
 export async function forgotPassword(email: string): Promise<void> {
@@ -369,9 +400,10 @@ export interface GovernmentStats {
   scope: { level: GovLevel; regionName: string; coverage: string };
   totalConversations: number;
   languageSplit: Record<string, number>;
-  topicEngagement: { topic: { id: string; slug: string; nameEn: string; nameRw: string; colorToken: string }; count: number }[];
+  topicEngagement: { topic: { id: string; slug: string; nameEn: string; nameRw: string; nameFr: string; nameSw: string; colorToken: string }; count: number }[];
   consultationsByStatus: Record<string, number>;
   referralCount: number;
+  privacyThreshold: number;
   appointmentsByStatus: Record<string, number>;
   facilitiesByDistrict: Record<string, number>;
   facilitiesByType: Record<string, number>;

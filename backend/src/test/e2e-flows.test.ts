@@ -13,6 +13,10 @@ const mockUser = {
   name: "E2E User",
   role: "TEENAGER",
   preferredLanguage: "EN",
+  province: null,
+  district: null,
+  sector: null,
+  cell: null,
   notificationPrefs: "{}",
   active: true,
   loginAttempts: 0,
@@ -64,6 +68,8 @@ describe("User Flow: Register → Login → Profile → Logout", () => {
   });
 
   it("4. updates profile", async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({ ...mockUser, email });
+    vi.mocked(prisma.user.update).mockResolvedValueOnce({ ...mockUser, email, name: "Updated Name" });
     vi.mocked(prisma.user.update).mockResolvedValueOnce({ ...mockUser, email, name: "Updated Name" });
     const res = await request(app)
       .patch("/api/users/me")

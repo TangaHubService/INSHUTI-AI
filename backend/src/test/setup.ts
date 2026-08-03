@@ -30,9 +30,10 @@ const allModels = [
   "adminUser", "crisisResource", "user", "healthcareProfessional",
   "governmentUser", "consultation", "appointment", "notification",
   "healthFacility", "appSettings", "contactInquiry", "auditLog", "fileAttachment",
+  "pushSubscription",
 ];
 
-const mockPrisma: any = Object.fromEntries(
+const mockPrisma: Record<string, unknown> = Object.fromEntries(
   allModels.map((model) => [model, mockQueryMethods()]),
 );
 mockPrisma.$connect = vi.fn();

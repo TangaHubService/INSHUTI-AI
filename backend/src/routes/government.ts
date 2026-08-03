@@ -3,6 +3,8 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireUser, type AuthenticatedUserRequest } from "../lib/userAuth.js";
 import { APPOINTMENT_STATUSES, FACILITY_TYPES, LANGUAGES, MESSAGE_ROLES } from "../lib/constants.js";
+import type { Prisma } from "@prisma/client";
+import { env } from "../lib/env.js";
 
 const router = Router();
 const [USER] = MESSAGE_ROLES;
@@ -14,6 +16,19 @@ router.get("/stats", requireUser, async (req: AuthenticatedUserRequest, res) => 
     return;
   }
 
+  const locationField = ({ PROVINCIAL: "province", DISTRICT: "district", SECTOR: "sector", CELL: "cell" } as const)[governmentUser.level as "PROVINCIAL" | "DISTRICT" | "SECTOR" | "CELL"];
+  const userWhere: Prisma.UserWhereInput | undefined = locationField && governmentUser.regionName
+    ? { [locationField]: { equals: governmentUser.regionName, mode: "insensitive" } }
+    : undefined;
+  const conversationWhere: Prisma.ConversationWhereInput = userWhere ? { user: { is: userWhere } } : {};
+  const consultationWhere: Prisma.ConsultationWhereInput = userWhere ? { user: { is: userWhere } } : {};
+  const appointmentWhere: Prisma.AppointmentWhereInput = userWhere ? { user: { is: userWhere } } : {};
+  const facilityWhere: Prisma.HealthFacilityWhereInput = governmentUser.level === "DISTRICT"
+    ? { district: governmentUser.regionName }
+    : governmentUser.level === "SECTOR"
+      ? { sector: governmentUser.regionName }
+      : {};
+
   const [
     totalConversations,
     languageCounts,
@@ -23,19 +38,20 @@ router.get("/stats", requireUser, async (req: AuthenticatedUserRequest, res) => 
     appointmentCounts,
     facilities,
   ] = await Promise.all([
-    prisma.conversation.count(),
-    Promise.all(LANGUAGES.map((language) => prisma.conversation.count({ where: { language } }))),
+    prisma.conversation.count({ where: conversationWhere }),
+    Promise.all(LANGUAGES.map((language) => prisma.conversation.count({ where: { ...conversationWhere, language } }))),
     prisma.message.findMany({
-      where: { role: USER, topicId: { not: null } },
+      where: { role: USER, topicId: { not: null }, conversation: { is: conversationWhere } },
       include: { topic: true },
     }),
-    prisma.consultation.groupBy({ by: ["status"], _count: { _all: true } }),
-    prisma.consultation.count({ where: { professionalId: { not: null } } }),
-    prisma.appointment.groupBy({ by: ["status"], _count: { _all: true } }),
-    prisma.healthFacility.findMany({ select: { district: true, type: true } }),
+    prisma.consultation.groupBy({ where: consultationWhere, by: ["status"], _count: { _all: true } }),
+    prisma.consultation.count({ where: { ...consultationWhere, professionalId: { not: null } } }),
+    prisma.appointment.groupBy({ where: appointmentWhere, by: ["status"], _count: { _all: true } }),
+    prisma.healthFacility.findMany({ where: facilityWhere, select: { district: true, type: true } }),
   ]);
 
-  const languageSplit = Object.fromEntries(LANGUAGES.map((language, i) => [language, languageCounts[i]]));
+  const suppress = (count: number) => count > 0 && count < env.GOV_AGGREGATE_MIN_COUNT ? 0 : count;
+  const languageSplit = Object.fromEntries(LANGUAGES.map((language, i) => [language, suppress(languageCounts[i])]));
 
   const topicEngagement = new Map<string, { topic: NonNullable<(typeof topicMessages)[number]["topic"]>; count: number }>();
   for (const message of topicMessages) {
@@ -50,13 +66,13 @@ router.get("/stats", requireUser, async (req: AuthenticatedUserRequest, res) => 
   const topicEngagementList = [...topicEngagement.values()]
     .sort((a, b) => b.count - a.count)
     .map(({ topic, count }) => ({
-      topic: { id: topic.id, slug: topic.slug, nameEn: topic.nameEn, nameRw: topic.nameRw, colorToken: topic.colorToken },
-      count,
+      topic: { id: topic.id, slug: topic.slug, nameEn: topic.nameEn, nameRw: topic.nameRw, nameFr: topic.nameFr, nameSw: topic.nameSw, colorToken: topic.colorToken },
+      count: suppress(count),
     }));
 
-  const consultationsByStatus = Object.fromEntries(consultationCounts.map((c) => [c.status, c._count._all]));
+  const consultationsByStatus = Object.fromEntries(consultationCounts.map((c) => [c.status, suppress(c._count._all)]));
   const appointmentsByStatus = Object.fromEntries(
-    APPOINTMENT_STATUSES.map((status) => [status, appointmentCounts.find((a) => a.status === status)?._count._all ?? 0]),
+    APPOINTMENT_STATUSES.map((status) => [status, suppress(appointmentCounts.find((a) => a.status === status)?._count._all ?? 0)]),
   );
 
   const facilitiesByDistrict: Record<string, number> = {};
@@ -67,12 +83,13 @@ router.get("/stats", requireUser, async (req: AuthenticatedUserRequest, res) => 
   }
 
   res.json({
-    scope: { level: governmentUser.level, regionName: governmentUser.regionName, coverage: "nationwide" },
-    totalConversations,
+    scope: { level: governmentUser.level, regionName: governmentUser.regionName, coverage: governmentUser.level === "NATIONAL" ? "nationwide" : governmentUser.regionName },
+    totalConversations: suppress(totalConversations),
     languageSplit,
     topicEngagement: topicEngagementList,
     consultationsByStatus,
-    referralCount,
+    referralCount: suppress(referralCount),
+    privacyThreshold: env.GOV_AGGREGATE_MIN_COUNT,
     appointmentsByStatus,
     facilitiesByDistrict,
     facilitiesByType,

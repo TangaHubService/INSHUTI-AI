@@ -5,6 +5,11 @@ import { env } from "./env.js";
 import { decodeNotificationPrefs } from "./notificationPrefs.js";
 import { sendSms } from "./sms.js";
 import type { NotificationType } from "./constants.js";
+import webpush from "web-push";
+
+if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(env.VAPID_SUBJECT, env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY);
+}
 
 interface EmailMessage {
   to: string;
@@ -79,9 +84,22 @@ export async function notifyUser(params: {
       console.error(`[notifications] sms send failed for user ${user.id}:`, err);
     }
   }
+
+  if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) {
+    const subscriptions = await prisma.pushSubscription.findMany({ where: { userId: user.id } });
+    await Promise.all(subscriptions.map(async (subscription) => {
+      try {
+        await webpush.sendNotification({ endpoint: subscription.endpoint, keys: { p256dh: subscription.p256dh, auth: subscription.auth } }, JSON.stringify({ title: params.title, body: params.body, url: "/notifications" }));
+      } catch (error) {
+        const statusCode = (error as { statusCode?: number }).statusCode;
+        if (statusCode === 404 || statusCode === 410) await prisma.pushSubscription.delete({ where: { id: subscription.id } });
+        else console.error(`[notifications] push failed for user ${user.id}:`, error);
+      }
+    }));
+  }
 }
 
-export async function queueAppointmentReminder(appointmentId: string): Promise<void> {
+export async function sendAppointmentReminder(appointmentId: string): Promise<void> {
   const appointment = await prisma.appointment.findUnique({
     where: { id: appointmentId },
     include: { professional: { include: { user: true } } },
@@ -94,4 +112,18 @@ export async function queueAppointmentReminder(appointmentId: string): Promise<v
     title: "Appointment reminder",
     body: `You have an appointment with ${appointment.professional.user.name} on ${appointment.requestedTime.toLocaleString()}.`,
   });
+  await prisma.appointment.update({ where: { id: appointment.id }, data: { reminderSentAt: new Date() } });
+}
+
+export async function processDueAppointmentReminders(now = new Date()): Promise<number> {
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      status: { in: ["CONFIRMED", "RESCHEDULED"] },
+      reminderSentAt: null,
+      requestedTime: { gt: now, lte: new Date(now.getTime() + 24 * 60 * 60 * 1000) },
+    },
+    select: { id: true },
+  });
+  await Promise.all(appointments.map((appointment) => sendAppointmentReminder(appointment.id)));
+  return appointments.length;
 }

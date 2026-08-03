@@ -98,8 +98,8 @@
         "body": "Hakuna majina, hakuna akaunti. Faragha yako inalindwa kwa muundo."
       },
       "bilingual": {
-        "title": "Lugha Mbili",
-        "body": "Msaada kamili kwa Kiingereza na Kinyarwanda."
+        "title": "Lugha nne",
+        "body": "Kiingereza, Kinyarwanda, Kifaransa na Kiswahili."
       },
       "evidenceBased": {
         "title": "Kulingana na Ushahidi",
@@ -118,7 +118,7 @@
   },
   "chat": {
     "greeting": "Muraho! Mimi ni Inshuti — unaweza kuniuliza chochote kuhusu mwili wako, mahusiano yako, au afya yako. Mazungumzo haya ni siri. Una nini akilini mwako leo?",
-    "inputPlaceholder": "Andika swali lako kwa Kiingereza au Kinyarwanda…",
+    "inputPlaceholder": "Andika swali lako kwa lugha unayopendelea…",
     "crisisBar": "Uko kwenye dharura au unahitaji msaada wa haraka? ",
     "crisisLink": "Bonyeza hapa kupata rasilimali za msaada wa haraka",
     "typing": "Inshuti anaandika…",

@@ -19,6 +19,8 @@ import {
   type NotificationChannel,
   type NotificationPrefs,
   type NotificationType,
+  getPushConfig,
+  savePushSubscription,
 } from "@/lib/userApiClient";
 
 const TYPE_LABEL: Record<Language, Record<NotificationType, string>> = {
@@ -186,6 +188,30 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
   const [saving, setSaving] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+
+  function applicationServerKey(value: string): ArrayBuffer {
+    const padded = `${value}${"=".repeat((4 - value.length % 4) % 4)}`.replace(/-/g, "+").replace(/_/g, "/");
+    const bytes = Uint8Array.from(atob(padded), (char) => char.charCodeAt(0));
+    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  }
+
+  async function enablePush() {
+    try {
+      const config = await getPushConfig();
+      if (!config.enabled || !config.publicKey) throw new Error("Push delivery has not been configured by an administrator.");
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") throw new Error("Notification permission was not granted.");
+      const registration = await navigator.serviceWorker.ready;
+      const existing = await registration.pushManager.getSubscription();
+      const subscription = existing ?? await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: applicationServerKey(config.publicKey) });
+      await savePushSubscription(subscription);
+      setPushEnabled(true);
+      toast("Push notifications enabled", "success");
+    } catch (error) {
+      toast(error instanceof Error ? error.message : "Could not enable push notifications", "error");
+    }
+  }
 
   async function loadAll() {
     const [list, prefsData] = await Promise.all([getNotifications(), getNotificationPrefs()]);
@@ -282,6 +308,9 @@ export default function NotificationsPage() {
                   <p className="mt-3 text-[12px] leading-[1.5] text-ink-soft">
                     {t.smsNote}
                   </p>
+                  <button type="button" onClick={() => void enablePush()} disabled={pushEnabled} className="mt-3 w-full rounded-full border border-teal-700 px-4 py-2 text-sm font-semibold text-teal-700 disabled:opacity-60">
+                    {pushEnabled ? "Push notifications enabled" : "Enable browser push notifications"}
+                  </button>
                 </>
               )}
             </div>

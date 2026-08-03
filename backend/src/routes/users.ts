@@ -8,15 +8,14 @@ import { requireUser, type AuthenticatedUserRequest } from "../lib/userAuth.js";
 import { notifyUser } from "../lib/notifications.js";
 import { decodeNotificationPrefs, encodeNotificationPrefs } from "../lib/notificationPrefs.js";
 import { env } from "../lib/env.js";
+import { writeAuditLog } from "../lib/auditLog.js";
 import {
-  USER_ROLES,
   userRoleSchema,
-  PROFESSIONAL_TYPES,
   professionalTypeSchema,
-  GOV_LEVELS,
   govLevelSchema,
   NOTIFICATION_TYPES,
   NOTIFICATION_CHANNELS,
+  type UserRole,
 } from "../lib/constants.js";
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
@@ -34,6 +33,10 @@ const registerSchema = z.object({
   name: z.string().min(1).max(100),
   role: userRoleSchema,
   preferredLanguage: z.enum(["EN", "RW", "FR", "SW"]).optional(),
+  province: z.string().trim().max(100).optional(),
+  district: z.string().trim().max(100).optional(),
+  sector: z.string().trim().max(100).optional(),
+  cell: z.string().trim().max(100).optional(),
   professionalType: professionalTypeSchema.optional(),
   specialization: z.string().optional(),
   govLevel: govLevelSchema.optional(),
@@ -47,7 +50,7 @@ router.post("/register", async (req, res) => {
     return;
   }
 
-  const { email, phone, password, name, role, preferredLanguage, professionalType, specialization, govLevel, regionName } = parsed.data;
+  const { email, phone, password, name, role, preferredLanguage, professionalType, specialization, govLevel, regionName, province, district, sector, cell } = parsed.data;
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -60,7 +63,7 @@ router.post("/register", async (req, res) => {
   const user = await prisma.user.create({
     data: {
       email, phone, passwordHash, name, role,
-      preferredLanguage: preferredLanguage ?? "EN",
+      preferredLanguage: preferredLanguage ?? "EN", province, district, sector, cell,
       ...(role === "HEALTHCARE_PROFESSIONAL" && professionalType
         ? { healthcareProfessional: { create: { professionalType, specialization: specialization ?? null, approvalStatus: "PENDING" } } }
         : {}),
@@ -70,7 +73,7 @@ router.post("/register", async (req, res) => {
     },
   });
 
-  setUserCookie(res, user.id, role as any);
+  setUserCookie(res, user.id, role);
 
   await notifyUser({
     userId: user.id,
@@ -80,7 +83,7 @@ router.post("/register", async (req, res) => {
   });
 
   res.status(201).json({
-    user: { id: user.id, email: user.email, name: user.name, role: user.role, preferredLanguage: user.preferredLanguage },
+    user: { id: user.id, email: user.email, phone: user.phone, name: user.name, role: user.role, preferredLanguage: user.preferredLanguage, province: user.province, district: user.district, sector: user.sector, cell: user.cell },
   });
 });
 
@@ -99,7 +102,15 @@ router.post("/login", async (req, res) => {
   const { email, password } = parsed.data;
 
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) {
+  const passwordHash = user?.passwordHash ?? "$2b$12$invalidsaltinvalidsaltinvalidsalOu6XW4Iu0ipTM6ke0Xz9O";
+  const valid = await verifyPassword(password, passwordHash);
+  if (!user || !valid) {
+    if (user) {
+      const maxAttempts = 5;
+      const newAttempts = user.loginAttempts + 1;
+      await prisma.user.update({ where: { id: user.id }, data: newAttempts >= maxAttempts ? { loginAttempts: newAttempts, lockedUntil: new Date(Date.now() + 15 * 60 * 1000) } : { loginAttempts: newAttempts } });
+    }
+    await writeAuditLog({ action: "USER_LOGIN_FAILED", entityType: "security", entityId: hashToken(email.toLowerCase()), details: { ip: req.ip } });
     res.status(401).json({ error: "Invalid email or password" });
     return;
   }
@@ -115,31 +126,15 @@ router.post("/login", async (req, res) => {
     return;
   }
 
-  const valid = await verifyPassword(password, user.passwordHash);
-  if (!valid) {
-    const maxAttempts = 5;
-    const newAttempts = user.loginAttempts + 1;
-    if (newAttempts >= maxAttempts) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { loginAttempts: newAttempts, lockedUntil: new Date(Date.now() + 15 * 60 * 1000) },
-      });
-      res.status(423).json({ error: "Account locked due to too many failed attempts. Try again in 15 minutes." });
-      return;
-    }
-    await prisma.user.update({ where: { id: user.id }, data: { loginAttempts: newAttempts } });
-    res.status(401).json({ error: "Invalid email or password" });
-    return;
-  }
-
   await prisma.user.update({
     where: { id: user.id },
     data: { loginAttempts: 0, lockedUntil: null, lastActivityAt: new Date() },
   });
 
-  setUserCookie(res, user.id, user.role as any);
+  setUserCookie(res, user.id, user.role as UserRole);
+  await writeAuditLog({ action: "USER_LOGIN_SUCCEEDED", entityType: "security", entityId: user.id, details: { ip: req.ip } });
   res.json({
-    user: { id: user.id, email: user.email, name: user.name, role: user.role, preferredLanguage: user.preferredLanguage },
+    user: { id: user.id, email: user.email, phone: user.phone, name: user.name, role: user.role, preferredLanguage: user.preferredLanguage, province: user.province, district: user.district, sector: user.sector, cell: user.cell },
   });
 });
 
@@ -175,6 +170,7 @@ router.get("/me", async (req, res) => {
     user: {
       id: user.id, email: user.email, phone: user.phone, name: user.name,
       role: user.role, preferredLanguage: user.preferredLanguage,
+      province: user.province, district: user.district, sector: user.sector, cell: user.cell,
       healthcareProfessional: user.healthcareProfessional ?? null,
       governmentUser: user.governmentUser ?? null,
     },
@@ -185,6 +181,10 @@ const updateProfileSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   phone: z.string().max(30).optional(),
   preferredLanguage: z.enum(["EN", "RW", "FR", "SW"]).optional(),
+  province: z.string().trim().max(100).nullable().optional(),
+  district: z.string().trim().max(100).nullable().optional(),
+  sector: z.string().trim().max(100).nullable().optional(),
+  cell: z.string().trim().max(100).nullable().optional(),
 });
 
 router.patch("/me", requireUser, async (req: AuthenticatedUserRequest, res) => {
@@ -200,6 +200,7 @@ router.patch("/me", requireUser, async (req: AuthenticatedUserRequest, res) => {
     user: {
       id: user.id, email: user.email, phone: user.phone, name: user.name,
       role: user.role, preferredLanguage: user.preferredLanguage,
+      province: user.province, district: user.district, sector: user.sector, cell: user.cell,
     },
   });
 });
@@ -305,6 +306,43 @@ router.put("/me/notification-prefs", requireUser, async (req: AuthenticatedUserR
 
   await prisma.user.update({ where: { id: user.id }, data: { notificationPrefs: encodeNotificationPrefs(merged) } });
   res.json({ prefs: merged });
+});
+
+router.delete("/me", requireUser, async (req: AuthenticatedUserRequest, res) => {
+  const parsed = z.object({ password: z.string().min(1) }).safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Password is required" });
+    return;
+  }
+  const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+  if (!user || !(await verifyPassword(parsed.data.password, user.passwordHash))) {
+    res.status(401).json({ error: "Incorrect password" });
+    return;
+  }
+  const unusablePasswordHash = await hashPassword(crypto.randomBytes(32).toString("hex"));
+  await prisma.$transaction([
+    prisma.notification.deleteMany({ where: { userId: user.id } }),
+    prisma.pushSubscription.deleteMany({ where: { userId: user.id } }),
+    prisma.user.update({
+      where: { id: user.id },
+      data: {
+        active: false,
+        email: `deactivated-${user.id}@deleted.invalid`,
+        passwordHash: unusablePasswordHash,
+        name: "Deactivated user",
+        phone: null,
+        province: null,
+        district: null,
+        sector: null,
+        cell: null,
+        notificationPrefs: "{}",
+        resetTokenHash: null,
+        resetTokenExpiresAt: null,
+      },
+    }),
+  ]);
+  clearUserCookie(res);
+  res.json({ deactivated: true });
 });
 
 export default router;

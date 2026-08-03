@@ -98,8 +98,8 @@
         "body": "Nta mazina, nta konti. Ubuzima bwawe bubitswe mu ibanga."
       },
       "bilingual": {
-        "title": "Indimi ebyiri",
-        "body": "Inkunga yuzuye mu Cyongereza n'Igikinyarwanda."
+        "title": "Indimi enye",
+        "body": "Icyongereza, Ikinyarwanda, Igifaransa n'Igiswahili."
       },
       "evidenceBased": {
         "title": "Ihingiye ku bimenyetso",
@@ -118,7 +118,7 @@
   },
   "chat": {
     "greeting": "Muraho! Ndi Inshuti — unshobora kubaza ikintu cyose ku mubiri wawe, imibanire yawe, cyangwa ubuzima bwawe. Iki kiganiro ni ibanga. Ni iki uri gutekereza kuri cyo uyu munsi?",
-    "inputPlaceholder": "Andika ikibazo cyawe mu Cyongereza cyangwa Ikinyarwanda…",
+    "inputPlaceholder": "Andika ikibazo cyawe mu rurimi wifuza…",
     "crisisBar": "Uri mu kaga cyangwa ukeneye ubufasha vuba? ",
     "crisisLink": "Kanda hano ubone ubufasha",
     "typing": "Inshuti irandika…",

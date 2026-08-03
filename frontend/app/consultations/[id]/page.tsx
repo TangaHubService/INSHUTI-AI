@@ -43,11 +43,14 @@ export default function ConsultationThreadPage() {
   const [otherOnline, setOtherOnline] = useState(false);
   const [otherName, setOtherName] = useState("");
   const [typing, setTyping] = useState(false);
+  const [recording, setRecording] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -143,8 +146,7 @@ export default function ConsultationThreadPage() {
     }
   }, [messages, user?.role, consultationId]);
 
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  async function uploadFile(file: File) {
     if (!file) return;
     setUploading(true);
     try {
@@ -156,8 +158,53 @@ export default function ConsultationThreadPage() {
       toast(err instanceof Error ? err.message : "Failed to upload file", "error");
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
+  }
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) await uploadFile(file);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function toggleRecording() {
+    if (recorderRef.current?.state === "recording") {
+      recorderRef.current.stop();
+      setRecording(false);
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (event) => { if (event.data.size) audioChunksRef.current.push(event.data); };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || "audio/webm" });
+        void uploadFile(new File([blob], `voice-${Date.now()}.webm`, { type: blob.type }));
+      };
+      recorder.start();
+      recorderRef.current = recorder;
+      setRecording(true);
+    } catch {
+      toast("Microphone access is unavailable.", "error");
+    }
+  }
+
+  function startDictation() {
+    const SpeechRecognitionCtor = (window as unknown as { SpeechRecognition?: new () => {
+      lang: string; start(): void; onresult: (event: { results: ArrayLike<{ 0: { transcript: string } }> }) => void;
+      onerror: () => void;
+    }; webkitSpeechRecognition?: new () => {
+      lang: string; start(): void; onresult: (event: { results: ArrayLike<{ 0: { transcript: string } }> }) => void;
+      onerror: () => void;
+    } }).SpeechRecognition ?? (window as unknown as { webkitSpeechRecognition?: new () => { lang: string; start(): void; onresult: (event: { results: ArrayLike<{ 0: { transcript: string } }> }) => void; onerror: () => void } }).webkitSpeechRecognition;
+    if (!SpeechRecognitionCtor) { toast("Voice-to-text is not supported by this browser.", "error"); return; }
+    const recognition = new SpeechRecognitionCtor();
+    recognition.lang = user?.preferredLanguage === "FR" ? "fr-FR" : user?.preferredLanguage === "SW" ? "sw-KE" : user?.preferredLanguage === "RW" ? "rw-RW" : "en-US";
+    recognition.onresult = (event) => setInput((current) => `${current}${current ? " " : ""}${event.results[0][0].transcript}`);
+    recognition.onerror = () => toast("Voice-to-text could not understand that. Please try again.", "error");
+    recognition.start();
   }
 
   function formatFileSize(bytes: number): string {
@@ -255,11 +302,11 @@ export default function ConsultationThreadPage() {
             <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-ink-soft">Attachments</div>
             <div className="flex flex-wrap gap-2">
               {files.map((file) => (
-                <div key={file.id} className="flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-[12px]">
+                <a href={`${API_URL}/api/uploads/${file.id}`} target="_blank" rel="noreferrer" key={file.id} className="flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-[12px]">
                   <svg width="12" height="12" className="text-ink-soft"><use href="#i-file" /></svg>
                   <span className="font-medium text-teal-900">{file.originalName}</span>
                   <span className="text-ink-soft">({formatFileSize(file.size)})</span>
-                </div>
+                </a>
               ))}
             </div>
           </div>
@@ -311,7 +358,7 @@ export default function ConsultationThreadPage() {
       </main>
 
       <form className="flex items-end gap-2 border-t border-line bg-white px-4 pb-2 pt-3" onSubmit={handleSend}>
-        <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => void handleFileUpload(e)} />
+        <input ref={fileInputRef} type="file" accept="image/*,audio/*,application/pdf" className="hidden" onChange={(e) => void handleFileUpload(e)} />
         <button
           type="button"
           disabled={uploading}
@@ -320,6 +367,10 @@ export default function ConsultationThreadPage() {
         >
           <svg width="18" height="18" className="text-ink-soft"><use href={uploading ? "#i-spinner" : "#i-attach"} /></svg>
         </button>
+        <button type="button" onClick={() => void toggleRecording()} className={`h-10 rounded-full px-3 text-xs font-bold ${recording ? "bg-red-100 text-red-700" : "bg-teal-100 text-teal-700"}`} aria-label={recording ? "Stop voice message" : "Record voice message"}>
+          {recording ? "Stop" : "Voice"}
+        </button>
+        <button type="button" onClick={startDictation} className="h-10 rounded-full bg-paper-2 px-3 text-xs font-bold text-teal-700" aria-label="Dictate message">Dictate</button>
         <textarea
           ref={textareaRef}
           rows={1}

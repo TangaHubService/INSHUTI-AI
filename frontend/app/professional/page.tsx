@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { PageLoading, FullPageLoading } from "@/components/Spinner";
 import { useRequireUser } from "@/lib/useUserAuth";
+import { useLanguage } from "@/lib/LanguageContext";
+import { PORTAL_COPY } from "@/lib/portalCopy";
 import {
   getProfessionalCalendar,
   getProfessionalConsultations,
@@ -18,6 +20,8 @@ function formatDateTime(iso: string): string {
 }
 
 export default function ProfessionalPortalPage() {
+  const { language } = useLanguage();
+  const t = PORTAL_COPY[language];
   const { user, loading: authLoading } = useRequireUser();
   const [consultations, setConsultations] = useState<ProfessionalConsultation[]>([]);
   const [appointments, setAppointments] = useState<ProfessionalAppointment[]>([]);
@@ -50,15 +54,14 @@ export default function ProfessionalPortalPage() {
       <div className="mx-auto max-w-[1160px]">
         <section className="pb-3">
           <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
-            Healthcare Professional Portal
+            {t.professionalPortal}
           </span>
           <h1 className="mt-3 font-display text-[34px] text-teal-900">
-            Welcome, {user.name.split(" ")[0]}
+            {t.welcome}, {user.name.split(" ")[0]}
           </h1>
           {user.healthcareProfessional?.approvalStatus !== "APPROVED" && user.role === "HEALTHCARE_PROFESSIONAL" && (
             <p className="mt-3 max-w-[560px] rounded-md border border-gold bg-gold-100 px-4 py-3 text-[13.5px] text-[#8A5E1E]">
-              Your professional account is still <strong>{user?.healthcareProfessional?.approvalStatus ?? "pending"}</strong> review by an
-              administrator. You won&apos;t receive consultations or appointments until it&apos;s approved.
+              {t.approval} <strong>({user?.healthcareProfessional?.approvalStatus ?? "pending"})</strong>
             </p>
           )}
         </section>
@@ -68,33 +71,33 @@ export default function ProfessionalPortalPage() {
         ) : (
           <section className="grid grid-cols-1 gap-4 pb-16 sm:grid-cols-2 lg:grid-cols-4">
             <div className="card p-5">
-              <div className="text-[12.5px] font-semibold text-ink-soft">Waiting on you</div>
+              <div className="text-[12.5px] font-semibold text-ink-soft">{t.waiting}</div>
               <div className="mt-2 font-display text-[30px] text-teal-900">{pendingCount}</div>
               <Link href="/consultations" className="mt-2 inline-block text-[12.5px] font-semibold text-teal-700">
-                Open queue →
+                {t.open} →
               </Link>
             </div>
             <div className="card p-5">
-              <div className="text-[12.5px] font-semibold text-ink-soft">Resolved consultations</div>
+              <div className="text-[12.5px] font-semibold text-ink-soft">{t.resolved}</div>
               <div className="mt-2 font-display text-[30px] text-teal-900">{resolvedCount}</div>
             </div>
             <div className="card p-5">
-              <div className="text-[12.5px] font-semibold text-ink-soft">Upcoming appointments</div>
+              <div className="text-[12.5px] font-semibold text-ink-soft">{t.upcoming}</div>
               <div className="mt-2 font-display text-[30px] text-teal-900">{upcomingAppointments.length}</div>
               <Link href="/appointments" className="mt-2 inline-block text-[12.5px] font-semibold text-teal-700">
-                Open calendar →
+                {t.open} →
               </Link>
             </div>
             <div className="card p-5">
-              <div className="text-[12.5px] font-semibold text-ink-soft">Completed appointments</div>
+              <div className="text-[12.5px] font-semibold text-ink-soft">{t.completed}</div>
               <div className="mt-2 font-display text-[30px] text-teal-900">{completedAppointments}</div>
             </div>
 
             <div className="sm:col-span-2 lg:col-span-4">
               <div className="card py-1.5">
-                <div className="px-5 pb-1.5 pt-[14px] text-base text-teal-900">Next up</div>
+                <div className="px-5 pb-1.5 pt-[14px] text-base text-teal-900">{t.next}</div>
                 {upcomingAppointments.length === 0 && (
-                  <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">Nothing scheduled yet.</p>
+                  <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">{t.none}</p>
                 )}
                 {upcomingAppointments.map((appt) => (
                   <div key={appt.id} className="flex items-center justify-between border-b border-line px-5 py-3 last:border-b-0">

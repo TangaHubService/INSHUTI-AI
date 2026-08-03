@@ -5,6 +5,7 @@ import { IconSprite } from "@/components/IconSprite";
 import { ToastProvider } from "@/lib/useToast";
 import { LanguageProvider } from "@/lib/LanguageContext";
 import { ThemeProvider } from "@/lib/theme/ThemeProvider";
+import { PwaRegistration } from "@/components/PwaRegistration";
 
 const balooDisplay = Baloo_2({
   subsets: ["latin"],
@@ -29,11 +30,12 @@ export const metadata: Metadata = {
     default: "Inshuti \u2014 Your Health Companion",
     template: "%s \u2014 Inshuti",
   },
-  description: "A warm, non-judgmental AI health assistant for young people in Rwanda. Free, anonymous, and bilingual.",
+  description: "A warm, non-judgmental AI health assistant for young people in Rwanda. Free, private, and available in four languages.",
+  manifest: "/manifest.webmanifest",
   keywords: ["health", "Rwanda", "sexual health", "reproductive health", "AI assistant", "teen health", "anonymous"],
   openGraph: {
     title: "Inshuti \u2014 Your Health Companion",
-    description: "A warm, non-judgmental AI health assistant for young people in Rwanda. Free, anonymous, and bilingual.",
+    description: "A warm, non-judgmental AI health assistant for young people in Rwanda. Free, private, and available in four languages.",
     type: "website",
     locale: "en_RW",
   },
@@ -53,6 +55,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${balooDisplay.variable} ${interBody.variable} ${plexMono.variable}`} suppressHydrationWarning>
       <body>
+        <PwaRegistration />
         <IconSprite />
         <ThemeProvider>
           <LanguageProvider>

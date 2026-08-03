@@ -18,7 +18,7 @@ const COPY: Record<Language, Copy> = {
     eyebrow: "Our Services", title: "What We Offer",
     lead: "Inshuti provides a range of free, confidential services designed to help young people in Rwanda get the health information and support they need.",
     services: [
-      { icon: "i-chat", title: "AI Health Chat", body: "Get instant answers to your health questions through our anonymous AI chat assistant. Available 24/7 in English and Kinyarwanda.", href: "/chat", cta: "Start chatting" },
+      { icon: "i-chat", title: "AI Health Chat", body: "Get instant answers through our anonymous AI chat assistant in English, Kinyarwanda, French, or Kiswahili.", href: "/chat", cta: "Start chatting" },
       { icon: "i-clock", title: "My Space", body: "Your personal history of past conversations, topic exploration, and personalized suggestions — all private to your device.", href: "/my-space", cta: "Visit My Space" },
       { icon: "i-stethoscope", title: "Health Consultations", body: "When you need more than AI, request a follow-up conversation with a real health worker who can provide personalized support.", href: "/consultations", cta: "View consultations" },
       { icon: "i-calendar", title: "Appointment Booking", body: "Book time with a Community Health Worker, nurse, midwife, psychologist, or doctor at a time that works for you.", href: "/appointments", cta: "Book an appointment" },

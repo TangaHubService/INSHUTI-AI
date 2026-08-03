@@ -38,7 +38,7 @@ export function FollowUpCTA({ language, requestingHelp, onRequest }: FollowUpCTA
         className="rounded-full bg-teal-700 px-4 py-1.5 text-[12px] font-semibold text-white shadow-sm transition hover:bg-teal-900 disabled:opacity-50"
       >
         {requestingHelp
-          ? "Requesting\u2026"
+          ? language === "RW" ? "Birimo…" : language === "FR" ? "En cours…" : language === "SW" ? "Inaomba…" : "Requesting…"
           : language === "RW"
             ? "Kanda"
             : language === "FR"

@@ -37,10 +37,10 @@ export interface ChatResponse {
   canRequestHumanFollowUp?: boolean;
 }
 
-export async function sendChatMessage(message: string, language: Language): Promise<ChatResponse> {
+export async function sendChatMessage(message: string, language: Language, anonymousMode = true): Promise<ChatResponse> {
   const res = await apiFetch("/api/chat", {
     method: "POST",
-    body: JSON.stringify({ message, language }),
+    body: JSON.stringify({ message, language, anonymousMode }),
   });
   if (!res.ok) {
     throw new Error(`Chat request failed (${res.status})`);

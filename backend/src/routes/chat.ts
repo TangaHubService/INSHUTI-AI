@@ -10,6 +10,7 @@ import { prisma } from "../lib/prisma.js";
 import { getQuickReplies } from "../lib/quickReplies.js";
 import { retrieveArticles, scoreToConfidence } from "../lib/retrieval.js";
 import { getOrCreateSessionId } from "../lib/session.js";
+import { getUserFromRequest } from "../lib/userAuth.js";
 
 const router = Router();
 
@@ -19,20 +20,21 @@ const [CRISIS_LANGUAGE, LOW_CONFIDENCE] = FLAG_REASONS;
 const chatRequestSchema = z.object({
   message: z.string().trim().min(1).max(2000),
   language: languageSchema.optional(),
+  anonymousMode: z.boolean().default(true),
 });
 
 const OPEN_CONVERSATION_WINDOW_MS = 30 * 60 * 1000;
 
-async function getOrCreateConversation(sessionId: string, language: Language) {
+async function getOrCreateConversation(sessionId: string, language: Language, userId: string | null) {
   const latest = await prisma.conversation.findFirst({
-    where: { sessionId },
+    where: { sessionId, userId },
     orderBy: { createdAt: "desc" },
   });
   const isRecent = latest && Date.now() - latest.createdAt.getTime() < OPEN_CONVERSATION_WINDOW_MS;
   if (latest && isRecent) {
     return latest;
   }
-  return prisma.conversation.create({ data: { sessionId, language } });
+  return prisma.conversation.create({ data: { sessionId, language, userId } });
 }
 
 router.get("/conversations/:id", async (req, res) => {
@@ -84,7 +86,7 @@ router.post("/", async (req, res) => {
     res.status(400).json({ error: "Invalid request", details: z.flattenError(parsed.error) });
     return;
   }
-  const { message } = parsed.data;
+  const { message, anonymousMode } = parsed.data;
 
   const sessionId = getOrCreateSessionId(req, res);
   const settings = await prisma.appSettings.findUnique({ where: { id: "singleton" } });
@@ -94,7 +96,8 @@ router.post("/", async (req, res) => {
     ? detectLanguage(message, requestedLanguage)
     : requestedLanguage;
 
-  const conversation = await getOrCreateConversation(sessionId, language);
+  const signedInUser = getUserFromRequest(req);
+  const conversation = await getOrCreateConversation(sessionId, language, anonymousMode ? null : signedInUser?.userId ?? null);
 
   const previousMessages = await prisma.message.findMany({
     where: { conversationId: conversation.id, consultationId: null },

@@ -40,6 +40,12 @@ const envSchema = z.object({
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
   TWILIO_FROM: z.string().optional(),
+
+  VAPID_PUBLIC_KEY: z.string().default(""),
+  VAPID_PRIVATE_KEY: z.string().default(""),
+  VAPID_SUBJECT: z.string().default("mailto:admin@inshuti.rw"),
+  ANONYMOUS_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
+  GOV_AGGREGATE_MIN_COUNT: z.coerce.number().int().min(2).default(5),
 });
 
 const parsed = envSchema.safeParse(process.env);

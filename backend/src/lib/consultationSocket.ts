@@ -1,21 +1,12 @@
-import crypto from "node:crypto";
 import { type Server as SocketIOServer } from "socket.io";
 
 import { prisma } from "./prisma.js";
 import { deserializeToken } from "./userAuth.js";
-import { env } from "./env.js";
+import { encryptMessage } from "./messageCrypto.js";
 
-const ENCRYPTION_KEY = env.MESSAGE_ENCRYPTION_KEY;
 const TOKEN_COOKIE = "inshuti_user_token";
 
 const onlineUsers = new Set<string>();
-
-function encrypt(text: string): string {
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv("aes-256-cbc", crypto.createHash("sha256").update(ENCRYPTION_KEY).digest(), iv);
-  const encrypted = Buffer.concat([cipher.update(text, "utf8"), cipher.final()]);
-  return iv.toString("hex") + ":" + encrypted.toString("hex");
-}
 
 function parseCookies(cookieHeader: string | undefined): Record<string, string> {
   const cookies: Record<string, string> = {};
@@ -108,7 +99,7 @@ export function setupConsultationSocket(io: SocketIOServer): void {
     socket.on("message:send", async (content: string) => {
       if (typeof content !== "string" || content.trim().length === 0) return;
 
-      const encryptedContent = encrypt(content);
+      const encryptedContent = encryptMessage(content);
 
       const message = await prisma.message.create({
         data: {

@@ -1,6 +1,7 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { type ErrorRequestHandler } from "express";
+import helmet from "helmet";
 
 import { env } from "./lib/env.js";
 import { rateLimiter } from "./lib/rateLimiter.js";
@@ -26,6 +27,7 @@ import reportsRouter from "./routes/reports.js";
 import auditLogsRouter from "./routes/auditLogs.js";
 import contactRouter from "./routes/contact.js";
 import publicKbRouter from "./routes/publicKb.js";
+import searchRouter from "./routes/search.js";
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   incrementErrorCounter();
@@ -35,6 +37,12 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 
 export function createApp() {
   const app = express();
+  app.disable("x-powered-by");
+  app.use(helmet({
+    contentSecurityPolicy: false,
+    strictTransportSecurity: env.NODE_ENV === "production" ? undefined : false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }));
 
   const allowedOrigins = [
     env.NEXT_PUBLIC_APP_URL,
@@ -94,6 +102,7 @@ export function createApp() {
   app.use("/api/audit-logs", auditLogsRouter);
   app.use("/api/contact", contactRouter);
   app.use("/api/library", publicKbRouter);
+  app.use("/api/search", searchRouter);
 
   // Versioned /api/v1/* routes
   app.use("/api/v1/health", healthRouter);
@@ -119,6 +128,7 @@ export function createApp() {
   app.use("/api/v1/audit-logs", auditLogsRouter);
   app.use("/api/v1/contact", contactRouter);
   app.use("/api/v1/library", publicKbRouter);
+  app.use("/api/v1/search", searchRouter);
 
   app.use(errorHandler);
 

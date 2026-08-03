@@ -170,6 +170,8 @@ function ChatPageInner() {
         topic[`starter${language.charAt(0)}${language.slice(1).toLowerCase()}` as keyof typeof topic] as string,
       );
     }, 0);
+    // send is defined in the component so it can use the current conversation state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, language, router]);
 
   async function loadConversation(convId: string) {
@@ -227,6 +229,17 @@ function ChatPageInner() {
 
   async function handleRequestFollowUp() {
     if (!conversationId || requestingHelp) return;
+    if (!user || anonymousMode) {
+      toast(
+        language === "RW" ? "Injira kugira ngo umukozi w'ubuzima abashe kugusubiza mu ibanga." :
+          language === "FR" ? "Connectez-vous pour qu'un professionnel puisse vous répondre en privé." :
+            language === "SW" ? "Ingia ili mhudumu wa afya aweze kukujibu kwa faragha." :
+              "Sign in so a health worker can reply to you privately.",
+        "info",
+      );
+      router.push("/login?returnTo=/chat");
+      return;
+    }
     setRequestingHelp(true);
     try {
       await requestConsultation(conversationId);
@@ -253,7 +266,7 @@ function ChatPageInner() {
 
     try {
       setAiStatus("generating");
-      const response = await sendChatMessage(trimmed, language);
+      const response = await sendChatMessage(trimmed, language, anonymousMode);
       setMessages((prev) => [...prev, { role: "bot", content: response.reply, time: nowLabel() }]);
       setSources(response.sources);
       setQuickReplies(response.quickReplies);
@@ -448,7 +461,7 @@ function ChatPageInner() {
                 </AnimatePresence>
 
                 {/* Follow-up CTA */}
-                {canRequestFollowUp && user && !anonymousMode && conversationId && (
+                {canRequestFollowUp && conversationId && (
                   <FollowUpCTA
                     language={language}
                     requestingHelp={requestingHelp}

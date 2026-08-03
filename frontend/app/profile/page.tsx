@@ -9,7 +9,8 @@ import { useLanguage } from "@/lib/LanguageContext";
 import { useRequireUser } from "@/lib/useUserAuth";
 import { FullPageLoading } from "@/components/Spinner";
 import type { Language } from "@/lib/apiClient";
-import { updateProfile } from "@/lib/userApiClient";
+import { deactivateMyAccount, updateProfile } from "@/lib/userApiClient";
+import { useRouter } from "next/navigation";
 import { isValidPhone } from "@/lib/validation";
 import { VALIDATION } from "@/lib/validationMessages";
 
@@ -49,6 +50,13 @@ const LANGUAGE_OPTION_LABEL: Record<Language, string> = {
   SW: "Kiswahili",
 };
 
+const LOCATION_LABEL: Record<Language, { province: string; district: string; sector: string; cell: string; note: string }> = {
+  EN: { province: "Province", district: "District", sector: "Sector", cell: "Cell", note: "Optional. Used only for anonymous regional statistics and finding nearby care." },
+  RW: { province: "Intara", district: "Akarere", sector: "Umurenge", cell: "Akagari", note: "Si ngombwa. Bikoreshwa gusa mu mibare rusange no kubona ubuvuzi hafi." },
+  FR: { province: "Province", district: "District", sector: "Secteur", cell: "Cellule", note: "Facultatif. Utilisé uniquement pour les statistiques régionales agrégées et les soins à proximité." },
+  SW: { province: "Mkoa", district: "Wilaya", sector: "Sekta", cell: "Kijiji", note: "Si lazima. Hutumiwa tu kwa takwimu za jumla na kupata huduma zilizo karibu." },
+};
+
 const COPY: Record<Language, {
   eyebrow: string;
   title: string;
@@ -69,6 +77,9 @@ const COPY: Record<Language, {
   notifications: string;
   notificationsDesc: string;
   notificationPreferences: string;
+  deactivate: string;
+  deactivatePrompt: string;
+  deactivateConfirm: string;
 }> = {
   EN: {
     eyebrow: "Profile",
@@ -91,6 +102,9 @@ const COPY: Record<Language, {
     notifications: "Notifications",
     notificationsDesc: "Manage which channels you're notified on.",
     notificationPreferences: "Notification preferences →",
+    deactivate: "Deactivate and anonymize my account",
+    deactivatePrompt: "Enter your password to continue",
+    deactivateConfirm: "Deactivate this account? You will be signed out.",
   },
   RW: {
     eyebrow: "Umwirondoro",
@@ -113,6 +127,9 @@ const COPY: Record<Language, {
     notifications: "Amamenyesha",
     notificationsDesc: "Cunga inzira wifuza kumenyeshwaho.",
     notificationPreferences: "Uburyo bw'amamenyesha →",
+    deactivate: "Funga kandi uhindure konti yanjye itazwi",
+    deactivatePrompt: "Andika ijambo ry'ibanga kugira ngo ukomeze",
+    deactivateConfirm: "Urashaka gufunga iyi konti? Urahita usohoka.",
   },
   FR: {
     eyebrow: "Profil",
@@ -135,6 +152,9 @@ const COPY: Record<Language, {
     notifications: "Notifications",
     notificationsDesc: "Gérez les canaux sur lesquels vous êtes notifié·e.",
     notificationPreferences: "Préférences de notification →",
+    deactivate: "Désactiver et anonymiser mon compte",
+    deactivatePrompt: "Saisissez votre mot de passe pour continuer",
+    deactivateConfirm: "Désactiver ce compte ? Vous serez déconnecté·e.",
   },
   SW: {
     eyebrow: "Wasifu",
@@ -157,10 +177,14 @@ const COPY: Record<Language, {
     notifications: "Arifa",
     notificationsDesc: "Dhibiti njia unazopenda kufahamishwa.",
     notificationPreferences: "Mapendeleo ya arifa →",
+    deactivate: "Zima na uondoe utambulisho wa akaunti yangu",
+    deactivatePrompt: "Weka nenosiri lako ili kuendelea",
+    deactivateConfirm: "Zima akaunti hii? Utaondolewa kwenye mfumo.",
   },
 };
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { toast } = useToast();
   const { language, setLanguage } = useLanguage();
   const { user, loading: authLoading } = useRequireUser();
@@ -170,6 +194,7 @@ export default function ProfilePage() {
   const [preferredLanguage, setPreferredLanguage] = useState<Language>("EN");
   const [saving, setSaving] = useState(false);
   const [anonymousMode, setAnonymousMode] = useState(true);
+  const [location, setLocation] = useState({ province: "", district: "", sector: "", cell: "" });
   const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
   const v = VALIDATION[language];
 
@@ -182,6 +207,7 @@ export default function ProfilePage() {
       setName(user.name);
       setPhone(user.phone ?? "");
       setPreferredLanguage((user.preferredLanguage as Language) ?? "EN");
+      setLocation({ province: user.province ?? "", district: user.district ?? "", sector: user.sector ?? "", cell: user.cell ?? "" });
     }
   }, [user]);
 
@@ -207,13 +233,25 @@ export default function ProfilePage() {
     }
     setSaving(true);
     try {
-      await updateProfile({ name: name.trim(), phone: phone.trim() || undefined, preferredLanguage });
+      await updateProfile({ name: name.trim(), phone: phone.trim() || undefined, preferredLanguage, ...Object.fromEntries(Object.entries(location).map(([key, value]) => [key, value.trim() || null])) });
       setLanguage(preferredLanguage);
       toast(t.saved, "success");
     } catch (err) {
       toast(err instanceof Error ? err.message : t.saveFailed, "error");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDeactivate() {
+    if (!window.confirm(t.deactivateConfirm)) return;
+    const password = window.prompt(t.deactivatePrompt);
+    if (!password) return;
+    try {
+      await deactivateMyAccount(password);
+      router.replace("/");
+    } catch (error) {
+      toast(error instanceof Error ? error.message : t.saveFailed, "error");
     }
   }
 
@@ -265,6 +303,16 @@ export default function ProfilePage() {
                 ))}
               </select>
 
+              <p className="mb-3 text-xs text-ink-soft">{LOCATION_LABEL[language].note}</p>
+              <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {(Object.keys(location) as Array<keyof typeof location>).map((field) => (
+                  <label key={field} className="text-[12.5px] font-bold text-ink-soft">
+                    {LOCATION_LABEL[language][field]}
+                    <input value={location[field]} onChange={(event) => setLocation((current) => ({ ...current, [field]: event.target.value }))} className="mt-1 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm font-normal" />
+                  </label>
+                ))}
+              </div>
+
               <button
                 type="submit"
                 disabled={saving}
@@ -300,6 +348,11 @@ export default function ProfilePage() {
                 <Link href="/notifications" className="text-[13px] font-semibold text-teal-700">
                   {t.notificationPreferences}
                 </Link>
+              </div>
+              <div className="card border border-red-200 p-6">
+                <button type="button" onClick={() => void handleDeactivate()} className="text-[13px] font-semibold text-red-700">
+                  {t.deactivate}
+                </button>
               </div>
             </div>
           </section>

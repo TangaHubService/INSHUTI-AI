@@ -10,10 +10,14 @@ import {
   getCrisisResources,
   getHistory,
   getConversationMessages,
+  getPublicLibraryArticles,
+  getSuggestions,
   type ChatSource,
   type CrisisResource,
   type Language,
   type ConversationSummary,
+  type PublicLibraryArticle,
+  type Suggestion,
 } from "@/lib/apiClient";
 import { useToast } from "@/lib/useToast";
 import { getCurrentUser, requestConsultation, type UserProfile } from "@/lib/userApiClient";
@@ -26,6 +30,8 @@ import { ChatMessage } from "@/components/chat/ChatMessage";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import { CrisisBar } from "@/components/chat/CrisisBar";
 import { FollowUpCTA } from "@/components/chat/FollowUpCTA";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const ANONYMOUS_MODE_KEY = "inshuti_anonymous_mode";
 
@@ -110,7 +116,7 @@ export default function ChatPage() {
 function ChatPageInner() {
   const { toast } = useToast();
   const router = useRouter();
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const searchParams = useSearchParams();
 
   const [messages, setMessages] = useState<DisplayMessage[]>([
@@ -121,6 +127,8 @@ function ChatPageInner() {
   const [sources, setSources] = useState<ChatSource[]>([]);
   const [showSources, setShowSources] = useState(false);
   const [quickReplies, setQuickReplies] = useState<string[]>([]);
+  const [contextArticles, setContextArticles] = useState<PublicLibraryArticle[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [canRequestFollowUp, setCanRequestFollowUp] = useState(false);
@@ -134,7 +142,6 @@ function ChatPageInner() {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [aiStatus, setAiStatus] = useState<"idle" | "thinking" | "generating" | "finished">("idle");
   const [convSearch, setConvSearch] = useState("");
-  const [darkMode, setDarkMode] = useState(false);
   const mainRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const topicDeepLinkHandled = useRef(false);
@@ -148,14 +155,6 @@ function ChatPageInner() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, sending, scrollToBottom]);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [darkMode]);
 
   useEffect(() => {
     void getCurrentUser().then((loadedUser) => {
@@ -358,6 +357,12 @@ function ChatPageInner() {
     ? language === "RW" ? activeTopic.nameRw : activeTopic.nameEn
     : language === "RW" ? "Ubuzima rusange" : language === "FR" ? "Santé générale" : language === "SW" ? "Afya ya jumla" : "General health";
 
+  useEffect(() => {
+    void getSuggestions(language).then(setSuggestions).catch(() => setSuggestions([]));
+    if (!activeTopic?.id) { setContextArticles([]); return; }
+    void getPublicLibraryArticles(language, activeTopic.id).then(setContextArticles).catch(() => setContextArticles([]));
+  }, [activeTopic?.id, language]);
+
   return (
     <div className="flex h-screen flex-row bg-[#FBFAF7] dark:bg-[#212121]">
       {/* Mobile sidebar overlay */}
@@ -392,7 +397,16 @@ function ChatPageInner() {
         />
       </div>
 
-      <div className="flex min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex h-[68px] shrink-0 items-center justify-end gap-3 border-b border-line bg-white px-7 dark:border-[#333] dark:bg-[#1A1A1A]">
+        <LanguageSwitcher value={language} onChange={setLanguage} />
+        {user && <NotificationBell />}
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-800">{user?.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase() ?? "IU"}</div>
+          <div className="hidden min-w-[110px] sm:block"><div className="text-xs font-semibold text-ink">{user?.name ?? "Inshuti User"}</div><div className="mt-1 text-[9px] uppercase text-ink-soft">{user?.role.replaceAll("_", " ") ?? "Guest"}</div></div>
+        </div>
+      </div>
+      <div className="flex min-h-0 flex-1">
       {/* Main area */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Conversation header */}
@@ -401,13 +415,12 @@ function ChatPageInner() {
             <button
               type="button"
               onClick={goBack}
-              className="flex h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#555] transition hover:bg-[#F0F0F0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 dark:text-[#D0D0D0] dark:hover:bg-[#333]"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-[#334B47] transition hover:bg-[#F0F0F0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 dark:border-[#444] dark:bg-[#242424] dark:text-[#D0D0D0] dark:hover:bg-[#333]"
               aria-label={BACK_LABEL[language]}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="m15 18-6-6 6-6" />
               </svg>
-              <span className="hidden sm:inline">{BACK_LABEL[language]}</span>
             </button>
             <button
               type="button"
@@ -425,32 +438,15 @@ function ChatPageInner() {
             </div>
           </div>
           <div className="flex items-center gap-2 justify-self-end">
-            <button type="button" onClick={startNewChat} className="hidden items-center gap-2 rounded-xl border border-teal-600 px-3.5 py-2 text-[11px] font-semibold text-teal-700 transition hover:bg-teal-100 sm:flex"><svg width="13" height="13"><use href="#i-plus" /></svg>New conversation</button>
+            <button type="button" onClick={startNewChat} className="hidden items-center gap-2 rounded-xl border border-teal-600 px-4 py-2.5 text-[11px] font-semibold text-teal-700 transition hover:bg-teal-100 sm:flex">New conversation <span className="text-base">↻</span></button>
             <button
               type="button"
-              onClick={() => setDarkMode((d) => !d)}
               className="flex h-9 w-9 items-center justify-center rounded-lg text-[#666] hover:bg-[#F0F0F0] dark:text-[#A0A0A0] dark:hover:bg-[#333]"
-              aria-label={darkMode ? "Use light theme" : "Use dark theme"}
+              aria-label="More conversation options"
             >
-            {darkMode ? (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                <circle cx="12" cy="12" r="4.5" />
-                <path d="M12 3v1M12 20v1M3 12h1M20 12h1M5.6 5.6l.7.7M17.7 17.7l.7.7M5.6 18.4l.7-.7M17.7 6.3l.7-.7" />
-              </svg>
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
-              </svg>
-            )}
+              <span className="text-xl leading-none">⋮</span>
             </button>
           </div>
-        </div>
-
-        <div className="mx-4 mt-4 flex min-h-14 shrink-0 items-center gap-3 rounded-2xl border border-line bg-white px-4 shadow-sm dark:border-[#333] dark:bg-[#1F1F1F] sm:mx-6">
-          <span className="text-[11px] text-ink-soft">Current topic</span>
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-coral-100 text-coral"><svg width="15" height="15"><use href={`#${activeTopic?.icon ?? "i-sparkles"}`} /></svg></span>
-          <strong className="text-xs text-ink dark:text-[#ECECF1]">{activeTopicName}</strong>
-          <Link href="/library" className="ml-auto text-[10.5px] font-semibold text-teal-700">Explore</Link>
         </div>
 
         {/* Crisis bar */}
@@ -491,7 +487,7 @@ function ChatPageInner() {
                       language={language}
                       sources={sources}
                       showSources={showSources}
-                      quickReplies={quickReplies}
+                      quickReplies={[]}
                       sending={sending}
                       onSend={(t) => void send(t)}
                       onRegenerate={retryLast}
@@ -499,13 +495,14 @@ function ChatPageInner() {
                       onSuggestedAction={handleSuggestedAction}
                       onToggleSources={() => setShowSources((s) => !s)}
                       onShare={handleShare}
+                      userInitials={user?.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase() ?? "U"}
                     />
                   ))}
                 </AnimatePresence>
 
                 {/* Typing indicator */}
                 <AnimatePresence>
-                  {sending && <TypingIndicator status={aiStatus === "thinking" ? "thinking" : "generating"} />}
+                  {sending && <TypingIndicator status={aiStatus === "thinking" ? "thinking" : "generating"} language={language} />}
                 </AnimatePresence>
 
                 {/* Follow-up CTA */}
@@ -547,25 +544,28 @@ function ChatPageInner() {
             onSubmit={handleSend}
             sending={sending}
           />
+          {quickReplies.length > 0 && <div className="mx-auto mt-2 flex w-full max-w-[860px] flex-wrap gap-2 px-4 sm:px-6">{quickReplies.slice(0, 3).map((reply) => <button key={reply} type="button" onClick={() => void send(reply)} className="rounded-lg border border-teal-600 bg-white px-4 py-2 text-[11px] font-medium text-teal-700 hover:bg-teal-100">{reply}</button>)}</div>}
+          <p className="mx-auto mt-3 w-full max-w-[860px] px-4 text-[9.5px] text-ink-soft sm:px-6">🔒 Inshuti can make mistakes. Talk to a health professional for medical advice.</p>
         </div>
       </div>
-      <aside className="hidden w-[310px] shrink-0 overflow-y-auto border-l border-line bg-white p-4 2xl:block dark:border-[#333] dark:bg-[#1A1A1A]">
+      <aside className="hidden w-[353px] shrink-0 overflow-y-auto border-l border-line bg-white p-6 2xl:block dark:border-[#333] dark:bg-[#1A1A1A]">
         <div className="space-y-4">
           <section className="rounded-2xl border border-line p-5 shadow-sm dark:border-[#333]">
-            <div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-coral-100 text-coral"><svg width="18" height="18"><use href={`#${activeTopic?.icon ?? "i-sparkles"}`} /></svg></span><h2 className="text-sm font-bold">About this topic</h2></div>
+            <div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-coral-100 text-coral"><svg width="18" height="18"><use href={`#${activeTopic?.icon ?? "i-sparkle"}`} /></svg></span><h2 className="text-sm font-bold">About this topic</h2></div>
             <h3 className="mt-5 text-base font-bold">{activeTopicName}</h3>
-            <p className="mt-2 text-[11.5px] leading-5 text-ink-soft">Explore reviewed, youth-friendly information and ask questions in your own words.</p>
+            <p className="mt-2 line-clamp-3 text-[11.5px] leading-5 text-ink-soft">{contextArticles[0]?.body ?? "Reviewed health information related to your current conversation will appear here."}</p>
             <Link href="/library" className="mt-4 inline-flex items-center gap-2 text-[11px] font-semibold text-teal-700">Explore articles <span>→</span></Link>
           </section>
           <section className="rounded-2xl border border-line p-5 shadow-sm dark:border-[#333]">
             <h2 className="text-sm font-bold">Related articles</h2>
-            <div className="mt-3 divide-y divide-line">{sources.length ? sources.slice(0, 3).map((source) => <div key={source.id} className="flex items-center gap-3 py-3"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-coral-100 text-coral"><svg width="14" height="14"><use href="#i-book" /></svg></span><span className="line-clamp-2 flex-1 text-[11px] font-medium">{language === "RW" ? source.titleRw : source.titleEn}</span></div>) : <p className="py-4 text-[11px] leading-5 text-ink-soft">Relevant reviewed articles will appear here after you ask a question.</p>}</div>
+            <div className="mt-3 divide-y divide-line">{sources.length ? sources.slice(0, 3).map((source) => <Link href={source.externalUrl || `/library/${source.id}`} key={source.id} className="flex items-center gap-3 py-3"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-coral-100 text-coral"><svg width="14" height="14"><use href="#i-book" /></svg></span><span className="line-clamp-2 flex-1 text-[11px] font-medium">{language === "RW" ? source.titleRw : source.titleEn}</span><span>›</span></Link>) : contextArticles.length ? contextArticles.slice(0, 3).map((article) => <Link href={`/library/${article.id}`} key={article.id} className="flex items-center gap-3 py-3"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-coral-100 text-coral"><svg width="14" height="14"><use href="#i-book" /></svg></span><span className="line-clamp-2 flex-1 text-[11px] font-medium">{article.title}</span><span>›</span></Link>) : <p className="py-4 text-[11px] leading-5 text-ink-soft">Relevant reviewed articles will appear here after you ask a question.</p>}</div>
             <Link href="/library" className="mt-2 block text-[11px] font-semibold text-teal-700">View all articles</Link>
           </section>
-          <section className="rounded-2xl border border-line p-5 shadow-sm dark:border-[#333]"><h2 className="flex items-center gap-2 text-sm font-bold"><span className="text-gold">☼</span> Quick tips</h2><ul className="mt-4 space-y-3 text-[11px] text-ink-soft"><li>✓ Ask one question at a time</li><li>✓ Never share passwords or private identifiers</li><li>✓ Talk to a professional when worried</li><li>✓ Use crisis support for urgent help</li></ul></section>
+          <section className="rounded-2xl border border-line p-5 shadow-sm dark:border-[#333]"><h2 className="flex items-center gap-2 text-sm font-bold"><span className="text-gold">☼</span> Quick tips</h2>{suggestions.length ? <div className="mt-3 divide-y divide-line">{suggestions.slice(0, 4).map((suggestion) => <button type="button" key={suggestion.title} onClick={() => void send(suggestion.title)} className="block w-full py-3 text-left"><span className="block text-[11px] font-medium">{suggestion.title}</span><span className="mt-1 line-clamp-1 block text-[9px] text-ink-soft">{suggestion.body}</span></button>)}</div> : <p className="mt-4 text-[11px] leading-5 text-ink-soft">Suggestions will appear when reviewed content is available.</p>}</section>
           <section className="rounded-2xl border border-[#CDE5DF] bg-[#F0F9F7] p-5 dark:bg-[#17302D]"><h2 className="text-sm font-bold">Need to talk to someone?</h2><p className="mt-2 text-[11px] leading-5 text-ink-soft">Chat with a professional or find a health centre near you.</p><Link href="/facility-locator" className="mt-4 block rounded-xl bg-teal-700 px-4 py-3 text-center text-[11px] font-semibold text-white">Find care</Link></section>
         </div>
       </aside>
+      </div>
       </div>
     </div>
   );

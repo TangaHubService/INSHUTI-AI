@@ -44,6 +44,7 @@ function userNavItems(role: UserRole, nav: (typeof NAV)["EN"]): { href: string; 
         { href: "/notifications", label: nav.notifications, icon: "i-bell" },
         { href: "/profile", label: nav.profile, icon: "i-user-check" },
         { href: "/settings", label: "Settings", icon: "i-gear" },
+        { href: "/help-resources", label: "Help & Resources", icon: "i-file" },
       ];
     case "HEALTHCARE_PROFESSIONAL":
       return [
@@ -53,6 +54,7 @@ function userNavItems(role: UserRole, nav: (typeof NAV)["EN"]): { href: string; 
         { href: "/notifications", label: nav.notifications, icon: "i-bell" },
         { href: "/profile", label: nav.profile, icon: "i-user-check" },
         { href: "/settings", label: "Settings", icon: "i-gear" },
+        { href: "/help-resources", label: "Help & Resources", icon: "i-file" },
       ];
     case "GOVERNMENT_USER":
       return [
@@ -60,6 +62,7 @@ function userNavItems(role: UserRole, nav: (typeof NAV)["EN"]): { href: string; 
         { href: "/notifications", label: nav.notifications, icon: "i-bell" },
         { href: "/profile", label: nav.profile, icon: "i-user-check" },
         { href: "/settings", label: "Settings", icon: "i-gear" },
+        { href: "/help-resources", label: "Help & Resources", icon: "i-file" },
       ];
     default:
       return [
@@ -72,6 +75,7 @@ function userNavItems(role: UserRole, nav: (typeof NAV)["EN"]): { href: string; 
         { href: "/notifications", label: nav.notifications, icon: "i-bell" },
         { href: "/profile", label: nav.profile, icon: "i-user-check" },
         { href: "/settings", label: "Settings", icon: "i-gear" },
+        { href: "/help-resources", label: "Help & Resources", icon: "i-file" },
       ];
   }
 }

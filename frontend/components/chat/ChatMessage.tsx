@@ -8,6 +8,7 @@ import { MessageActions } from "./MessageActions";
 import { CodeBlock } from "./CodeBlock";
 import { SuggestedActions } from "./SuggestedActions";
 import { SourceCard } from "./SourceCard";
+import { Logo } from "@/components/Logo";
 
 interface DisplayMessage {
   role: "user" | "bot";
@@ -31,6 +32,7 @@ interface ChatMessageProps {
   onSuggestedAction: (key: string) => void;
   onToggleSources: () => void;
   onShare: () => void;
+  userInitials: string;
 }
 
 export function ChatMessage({
@@ -48,6 +50,7 @@ export function ChatMessage({
   onSuggestedAction,
   onToggleSources,
   onShare,
+  userInitials,
 }: ChatMessageProps) {
   const isUser = message.role === "user";
 
@@ -64,15 +67,12 @@ export function ChatMessage({
         {isUser ? (
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-100 ring-2 ring-white">
             <span className="text-sm font-bold text-teal-700">
-              {message.content.charAt(0).toUpperCase() || "U"}
+              {userInitials}
             </span>
           </div>
         ) : (
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-900 shadow-sm ring-2 ring-white">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-              <rect x="4" y="7" width="16" height="12" rx="4" />
-              <path d="M12 3v4M8 13h.01M16 13h.01" strokeLinecap="round" />
-            </svg>
+            <Logo size={25} />
           </div>
         )}
 
@@ -86,6 +86,7 @@ export function ChatMessage({
                 : "rounded-2xl rounded-tl-[5px] border border-line bg-white px-4 py-3.5 text-[#263B38] dark:border-[#3C3C3C] dark:bg-[#1F1F1F] dark:text-[#ECECF1]"
             }`}
           >
+            <span className="mb-1.5 block text-[10px] text-ink-soft">{message.time}</span>
             {isUser ? (
               <p className="whitespace-pre-wrap">{message.content}</p>
             ) : (
@@ -119,7 +120,6 @@ export function ChatMessage({
 
           {/* Footer row */}
           <div className={`mt-1.5 flex items-center gap-1 ${isUser ? "justify-end" : ""}`}>
-            <span className="px-1 text-[11px] text-[#B0B0B0]">{message.time}</span>
             {!isUser && (
               <div className="opacity-0 transition group-hover:opacity-100 flex items-center gap-0.5">
                 <MessageActions

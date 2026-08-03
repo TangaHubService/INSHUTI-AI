@@ -1,314 +1,95 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import {
-  clearHistory,
-  getHistory,
-  getSuggestions,
-  type ConversationSummary,
-  type Suggestion,
-  type TopicCount,
-} from "@/lib/apiClient";
-import { useToast } from "@/lib/useToast";
-import { ConfirmModal } from "@/components/Modal";
-import { SiteHeader } from "@/components/SiteHeader";
 import { AppShell } from "@/components/AppShell";
-import { PageLoading } from "@/components/Spinner";
-import { getCurrentUser, type UserProfile } from "@/lib/userApiClient";
+import { ConfirmModal } from "@/components/Modal";
+import { FullPageLoading } from "@/components/Spinner";
+import { clearHistory, getHistory, getSuggestions, type ConversationSummary, type Suggestion, type TopicCount } from "@/lib/apiClient";
 import { useLanguage } from "@/lib/LanguageContext";
-import { NAV } from "@/lib/i18nCommon";
+import { getCurrentUser, getMyAppointments, type Appointment, type UserProfile } from "@/lib/userApiClient";
+import { useToast } from "@/lib/useToast";
 
-const COLOR_TOKENS: Record<string, { bg: string; fg: string; pillBg: string; pillFg: string }> = {
-  coral: { bg: "bg-coral-100", fg: "text-coral-dark", pillBg: "bg-coral-100", pillFg: "text-coral-dark" },
-  gold: { bg: "bg-gold-100", fg: "text-[#8A5E1E]", pillBg: "bg-gold-100", pillFg: "text-[#8A5E1E]" },
-  teal: { bg: "bg-teal-100", fg: "text-teal-700", pillBg: "bg-teal-100", pillFg: "text-teal-700" },
-};
+const COLORS = ["#F05278", "#F5A623", "#16A06B", "#4188E8", "#8653DF", "#20A49B"];
 
-function colorFor(token: string | undefined) {
-  return COLOR_TOKENS[token ?? "teal"] ?? COLOR_TOKENS.teal;
+function relativeTime(value: string) {
+  const date = new Date(value);
+  const days = Math.floor((Date.now() - date.getTime()) / 86400000);
+  if (days <= 0) return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  if (days === 1) return "Yesterday";
+  return `${days} days ago`;
 }
 
-function relativeTime(iso: string): string {
-  const date = new Date(iso);
-  const diffMs = Date.now() - date.getTime();
-  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-  if (diffDays <= 0) {
-    return `Today, ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-  }
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays} days ago`;
-  const weeks = Math.floor(diffDays / 7);
-  return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
+function consecutiveDays(conversations: ConversationSummary[]) {
+  const days = new Set(conversations.map((item) => new Date(item.createdAt).toISOString().slice(0, 10)));
+  let streak = 0;
+  const cursor = new Date();
+  while (days.has(cursor.toISOString().slice(0, 10))) { streak += 1; cursor.setDate(cursor.getDate() - 1); }
+  return streak;
+}
+
+function StatCard({ icon, color, value, title, note }: { icon: string; color: string; value: string | number; title: string; note: string }) {
+  return <div className="flex min-h-[104px] items-center gap-4 rounded-2xl border border-line bg-white px-5 shadow-sm"><span className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: `${color}16`, color }}><svg width="23" height="23"><use href={`#${icon}`} /></svg></span><div><strong className="block text-[22px] leading-none text-ink">{value}</strong><span className="mt-2 block text-xs text-ink-soft">{title}</span><span className="mt-1 block text-[10px] font-medium" style={{ color }}>{note}</span></div></div>;
 }
 
 export default function MySpacePage() {
-  const { toast } = useToast();
   const { language } = useLanguage();
-  const nav = NAV[language];
+  const { toast } = useToast();
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [topicCounts, setTopicCounts] = useState<TopicCount[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
-  const [clearing, setClearing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [showClear, setShowClear] = useState(false);
 
-  useEffect(() => {
-    void getCurrentUser().then(setUser);
-  }, []);
-
-  async function loadAll() {
+  async function load() {
     setLoading(true);
     try {
-      const [history, suggestionList] = await Promise.all([getHistory(), getSuggestions(language)]);
-      setConversations(history.conversations);
-      setTopicCounts(history.topicCounts);
-      setSuggestions(suggestionList);
-      setError(null);
-    } catch {
-      setError(
-        language === "RW"
-          ? "Ntibyashobotse gukura amateka yawe. Ongera ugerageze."
-          : language === "FR"
-            ? "Impossible de charger votre historique. Veuillez réessayer."
-            : language === "SW"
-              ? "Haikuweza kupakia historia yako. Tafadhali jaribu tena."
-              : "Couldn't load your history right now. Please try again.",
-      );
-    } finally {
-      setLoading(false);
-    }
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+      const [history, suggested, booked] = await Promise.all([getHistory(), getSuggestions(language), currentUser ? getMyAppointments() : Promise.resolve([])]);
+      setConversations(history.conversations); setTopicCounts(history.topicCounts); setSuggestions(suggested); setAppointments(booked);
+    } catch { toast("Could not load My Space", "error"); }
+    finally { setLoading(false); }
   }
 
-  useEffect(() => {
-    void loadAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language]);
+  // Reload localized suggestions when the selected language changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { void load(); }, [language]);
 
-  async function handleClearHistory() {
-    setShowClearConfirm(false);
-    setClearing(true);
-    try {
-      await clearHistory();
-      await loadAll();
-      toast(language === "RW" ? "Amateka yawe yasibwe" : language === "FR" ? "Historique effacé" : language === "SW" ? "Historia imefutwa" : "History cleared", "success");
-    } catch {
-      toast(
-        language === "RW"
-          ? "Ntibyashobotse gusiba amateka yawe. Ongera ugerageze."
-          : language === "FR"
-            ? "Impossible d'effacer votre historique. Veuillez réessayer."
-            : language === "SW"
-              ? "Haikuweza kufuta historia yako. Tafadhali jaribu tena."
-              : "Couldn't clear your history right now. Please try again.",
-        "error",
-      );
-    } finally {
-      setClearing(false);
-    }
-  }
+  const upcoming = useMemo(() => appointments.filter((item) => !["CANCELLED", "COMPLETED"].includes(item.status) && new Date(item.requestedTime) >= new Date()).sort((a, b) => +new Date(a.requestedTime) - +new Date(b.requestedTime)), [appointments]);
+  const totalTopics = topicCounts.reduce((sum, item) => sum + item.count, 0);
+  const streak = consecutiveDays(conversations);
+  const chart = Array.from({ length: 7 }, (_, index) => { const date = new Date(); date.setDate(date.getDate() - (6 - index)); const key = date.toISOString().slice(0, 10); return { label: date.toLocaleDateString([], { weekday: "short" }), value: conversations.filter((item) => item.createdAt.slice(0, 10) === key).length }; });
+  const maxChart = Math.max(1, ...chart.map((item) => item.value));
+  const achievements = [
+    { title: "Curious Learner", detail: `Asked ${conversations.length} questions`, unlocked: conversations.length >= 5, color: "#14936B" },
+    { title: "Health Explorer", detail: `Explored ${topicCounts.length} topics`, unlocked: topicCounts.length >= 3, color: "#8653DF" },
+    { title: "Consistency Star", detail: `${streak} active days in a row`, unlocked: streak >= 3, color: "#F5A623" },
+  ];
 
-  const sections = (
-    <>
-        <section className="pb-3 pt-12">
-          <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
-            Private · Only on this device
-          </span>
-          <h1 className="mt-3 font-display text-[34px] text-teal-900">Your questions, your progress.</h1>
-          <p className="mt-[10px] max-w-[520px] text-[14.5px] leading-[1.6] text-ink-soft">
-            This is where your past conversations live, along with a few things Inshuti noticed
-            that might help you next. Nothing here is linked to your name — it&apos;s tied only to
-            this device.
-          </p>
-        </section>
+  if (loading || !user) return <FullPageLoading />;
 
-        {error && (
-          <div className="mb-4 rounded-md border border-danger bg-coral-100 px-4 py-3 text-[13.5px] font-semibold text-coral-dark">
-            {error}
-          </div>
-        )}
+  return <AppShell active="/my-space" session={{ kind: "user", user }}><div className="mx-auto max-w-[1220px] pb-10">
+    <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start"><header><h1 className="text-[30px] font-bold">My Space</h1><p className="mt-1 text-sm text-ink-soft">Your personal health journey at a glance.</p></header><section className="flex min-h-[132px] w-full items-center rounded-2xl border border-[#CDE5DF] bg-[linear-gradient(105deg,#F1FAF7,#E8F6F5)] px-7 lg:max-w-[480px]"><span className="mr-5 flex h-20 w-20 items-center justify-center rounded-full bg-coral-100 text-4xl">👋🏾</span><div><h2 className="text-base font-bold">You&apos;re doing great, {user.name.split(" ")[0]}!</h2><p className="mt-2 text-xs text-ink-soft">Small steps today, better tomorrow.</p><Link href="/chat" className="mt-3 inline-flex rounded-lg bg-teal-700 px-5 py-2 text-[11px] font-semibold text-white">Keep going</Link></div></section></div>
 
-        <section className="pb-16 pt-5">
-          <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1.2fr_1fr]">
-            <div className="card py-1.5">
-              <div className="flex items-center justify-between px-5 pb-1.5 pt-[14px]">
-                <h3 className="text-base text-teal-900">Recent conversations</h3>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-line px-[14px] py-1.5 text-[13px] font-semibold text-ink-soft">
-                  Last 30 days
-                </span>
-              </div>
+    <section className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><StatCard icon="i-chat" color="#16A06B" value={conversations.length} title="Conversations" note={conversations.length ? "Keep exploring" : "Start your first chat"} /><StatCard icon="i-calendar" color="#8653DF" value={upcoming.length} title="Appointments" note="Upcoming" /><StatCard icon="i-shield" color="#F5A623" value={`${streak}d`} title="Activity streak" note={streak ? "Keep it up!" : "Begin today"} /><StatCard icon="i-sparkle" color="#4188E8" value={totalTopics} title="Topics explored" note={`${topicCounts.length} categories`} /></section>
 
-              {loading && <PageLoading />}
+    <section className="mt-5 grid gap-4 xl:grid-cols-[1.05fr_1.05fr_1fr]">
+      <div className="rounded-2xl border border-line bg-white p-5 shadow-sm"><h2 className="text-sm font-bold">My Learning Journey</h2><p className="mt-2 text-[10px] text-ink-soft">Topics you&apos;ve explored</p>{topicCounts.length ? <div className="mt-6 flex items-center gap-6"><div className="relative flex h-36 w-36 shrink-0 items-center justify-center rounded-full" style={{ background: `conic-gradient(${topicCounts.map((item, index) => `${COLORS[index % COLORS.length]} ${topicCounts.slice(0, index).reduce((sum, entry) => sum + entry.count, 0) / totalTopics * 100}% ${(topicCounts.slice(0, index + 1).reduce((sum, entry) => sum + entry.count, 0) / totalTopics) * 100}%`).join(",")})` }}><div className="flex h-[92px] w-[92px] flex-col items-center justify-center rounded-full bg-white"><strong className="text-2xl">{totalTopics}</strong><span className="text-[10px] text-ink-soft">Explored</span></div></div><div className="min-w-0 flex-1 space-y-3">{topicCounts.slice(0, 6).map(({ topic, count }, index) => topic && <div key={topic.id} className="flex items-center gap-2 text-[10px]"><span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS[index % COLORS.length] }} /><span className="truncate">{language === "RW" ? topic.nameRw : topic.nameEn}</span><strong className="ml-auto">{count}</strong></div>)}</div></div> : <p className="mt-8 text-xs text-ink-soft">Your learning journey will appear after your first conversation.</p>}<Link href="/library" className="mt-6 inline-flex text-[11px] font-semibold text-teal-700">Explore more topics →</Link></div>
+      <div className="rounded-2xl border border-line bg-white p-5 shadow-sm"><h2 className="text-sm font-bold">My Progress</h2><p className="mt-2 text-[10px] text-ink-soft">Your conversation activity over the last 7 days</p><div className="mt-8 flex h-44 items-end gap-3 border-b border-line px-2">{chart.map((item) => <div key={item.label} className="flex h-full flex-1 flex-col items-center justify-end"><span className="mb-1 text-[9px] font-semibold text-teal-700">{item.value || ""}</span><div className="w-full max-w-8 rounded-t-lg bg-[linear-gradient(#25A678,#BCE7D8)] transition-all" style={{ height: `${Math.max(4, item.value / maxChart * 80)}%` }} /><span className="mt-2 text-[9px] text-ink-soft">{item.label}</span></div>)}</div></div>
+      <div className="rounded-2xl border border-line bg-white p-5 shadow-sm"><div className="flex justify-between"><h2 className="text-sm font-bold">My Achievements</h2><span className="text-[10px] text-teal-700">Based on your activity</span></div><div className="mt-3 divide-y divide-line">{achievements.map((item) => <div key={item.title} className={`flex items-center gap-3 py-4 ${item.unlocked ? "" : "opacity-45"}`}><span className="flex h-10 w-10 items-center justify-center rounded-xl text-white" style={{ background: item.color }}><svg width="18" height="18"><use href="#i-check" /></svg></span><div><strong className="text-xs">{item.title}</strong><p className="mt-1 text-[10px] text-ink-soft">{item.detail}</p></div><span className="ml-auto text-success">{item.unlocked ? "●" : "○"}</span></div>)}</div></div>
+    </section>
 
-              {!loading && conversations.length === 0 && (
-                <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">
-                  No conversations yet.{" "}
-                  <Link href="/chat" className="font-semibold text-teal-700">
-                    Start one now
-                  </Link>
-                  .
-                </p>
-              )}
+    <section className="mt-4 grid gap-4 xl:grid-cols-[1.05fr_1.05fr_1fr]">
+      <div className="rounded-2xl border border-line bg-white p-5 shadow-sm"><div className="flex justify-between"><h2 className="text-sm font-bold">Recent Conversations</h2><Link href="/chat" className="text-[10px] text-teal-700">View all</Link></div><div className="mt-3 divide-y divide-line">{conversations.slice(0, 4).map((item) => <Link href={`/chat?conversation=${item.id}`} key={item.id} className="flex items-center gap-3 py-3"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-coral-100 text-coral"><svg width="15" height="15"><use href={`#${item.topic?.icon ?? "i-chat"}`} /></svg></span><div className="min-w-0 flex-1"><p className="truncate text-[11px] font-medium">{item.firstUserMessage ?? "Conversation"}</p><p className="mt-1 text-[9px] text-ink-soft">{item.topic ? (language === "RW" ? item.topic.nameRw : item.topic.nameEn) : "General"} · {relativeTime(item.createdAt)}</p></div><span>›</span></Link>)}{!conversations.length && <p className="py-8 text-center text-xs text-ink-soft">No conversations yet.</p>}</div></div>
+      <div className="rounded-2xl border border-line bg-white p-5 shadow-sm"><div className="flex justify-between"><h2 className="text-sm font-bold">Upcoming Appointments</h2><Link href="/appointments" className="text-[10px] text-teal-700">View all</Link></div><div className="mt-3 divide-y divide-line">{upcoming.slice(0, 3).map((item) => { const date = new Date(item.requestedTime); return <div key={item.id} className="flex items-center gap-3 py-3"><div className="rounded-lg border border-[#B6DCCF] bg-[#EFF9F6] px-2 py-1 text-center"><span className="block text-[8px] uppercase text-teal-700">{date.toLocaleDateString([], { month: "short" })}</span><strong className="text-base">{date.getDate()}</strong></div><div className="min-w-0"><p className="truncate text-[11px] font-medium">{item.professional.name}</p><p className="mt-1 text-[9px] text-ink-soft">{date.toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })}</p></div><span className="ml-auto rounded-full bg-teal-100 px-2 py-1 text-[8px] text-success">{item.status}</span></div>; })}{!upcoming.length && <p className="py-8 text-center text-xs text-ink-soft">No upcoming appointments.</p>}</div></div>
+      <div className="rounded-2xl border border-line bg-white p-5 shadow-sm"><div className="flex justify-between"><h2 className="text-sm font-bold">Suggested for You</h2><Link href="/library" className="text-[10px] text-teal-700">View all</Link></div><div className="mt-3 divide-y divide-line">{suggestions.slice(0, 3).map((item) => <Link href="/chat" key={item.title} className="block py-3"><span className="text-[9px] font-semibold text-coral-dark">{item.tag}</span><p className="mt-1 text-[11px] font-medium">{item.title}</p><p className="mt-1 line-clamp-1 text-[9px] text-ink-soft">{item.body}</p></Link>)}</div><button onClick={() => setShowClear(true)} className="mt-4 text-[10px] font-semibold text-coral-dark">Clear conversation history</button></div>
+    </section>
 
-              {conversations.map((conversation) => {
-                const color = colorFor(conversation.topic?.colorToken);
-                return (
-                  <Link
-                    href="/chat"
-                    className="flex items-center gap-[14px] border-b border-line px-[18px] py-4 last:border-b-0 hover:bg-paper-2"
-                    key={conversation.id}
-                  >
-                    <div className={`flex h-[38px] w-[38px] items-center justify-center rounded-2xl ${color.bg} ${color.fg}`}>
-                      <svg width="18" height="18">
-                        <use href={`#${conversation.topic?.icon ?? "i-chat"}`} />
-                      </svg>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-semibold text-ink">
-                        &quot;{conversation.firstUserMessage ?? "…"}&quot;
-                      </div>
-                      <div className="mt-[3px] text-xs text-ink-soft">
-                        {conversation.topic
-                          ? language === "RW"
-                            ? conversation.topic.nameRw
-                            : conversation.topic.nameEn
-                          : "General"}{" "}
-                        · {relativeTime(conversation.createdAt)}
-                      </div>
-                    </div>
-                    <svg width="16" height="16" className="text-ink-soft">
-                      <use href="#i-arrow" />
-                    </svg>
-                  </Link>
-                );
-              })}
-
-              {topicCounts.length > 0 && (
-                <div className="px-5 pb-1 pt-4">
-                  <div className="pb-[10px] font-mono text-[11px] uppercase tracking-[0.08em] text-ink-soft">
-                    Topics you&apos;ve explored
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {topicCounts.map(({ topic, count }) =>
-                      topic ? (
-                        <span
-                          className={`inline-flex items-center gap-1.5 rounded-full px-[14px] py-1.5 text-[13px] font-semibold ${colorFor(topic.colorToken).pillBg} ${colorFor(topic.colorToken).pillFg}`}
-                          key={topic.id}
-                        >
-                          {language === "RW" ? topic.nameRw : topic.nameEn} · {count}
-                        </span>
-                      ) : null,
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-[14px]">
-              <div className="px-1 font-mono text-[11px] uppercase tracking-[0.08em] text-ink-soft">
-                Suggested for you
-              </div>
-
-              {suggestions.map((suggestion) => (
-                <div
-                  className="card p-5 flex flex-col gap-[10px]"
-                  key={suggestion.title}
-                >
-                  <span className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-coral-dark">
-                    <svg width="13" height="13">
-                      <use href="#i-sparkle" />
-                    </svg>
-                    {suggestion.tag}
-                  </span>
-                  <h3 className="text-[15.5px] text-teal-900">{suggestion.title}</h3>
-                  <p className="text-[13px] leading-[1.55] text-ink-soft">{suggestion.body}</p>
-                  <Link href="/chat" className="mt-auto flex items-center gap-[5px] text-[12.5px] font-bold text-teal-700">
-                    {suggestion.ctaText}
-                    <svg width="12" height="12">
-                      <use href="#i-arrow" />
-                    </svg>
-                  </Link>
-                </div>
-              ))}
-
-              <div className="flex items-start gap-[14px] card p-5">
-                <div className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-xl bg-teal-100 text-teal-700">
-                  <svg width="18" height="18">
-                    <use href="#i-lock" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="mb-1 text-[13.5px] font-bold text-teal-900">
-                    This history is private to your device
-                  </div>
-                  <p className="text-[12.5px] leading-[1.55] text-ink-soft">
-                    It&apos;s never linked to your name or shared with anyone. You can clear it at
-                    any time.
-                  </p>
-                  <button
-                    className="mt-3 inline-flex items-center justify-center gap-2 rounded-full border-[1.5px] border-coral-dark px-4 py-[9px] text-[13px] font-semibold text-coral-dark transition hover:-translate-y-px hover:bg-teal-100 disabled:opacity-50"
-                    onClick={() => setShowClearConfirm(true)}
-                    disabled={clearing}
-                  >
-                    <svg width="13" height="13">
-                      <use href="#i-trash" />
-                    </svg>
-                    {clearing ? "Clearing…" : "Clear my history"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <ConfirmModal
-          open={showClearConfirm}
-          title={language === "RW" ? "Gusiba amateka" : language === "FR" ? "Effacer l'historique" : language === "SW" ? "Futa historia" : "Clear history"}
-          message={language === "RW" ? "Wemeza ko ushaka gusiba amateka yawe yose?" : language === "FR" ? "Êtes-vous sûr de vouloir effacer tout votre historique ?" : language === "SW" ? "Una uhakika unataka kufuta historia yako yote?" : "Are you sure you want to clear all your history?"}
-          confirmLabel={language === "RW" ? "Siba" : language === "FR" ? "Effacer" : language === "SW" ? "Futa" : "Clear"}
-          cancelLabel={language === "RW" ? "Rekura" : language === "FR" ? "Annuler" : language === "SW" ? "Ghairi" : "Cancel"}
-          variant="danger"
-          onConfirm={() => void handleClearHistory()}
-          onCancel={() => setShowClearConfirm(false)}
-        />
-    </>
-  );
-
-  if (user) {
-    return (
-      <AppShell active="/my-space" session={{ kind: "user", user }}>
-        <div className="mx-auto max-w-[1160px]">{sections}</div>
-      </AppShell>
-    );
-  }
-
-  return (
-    <div className="bg-paper">
-      <SiteHeader
-        activeHref="/my-space"
-        navItems={[
-          { href: "/chat", label: nav.chat },
-          { href: "/my-space", label: nav.mySpace },
-          { href: "/appointments", label: nav.appointments },
-          { href: "/consultations", label: nav.consultations },
-          { href: "/facility-locator", label: nav.findCare },
-          { href: "/profile", label: nav.profile },
-        ]}
-        extraActions={
-          <Link
-            href="/chat"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark"
-          >
-            {nav.startChatting}
-          </Link>
-        }
-      />
-      <div className="mx-auto max-w-[1160px] px-5 sm:px-8">
-        {sections}
-      </div>
-    </div>
-  );
+    <section className="mt-4 flex items-center rounded-2xl border border-coral-100 bg-[#FFF8F6] p-5"><span className="mr-4 flex h-11 w-11 items-center justify-center rounded-full bg-coral-100 text-coral"><svg width="22" height="22"><use href="#i-heart" /></svg></span><div><h2 className="text-sm font-bold">You&apos;re not alone</h2><p className="mt-1 text-[10px] text-ink-soft">If you ever need to talk to someone right away, help is available.</p></div><Link href="/facility-locator" className="ml-auto rounded-xl bg-coral px-5 py-3 text-[11px] font-semibold text-white">View Crisis Resources</Link></section>
+    <ConfirmModal open={showClear} title="Clear history" message="Are you sure you want to clear all conversation history on this device?" confirmLabel="Clear" cancelLabel="Cancel" variant="danger" onConfirm={() => { setShowClear(false); void clearHistory().then(load).then(() => toast("History cleared", "success")); }} onCancel={() => setShowClear(false)} />
+  </div></AppShell>;
 }

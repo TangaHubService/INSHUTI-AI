@@ -1,9 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import type { Language } from "@/lib/apiClient";
 
 interface TypingIndicatorProps {
   status: "thinking" | "generating" | "idle";
+  language: Language;
 }
 
 const statusMessages = {
@@ -27,7 +29,7 @@ const statusMessages = {
   },
 };
 
-export function TypingIndicator({ status }: TypingIndicatorProps) {
+export function TypingIndicator({ status, language }: TypingIndicatorProps) {
   const dots = [0, 1, 2];
 
   return (
@@ -60,7 +62,7 @@ export function TypingIndicator({ status }: TypingIndicatorProps) {
           ))}
         </div>
         <span className="text-[12.5px] text-[#4B615D] dark:text-[#B0B0A8]">
-          {statusMessages[status].EN}
+          {statusMessages[status][language]}
         </span>
         <button
           type="button"

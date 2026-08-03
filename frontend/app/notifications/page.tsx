@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Fragment, useEffect, useState } from "react";
 
 import { useToast } from "@/lib/useToast";
@@ -274,18 +275,18 @@ export default function NotificationsPage() {
     (result[key] ??= []).push(notification);
     return result;
   }, {});
-  const iconFor = (type: NotificationType) => type === "APPOINTMENT_REMINDER" ? "i-calendar" : type === "CONSULTATION_UPDATE" || type === "REFERRAL" ? "i-stethoscope" : type === "PASSWORD_RESET" ? "i-lock" : "i-info";
+  const iconFor = (type: NotificationType) => type === "APPOINTMENT_REMINDER" ? "i-calendar" : type === "CONSULTATION_UPDATE" || type === "REFERRAL" ? "i-stethoscope" : type === "PASSWORD_RESET" ? "i-lock" : "i-file";
   const colorFor = (type: NotificationType) => type === "APPOINTMENT_REMINDER" ? "#239B6B" : type === "CONSULTATION_UPDATE" || type === "REFERRAL" ? "#8956E8" : type === "PASSWORD_RESET" ? "#F0A01E" : "#3C8ED8";
 
   return (
     <AppShell active="/notifications" session={{ kind: "user", user }}>
       <div className="mx-auto max-w-[1120px] pb-14">
-        <section className="flex items-start justify-between gap-4"><div><h1 className="font-display text-[34px] text-teal-900">{t.eyebrow}</h1><p className="mt-1 text-sm text-ink-soft">{t.subtitle}</p></div>{notifications.some((n) => !n.read) && <button onClick={() => void handleMarkAll()} className="mt-2 flex items-center gap-2 text-[11px] font-semibold text-success"><span>✓</span>{t.markAllRead}</button>}</section>
+        <section className="flex items-start justify-between gap-4"><div><h1 className="font-display text-[34px] text-teal-900">{t.eyebrow}</h1><p className="mt-1 text-sm text-ink-soft">Stay updated with your activities and important updates.</p></div>{notifications.some((n) => !n.read) && <button onClick={() => void handleMarkAll()} className="mt-2 flex items-center gap-2 text-[11px] font-semibold text-success"><span>✓</span>{t.markAllRead}</button>}</section>
         <div className="mt-6 flex gap-2 overflow-x-auto pb-1">{(["ALL", "APPOINTMENTS", "CONSULTATIONS", "SYSTEM"] as const).map((value) => <button key={value} onClick={() => setFilter(value)} className={`rounded-xl border px-4 py-2 text-[11px] font-semibold ${filter === value ? "border-teal-700 bg-teal-700 text-white" : "border-line bg-white text-ink-soft"}`}>{value.charAt(0) + value.slice(1).toLowerCase()}</button>)}</div>
 
         <section className="grid items-start gap-5 pt-5 xl:grid-cols-[1fr_340px]">
             <div className="space-y-5">
-              {filtered.length === 0 && <div className="rounded-2xl border border-line bg-white px-5 py-12 text-center text-sm text-ink-soft">{t.noNotifications}</div>}
+              {filtered.length === 0 && <div className="flex min-h-[390px] flex-col items-center justify-center rounded-2xl border border-line bg-white px-6 py-12 text-center shadow-sm"><span className="flex h-20 w-20 items-center justify-center rounded-full bg-teal-100 text-teal-700"><svg width="34" height="34"><use href="#i-bell" /></svg></span><h2 className="mt-5 text-lg font-bold text-ink">You&apos;re all caught up</h2><p className="mt-2 max-w-[400px] text-xs leading-5 text-ink-soft">{filter === "ALL" ? "Important appointment reminders, consultation updates, and account messages will appear here." : `There are no ${filter.toLowerCase()} notifications right now. We'll let you know when something needs your attention.`}</p><Link href="/settings" className="mt-5 rounded-xl border border-teal-700 px-5 py-2.5 text-[11px] font-semibold text-teal-700">Manage notification settings</Link></div>}
               {Object.entries(groups).map(([group, items]) => <div key={group}><h2 className="mb-2 px-1 text-[12px] font-bold text-teal-900">{group}</h2><div className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">{items.map((n) => { const color = colorFor(n.type); return <button key={n.id} onClick={() => void handleNotificationClick(n)} className={`flex w-full items-center gap-4 border-b border-line px-5 py-4 text-left last:border-0 hover:bg-paper-2 ${n.read ? "" : "bg-[#FBFEFD]"}`}><span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full" style={{ color, background: `${color}14` }}>{!n.read && <i className="absolute -left-4 h-2 w-2 rounded-full bg-success" />}<svg width="21" height="21"><use href={`#${iconFor(n.type)}`} /></svg></span><span className="min-w-0 flex-1"><strong className="block text-[12px] text-ink">{n.title}</strong><span className="mt-1 block text-[11px] leading-5 text-ink-soft">{n.body}</span><span className="mt-1 block text-[9.5px] text-ink-soft">{relativeTime(n.createdAt, language)}</span></span>{NOTIFICATION_LINK[n.type] && <span className="text-xl text-ink-soft">›</span>}</button>; })}</div></div>)}
             </div>
 

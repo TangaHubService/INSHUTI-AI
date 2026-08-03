@@ -9,7 +9,7 @@ import { useLanguage } from "@/lib/LanguageContext";
 import { useRequireUser } from "@/lib/useUserAuth";
 import { FullPageLoading } from "@/components/Spinner";
 import type { Language } from "@/lib/apiClient";
-import { deactivateMyAccount, updateProfile } from "@/lib/userApiClient";
+import { deactivateMyAccount, logoutUser, updateProfile } from "@/lib/userApiClient";
 import { useRouter } from "next/navigation";
 import { isValidPhone } from "@/lib/validation";
 import { VALIDATION } from "@/lib/validationMessages";
@@ -255,6 +255,11 @@ export default function ProfilePage() {
     }
   }
 
+  async function handleLogout() {
+    await logoutUser();
+    router.replace("/login");
+  }
+
   if (authLoading || !user) return <FullPageLoading />;
 
   return (
@@ -263,7 +268,7 @@ export default function ProfilePage() {
         <section><h1 className="font-display text-[34px] text-teal-900">{t.eyebrow}</h1><p className="mt-1 text-sm text-ink-soft">Manage your account and preferences.</p></section>
 
         <section className="mt-5 flex flex-col items-center gap-5 rounded-2xl border border-line bg-white p-5 shadow-sm sm:flex-row">
-          <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-[#D8EEE9] text-3xl font-bold text-teal-700">{user.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</div>
+          <div className="relative flex h-28 w-28 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-[#D8EEE9] text-3xl font-bold text-teal-700">{user.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}<span className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-teal-900 text-white"><svg width="14" height="14"><use href="#i-edit" /></svg></span></div>
           <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h2 className="text-xl font-bold">{user.name}</h2><span className="rounded-full bg-teal-100 px-3 py-1 text-[10px] font-bold text-success">{ROLE_LABEL[language][user.role] ?? user.role}</span></div><p className="mt-1 text-[11px] uppercase text-ink-soft">{user.role.replaceAll("_", " ")}</p><div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-ink-soft"><span>✉ {user.email}</span>{user.phone && <span>☎ {user.phone}</span>}{(user.district || user.province) && <span>⌖ {[user.district, user.province].filter(Boolean).join(", ")}</span>}</div></div>
         </section>
 
@@ -335,7 +340,8 @@ export default function ProfilePage() {
                 </Link>
               </div>
             </div>
-            <div className="rounded-2xl border border-red-200 bg-[#FFF8F7] p-5"><h3 className="text-sm font-bold text-red-800">Account & security</h3><p className="mt-2 text-[11px] text-ink-soft">Deactivation removes access and anonymizes the personal details linked to this account.</p><button type="button" onClick={() => void handleDeactivate()} className="mt-4 rounded-lg border border-red-300 px-4 py-2 text-[11px] font-semibold text-red-700">{t.deactivate}</button></div>
+            <div className="rounded-2xl border border-line bg-white p-5 shadow-sm"><h3 className="text-sm font-bold text-teal-900">Account & security</h3><div className="mt-4 divide-y divide-line text-[11px]"><div className="flex items-center gap-3 py-3"><svg width="16" height="16" className="text-ink-soft"><use href="#i-lock" /></svg><span className="text-ink-soft">Anonymous session</span><span className="ml-auto max-w-[55%] truncate font-mono text-[10px]">{user.id}</span></div><div className="flex items-center gap-3 py-3"><svg width="16" height="16" className="text-ink-soft"><use href="#i-shield" /></svg><span className="text-ink-soft">Security</span><span className="ml-auto text-right">Your conversations are private and secure</span></div><div className="flex items-center gap-3 py-3"><svg width="16" height="16" className="text-ink-soft"><use href="#i-globe" /></svg><span className="text-ink-soft">Preferred language</span><span className="ml-auto">{LANGUAGE_OPTION_LABEL[preferredLanguage]}</span></div></div><button type="button" onClick={() => void handleDeactivate()} className="mt-4 text-[10px] font-semibold text-red-700">{t.deactivate}</button></div>
+            <button type="button" onClick={() => void handleLogout()} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-[#FFF8F7] px-5 py-4 text-[11px] font-semibold text-red-600"><svg width="16" height="16"><use href="#i-logout" /></svg>Log out</button>
           </section>
       </div>
     </AppShell>

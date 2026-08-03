@@ -316,11 +316,12 @@ export default function AppointmentsPage() {
   return (
     <AppShell active="/appointments" session={{ kind: "user", user }}>
       <div className="mx-auto max-w-[1160px]">
-        <section className="pb-3">
-          <h1 className="font-display text-[34px] text-teal-900">{t.eyebrow}</h1>
-          <p className="mt-[10px] max-w-[520px] text-[14.5px] leading-[1.6] text-ink-soft">
-            {user.role === "HEALTHCARE_PROFESSIONAL" ? t.subtitlePro : t.subtitleUser}
-          </p>
+        <section className="flex items-start justify-between gap-5 pb-3">
+          <div><h1 className="font-display text-[34px] text-teal-900">{t.eyebrow}</h1>
+          <p className="mt-1 max-w-[620px] text-[13px] leading-[1.6] text-ink-soft">
+            {user.role === "HEALTHCARE_PROFESSIONAL" ? t.subtitlePro : "Book, manage, and track your appointments."}
+          </p></div>
+          {user.role !== "HEALTHCARE_PROFESSIONAL" && <a href="#book-appointment" className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-teal-700 px-5 py-3 text-[11px] font-semibold text-white shadow-sm hover:bg-teal-900"><span className="text-base">＋</span>{t.requestAppointment}</a>}
         </section>
 
         {user.role === "HEALTHCARE_PROFESSIONAL" ? (
@@ -455,7 +456,7 @@ function UserView({ toast, language }: { toast: (message: string, type?: "succes
         <div className="space-y-5">
         <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
           <div className="flex gap-5 overflow-x-auto border-b border-line px-5 pt-3">{statCards.map((stat) => <button key={stat.key} onClick={() => setFilter(stat.key)} className={`whitespace-nowrap border-b-2 px-1 py-3 text-xs font-semibold ${filter === stat.key ? "border-teal-700 text-teal-900" : "border-transparent text-ink-soft"}`}>{stat.label}</button>)}</div>
-          {filtered.length === 0 && <p className="px-5 py-12 text-center text-sm text-ink-soft">{t.noAppointments}</p>}
+          {filtered.length === 0 && <div className="flex min-h-[350px] flex-col items-center justify-center px-6 py-12 text-center"><span className="flex h-20 w-20 items-center justify-center rounded-full bg-[#EEE8FF] text-[#8956E8]"><svg width="34" height="34"><use href="#i-calendar" /></svg></span><h3 className="mt-5 text-lg font-bold text-ink">{filter === "UPCOMING" ? "No upcoming appointments" : `No ${statCards.find((item) => item.key === filter)?.label.toLowerCase()} appointments`}</h3><p className="mt-2 max-w-[390px] text-xs leading-5 text-ink-soft">{filter === "UPCOMING" ? "When you book care, your appointment details and confirmation status will appear here. Choose a professional and a time that works for you." : "There are no appointments in this category yet. You can switch tabs or book a new appointment whenever you need support."}</p><div className="mt-5 flex flex-wrap justify-center gap-3"><a href="#book-appointment" className="rounded-xl bg-teal-700 px-5 py-2.5 text-[11px] font-semibold text-white">Book an appointment</a><a href="/facility-locator" className="rounded-xl border border-teal-700 px-5 py-2.5 text-[11px] font-semibold text-teal-700">Find nearby care</a></div><div className="mt-7 flex flex-wrap justify-center gap-5 text-[10px] text-ink-soft"><span>✓ Private and confidential</span><span>✓ Qualified professionals</span><span>✓ Flexible scheduling</span></div></div>}
           {filtered.map((appt) => {
             const { day, month, time } = formatDateTime(appt.requestedTime);
             const canManage = appt.status !== "CANCELLED" && appt.status !== "COMPLETED";

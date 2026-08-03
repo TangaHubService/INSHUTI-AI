@@ -20,6 +20,33 @@ import {
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 
+const defaultAppPreferences = {
+  theme: "SYSTEM" as const,
+  responseStyle: "FRIENDLY" as const,
+  autoDetectLanguage: true,
+  saveConversations: true,
+  healthReminders: true,
+  largeText: false,
+  reducedMotion: false,
+  highContrast: false,
+};
+
+const appPreferencesSchema = z.object({
+  theme: z.enum(["LIGHT", "DARK", "SYSTEM"]),
+  responseStyle: z.enum(["FRIENDLY", "CONCISE", "DETAILED"]),
+  autoDetectLanguage: z.boolean(),
+  saveConversations: z.boolean(),
+  healthReminders: z.boolean(),
+  largeText: z.boolean(),
+  reducedMotion: z.boolean(),
+  highContrast: z.boolean(),
+});
+
+function decodeAppPreferences(value: string) {
+  try { return appPreferencesSchema.parse({ ...defaultAppPreferences, ...JSON.parse(value) }); }
+  catch { return defaultAppPreferences; }
+}
+
 function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
@@ -205,6 +232,49 @@ router.patch("/me", requireUser, async (req: AuthenticatedUserRequest, res) => {
   });
 });
 
+router.get("/me/preferences", requireUser, async (req: AuthenticatedUserRequest, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { appPreferences: true } });
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+  res.json({ preferences: decodeAppPreferences(user.appPreferences) });
+});
+
+router.put("/me/preferences", requireUser, async (req: AuthenticatedUserRequest, res) => {
+  const parsed = appPreferencesSchema.partial().safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Invalid preferences", details: z.flattenError(parsed.error) }); return; }
+  const user = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { appPreferences: true } });
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+  const preferences = appPreferencesSchema.parse({ ...decodeAppPreferences(user.appPreferences), ...parsed.data });
+  await prisma.user.update({ where: { id: req.user!.userId }, data: { appPreferences: JSON.stringify(preferences) } });
+  res.json({ preferences });
+});
+
+router.patch("/me/password", requireUser, async (req: AuthenticatedUserRequest, res) => {
+  const parsed = z.object({ currentPassword: z.string().min(1), newPassword: z.string().min(8).max(128) }).safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Current password and a valid new password are required" }); return; }
+  const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+  if (!user || !(await verifyPassword(parsed.data.currentPassword, user.passwordHash))) { res.status(401).json({ error: "Current password is incorrect" }); return; }
+  await prisma.user.update({ where: { id: user.id }, data: { passwordHash: await hashPassword(parsed.data.newPassword), resetTokenHash: null, resetTokenExpiresAt: null } });
+  await writeAuditLog({ action: "USER_PASSWORD_CHANGED", entityType: "user", entityId: user.id, details: { actorType: "USER", actorId: user.id } });
+  res.json({ changed: true });
+});
+
+router.get("/me/export", requireUser, async (req: AuthenticatedUserRequest, res) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.user!.userId },
+    select: {
+      id: true, email: true, phone: true, name: true, role: true, preferredLanguage: true,
+      province: true, district: true, sector: true, cell: true, createdAt: true,
+      conversations: { select: { id: true, language: true, createdAt: true, messages: { select: { role: true, content: true, createdAt: true }, where: { consultationId: null } } } },
+      consultations: { select: { id: true, status: true, priority: true, createdAt: true, updatedAt: true } },
+      appointments: { select: { id: true, requestedTime: true, status: true, notes: true, outcome: true, createdAt: true } },
+      notifications: { select: { type: true, title: true, body: true, read: true, createdAt: true } },
+    },
+  });
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+  res.setHeader("Content-Disposition", `attachment; filename="inshuti-data-${user.id}.json"`);
+  res.json({ exportedAt: new Date().toISOString(), user });
+});
+
 const forgotPasswordSchema = z.object({ email: z.string().email() });
 
 router.post("/forgot-password", async (req, res) => {
@@ -336,6 +406,7 @@ router.delete("/me", requireUser, async (req: AuthenticatedUserRequest, res) => 
         sector: null,
         cell: null,
         notificationPrefs: "{}",
+        appPreferences: "{}",
         resetTokenHash: null,
         resetTokenExpiresAt: null,
       },

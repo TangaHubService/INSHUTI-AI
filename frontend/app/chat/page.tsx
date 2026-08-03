@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import {
@@ -351,9 +352,14 @@ function ChatPageInner() {
   }
 
   const hasMessages = messages.length > 1;
+  const activeConversation = conversations.find((conversation) => conversation.id === conversationId);
+  const activeTopic = activeConversation?.topic;
+  const activeTopicName = activeTopic
+    ? language === "RW" ? activeTopic.nameRw : activeTopic.nameEn
+    : language === "RW" ? "Ubuzima rusange" : language === "FR" ? "Santé générale" : language === "SW" ? "Afya ya jumla" : "General health";
 
   return (
-    <div className="flex h-screen flex-row bg-white dark:bg-[#212121]">
+    <div className="flex h-screen flex-row bg-[#FBFAF7] dark:bg-[#212121]">
       {/* Mobile sidebar overlay */}
       {mobileSidebarOpen && (
         <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setMobileSidebarOpen(false)} />
@@ -386,10 +392,11 @@ function ChatPageInner() {
         />
       </div>
 
+      <div className="flex min-w-0 flex-1">
       {/* Main area */}
-      <div className="flex flex-1 flex-col min-w-0">
-        {/* Minimal top bar */}
-        <div className="grid h-12 shrink-0 grid-cols-[1fr_auto_1fr] items-center border-b border-[#E5E5E5] px-3 dark:border-[#333]">
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Conversation header */}
+        <div className="grid min-h-[72px] shrink-0 grid-cols-[1fr_auto] items-center gap-3 border-b border-line bg-white px-4 dark:border-[#333] dark:bg-[#212121] sm:px-6">
           <div className="flex items-center gap-1 justify-self-start">
             <button
               type="button"
@@ -412,16 +419,19 @@ function ChatPageInner() {
                 <path d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
+            <div className="ml-2">
+              <div className="flex items-center gap-2"><h1 className="text-base font-bold text-ink dark:text-[#ECECF1]">Chat with Inshuti</h1><span className="hidden rounded-full bg-teal-100 px-2 py-1 text-[9px] font-bold text-teal-700 sm:inline">AI Assistant</span></div>
+              <p className="mt-0.5 text-[10.5px] text-ink-soft dark:text-[#A0A0A0]">Your friendly health companion</p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-[#333] dark:text-[#ECECF1]">Inshuti</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setDarkMode((d) => !d)}
-            className="flex h-9 w-9 items-center justify-center justify-self-end rounded-lg text-[#666] hover:bg-[#F0F0F0] dark:text-[#A0A0A0] dark:hover:bg-[#333]"
-            aria-label={darkMode ? "Use light theme" : "Use dark theme"}
-          >
+          <div className="flex items-center gap-2 justify-self-end">
+            <button type="button" onClick={startNewChat} className="hidden items-center gap-2 rounded-xl border border-teal-600 px-3.5 py-2 text-[11px] font-semibold text-teal-700 transition hover:bg-teal-100 sm:flex"><svg width="13" height="13"><use href="#i-plus" /></svg>New conversation</button>
+            <button
+              type="button"
+              onClick={() => setDarkMode((d) => !d)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-[#666] hover:bg-[#F0F0F0] dark:text-[#A0A0A0] dark:hover:bg-[#333]"
+              aria-label={darkMode ? "Use light theme" : "Use dark theme"}
+            >
             {darkMode ? (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
                 <circle cx="12" cy="12" r="4.5" />
@@ -432,7 +442,15 @@ function ChatPageInner() {
                 <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
               </svg>
             )}
-          </button>
+            </button>
+          </div>
+        </div>
+
+        <div className="mx-4 mt-4 flex min-h-14 shrink-0 items-center gap-3 rounded-2xl border border-line bg-white px-4 shadow-sm dark:border-[#333] dark:bg-[#1F1F1F] sm:mx-6">
+          <span className="text-[11px] text-ink-soft">Current topic</span>
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-coral-100 text-coral"><svg width="15" height="15"><use href={`#${activeTopic?.icon ?? "i-sparkles"}`} /></svg></span>
+          <strong className="text-xs text-ink dark:text-[#ECECF1]">{activeTopicName}</strong>
+          <Link href="/library" className="ml-auto text-[10.5px] font-semibold text-teal-700">Explore</Link>
         </div>
 
         {/* Crisis bar */}
@@ -447,7 +465,7 @@ function ChatPageInner() {
 
         {/* Messages */}
         <main ref={mainRef} className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-[768px] px-4 min-h-full flex flex-col">
+          <div className="mx-auto flex min-h-full max-w-[860px] flex-col px-4 sm:px-6">
             {/* Empty state */}
             {!hasMessages && (
               <div className="flex-1 flex flex-col">
@@ -522,7 +540,7 @@ function ChatPageInner() {
         </main>
 
         {/* Input area - always visible */}
-        <div className="sticky bottom-0 bg-gradient-to-t from-white via-white to-transparent pb-4 pt-8 dark:from-[#212121] dark:via-[#212121]">
+        <div className="sticky bottom-0 bg-gradient-to-t from-[#FBFAF7] via-[#FBFAF7] to-transparent pb-4 pt-6 dark:from-[#212121] dark:via-[#212121]">
           <ChatInput
             input={input}
             onChange={setInput}
@@ -530,6 +548,24 @@ function ChatPageInner() {
             sending={sending}
           />
         </div>
+      </div>
+      <aside className="hidden w-[310px] shrink-0 overflow-y-auto border-l border-line bg-white p-4 2xl:block dark:border-[#333] dark:bg-[#1A1A1A]">
+        <div className="space-y-4">
+          <section className="rounded-2xl border border-line p-5 shadow-sm dark:border-[#333]">
+            <div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-coral-100 text-coral"><svg width="18" height="18"><use href={`#${activeTopic?.icon ?? "i-sparkles"}`} /></svg></span><h2 className="text-sm font-bold">About this topic</h2></div>
+            <h3 className="mt-5 text-base font-bold">{activeTopicName}</h3>
+            <p className="mt-2 text-[11.5px] leading-5 text-ink-soft">Explore reviewed, youth-friendly information and ask questions in your own words.</p>
+            <Link href="/library" className="mt-4 inline-flex items-center gap-2 text-[11px] font-semibold text-teal-700">Explore articles <span>→</span></Link>
+          </section>
+          <section className="rounded-2xl border border-line p-5 shadow-sm dark:border-[#333]">
+            <h2 className="text-sm font-bold">Related articles</h2>
+            <div className="mt-3 divide-y divide-line">{sources.length ? sources.slice(0, 3).map((source) => <div key={source.id} className="flex items-center gap-3 py-3"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-coral-100 text-coral"><svg width="14" height="14"><use href="#i-book" /></svg></span><span className="line-clamp-2 flex-1 text-[11px] font-medium">{language === "RW" ? source.titleRw : source.titleEn}</span></div>) : <p className="py-4 text-[11px] leading-5 text-ink-soft">Relevant reviewed articles will appear here after you ask a question.</p>}</div>
+            <Link href="/library" className="mt-2 block text-[11px] font-semibold text-teal-700">View all articles</Link>
+          </section>
+          <section className="rounded-2xl border border-line p-5 shadow-sm dark:border-[#333]"><h2 className="flex items-center gap-2 text-sm font-bold"><span className="text-gold">☼</span> Quick tips</h2><ul className="mt-4 space-y-3 text-[11px] text-ink-soft"><li>✓ Ask one question at a time</li><li>✓ Never share passwords or private identifiers</li><li>✓ Talk to a professional when worried</li><li>✓ Use crisis support for urgent help</li></ul></section>
+          <section className="rounded-2xl border border-[#CDE5DF] bg-[#F0F9F7] p-5 dark:bg-[#17302D]"><h2 className="text-sm font-bold">Need to talk to someone?</h2><p className="mt-2 text-[11px] leading-5 text-ink-soft">Chat with a professional or find a health centre near you.</p><Link href="/facility-locator" className="mt-4 block rounded-xl bg-teal-700 px-4 py-3 text-center text-[11px] font-semibold text-white">Find care</Link></section>
+        </div>
+      </aside>
       </div>
     </div>
   );

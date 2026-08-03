@@ -14,7 +14,6 @@ import {
 import { useToast } from "@/lib/useToast";
 import { ConfirmModal } from "@/components/Modal";
 import { SiteHeader } from "@/components/SiteHeader";
-import { SiteFooter } from "@/components/SiteFooter";
 import { AppShell } from "@/components/AppShell";
 import { PageLoading } from "@/components/Spinner";
 import { getCurrentUser, type UserProfile } from "@/lib/userApiClient";
@@ -309,7 +308,6 @@ export default function MySpacePage() {
       />
       <div className="mx-auto max-w-[1160px] px-5 sm:px-8">
         {sections}
-        <SiteFooter />
       </div>
     </div>
   );

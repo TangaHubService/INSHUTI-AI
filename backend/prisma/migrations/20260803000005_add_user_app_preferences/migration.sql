@@ -1,0 +1,1 @@
+ALTER TABLE "User" ADD COLUMN "appPreferences" TEXT NOT NULL DEFAULT '{}';

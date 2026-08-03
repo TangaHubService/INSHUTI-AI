@@ -130,6 +130,7 @@ model User {
   resetTokenHash    String?
   resetTokenExpiresAt DateTime?
   notificationPrefs String   @default("{}")
+  appPreferences    String   @default("{}")
   active            Boolean  @default(true)
   createdAt         DateTime @default(now())
 

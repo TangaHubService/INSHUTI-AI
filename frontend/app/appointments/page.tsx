@@ -317,12 +317,7 @@ export default function AppointmentsPage() {
     <AppShell active="/appointments" session={{ kind: "user", user }}>
       <div className="mx-auto max-w-[1160px]">
         <section className="pb-3">
-          <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
-            {t.eyebrow}
-          </span>
-          <h1 className="mt-3 font-display text-[34px] text-teal-900">
-            {user.role === "HEALTHCARE_PROFESSIONAL" ? t.titlePro : t.titleUser}
-          </h1>
+          <h1 className="font-display text-[34px] text-teal-900">{t.eyebrow}</h1>
           <p className="mt-[10px] max-w-[520px] text-[14.5px] leading-[1.6] text-ink-soft">
             {user.role === "HEALTHCARE_PROFESSIONAL" ? t.subtitlePro : t.subtitleUser}
           </p>
@@ -355,6 +350,8 @@ function UserView({ toast, language }: { toast: (message: string, type?: "succes
   const [rescheduling, setRescheduling] = useState<string | null>(null);
   const [rescheduleTime, setRescheduleTime] = useState("");
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"UPCOMING" | "REQUESTED" | "COMPLETED" | "CANCELLED">("UPCOMING");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   async function loadAppointments() {
     setLoading(true);
@@ -432,44 +429,53 @@ function UserView({ toast, language }: { toast: (message: string, type?: "succes
   }
 
   const minDateTime = toLocalInputValue(new Date(Date.now() + 60 * 60 * 1000));
+  const now = new Date();
+  const upcoming = appointments.filter((appt) => !["CANCELLED", "COMPLETED"].includes(appt.status) && new Date(appt.requestedTime) >= now);
+  const filtered = appointments.filter((appt) => {
+    if (filter === "UPCOMING") return !["CANCELLED", "COMPLETED"].includes(appt.status) && new Date(appt.requestedTime) >= now;
+    if (filter === "REQUESTED") return appt.status === "REQUESTED" || appt.status === "RESCHEDULED";
+    return appt.status === filter;
+  });
+  const selected = appointments.find((appt) => appt.id === selectedId) ?? filtered[0] ?? null;
+  const statCards = [
+    { key: "UPCOMING" as const, label: t.upcoming, value: upcoming.length, icon: "i-calendar", color: "#8956E8", helper: upcoming[0] ? new Date(upcoming[0].requestedTime).toLocaleString() : t.noAppointments },
+    { key: "COMPLETED" as const, label: statusLabel.COMPLETED, value: appointments.filter((a) => a.status === "COMPLETED").length, icon: "i-shield", color: "#219A6D", helper: "All time" },
+    { key: "REQUESTED" as const, label: statusLabel.REQUESTED, value: appointments.filter((a) => a.status === "REQUESTED" || a.status === "RESCHEDULED").length, icon: "i-clock", color: "#F0A01E", helper: "Awaiting confirmation" },
+    { key: "CANCELLED" as const, label: statusLabel.CANCELLED, value: appointments.filter((a) => a.status === "CANCELLED").length, icon: "i-close", color: "#EF5573", helper: "All time" },
+  ];
 
   return (
     <section className="pb-16 pt-5">
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1.2fr_1fr]">
-        <div className="card py-1.5">
-          <div className="flex items-center justify-between px-5 pb-1.5 pt-[14px]">
-            <h3 className="text-base text-teal-900">{t.upcoming}</h3>
-          </div>
+      {loading ? <PageLoading /> : <>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {statCards.map((stat) => <button type="button" key={stat.key} onClick={() => setFilter(stat.key)} className={`flex items-center gap-4 rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 ${filter === stat.key ? "border-teal-600" : "border-line"}`}><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full" style={{ background: `${stat.color}16`, color: stat.color }}><svg width="22" height="22"><use href={`#${stat.icon}`} /></svg></span><span className="min-w-0"><b className="block text-xl">{stat.value}</b><span className="block text-[11px] text-ink-soft">{stat.label}</span><span className="mt-1 block truncate text-[9px] font-semibold" style={{ color: stat.color }}>{stat.helper}</span></span></button>)}
+      </div>
 
-          {loading && <PageLoading />}
-
-          {!loading && appointments.length === 0 && (
-            <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">{t.noAppointments}</p>
-          )}
-
-          {appointments.map((appt) => {
+      <div className="mt-5 grid items-start gap-5 xl:grid-cols-[1fr_330px]">
+        <div className="space-y-5">
+        <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
+          <div className="flex gap-5 overflow-x-auto border-b border-line px-5 pt-3">{statCards.map((stat) => <button key={stat.key} onClick={() => setFilter(stat.key)} className={`whitespace-nowrap border-b-2 px-1 py-3 text-xs font-semibold ${filter === stat.key ? "border-teal-700 text-teal-900" : "border-transparent text-ink-soft"}`}>{stat.label}</button>)}</div>
+          {filtered.length === 0 && <p className="px-5 py-12 text-center text-sm text-ink-soft">{t.noAppointments}</p>}
+          {filtered.map((appt) => {
             const { day, month, time } = formatDateTime(appt.requestedTime);
             const canManage = appt.status !== "CANCELLED" && appt.status !== "COMPLETED";
             return (
-              <div key={appt.id} className="border-b border-line px-[18px] py-4 last:border-b-0">
-                <div className="flex items-center gap-[14px]">
-                  <div className="flex h-[46px] w-[46px] flex-shrink-0 flex-col items-center justify-center rounded-2xl bg-teal-100 text-teal-700">
-                    <span className="text-[15px] font-bold leading-none">{day}</span>
-                    <span className="text-[10px] font-semibold uppercase leading-none">{month}</span>
+              <div key={appt.id} onClick={() => setSelectedId(appt.id)} className={`cursor-pointer border-b border-line px-5 py-5 last:border-b-0 hover:bg-paper-2 ${selected?.id === appt.id ? "bg-[#F8FCFB]" : ""}`}>
+                <div className="flex items-center gap-4">
+                  <div className="flex h-[68px] w-[54px] flex-shrink-0 flex-col items-center justify-center rounded-xl bg-[#EFF6F3] text-teal-900">
+                    <span className="text-[10px] font-semibold uppercase">{month}</span><span className="text-[22px] font-bold leading-tight">{day}</span><span className="text-[9px] text-ink-soft">{new Date(appt.requestedTime).toLocaleDateString([], { weekday: "short" })}</span>
                   </div>
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#EEE8FF] text-[#8956E8]"><svg width="21" height="21"><use href="#i-stethoscope" /></svg></span>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold text-ink">
-                      {proTypeLabel[appt.professional.professionalType]} · {appt.professional.name}
-                    </div>
-                    <div className="mt-[3px] text-xs text-ink-soft">{time}{appt.notes ? ` · ${appt.notes}` : ""}</div>
+                    <div className="truncate text-sm font-semibold text-ink">{appt.professional.name}</div>
+                    <div className="mt-1 text-[11px] text-ink-soft">{proTypeLabel[appt.professional.professionalType]}</div><div className="mt-1 text-[10px] text-ink-soft">◷ {time}</div>
                     {appt.outcome && <div className="mt-1 text-xs italic text-ink-soft">{t.outcomeLabel}: {appt.outcome}</div>}
                   </div>
                   <span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold ${STATUS_STYLE[appt.status] ?? "bg-teal-100 text-teal-700"}`}>
                     {statusLabel[appt.status] ?? appt.status}
                   </span>
                 </div>
-                {canManage && (
-                  <div className="mt-3 flex flex-wrap items-center gap-2 pl-[60px]">
+                {canManage && <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
                     {rescheduling === appt.id ? (
                       <>
                         <input
@@ -488,35 +494,33 @@ function UserView({ toast, language }: { toast: (message: string, type?: "succes
                       </>
                     ) : (
                       <>
-                        <button
-                          onClick={() => {
+                        <button onClick={(event) => { event.stopPropagation();
                             setRescheduling(appt.id);
                             setRescheduleTime("");
                           }}
-                          className="rounded-full border border-line px-3 py-1.5 text-[12px] font-semibold text-ink-soft hover:bg-paper-2"
+                          className="rounded-lg border border-teal-700 px-3 py-1.5 text-[11px] font-semibold text-teal-700 hover:bg-paper-2"
                         >
                           {t.reschedule}
                         </button>
-                        <button
-                          onClick={() => setCancelTarget(appt.id)}
-                          className="rounded-full border border-coral-dark px-3 py-1.5 text-[12px] font-semibold text-coral-dark hover:bg-coral-100"
+                        <button onClick={(event) => { event.stopPropagation(); setCancelTarget(appt.id); }}
+                          className="rounded-lg border border-coral-dark px-3 py-1.5 text-[11px] font-semibold text-coral-dark hover:bg-coral-100"
                         >
                           {t.cancel}
                         </button>
                       </>
                     )}
-                  </div>
-                )}
+                  </div>}
               </div>
             );
           })}
         </div>
+        <div className="flex items-center justify-between rounded-2xl border border-[#CDE5DF] bg-gradient-to-r from-[#EFF9F6] to-white p-5"><div><h3 className="text-sm font-bold">Need help choosing the right appointment?</h3><p className="mt-1 text-[11px] text-ink-soft">Choose a professional type below or find nearby care.</p></div><a href="#book-appointment" className="rounded-xl bg-teal-700 px-4 py-2 text-[11px] font-semibold text-white">{t.requestAppointment}</a></div>
+        </div>
 
-        <div>
-          <div className="px-1 pb-2 font-mono text-[11px] uppercase tracking-[0.08em] text-ink-soft">
-            {t.requestNewTime}
-          </div>
-          <form onSubmit={(e) => void handleRequest(e)} className="card p-5">
+        <aside className="space-y-4">
+          {selected && <div className="rounded-2xl border border-line bg-white p-5 shadow-sm"><div className="flex items-center justify-between"><h3 className="text-sm font-bold">Appointment details</h3><span className={`rounded-full px-3 py-1 text-[10px] font-semibold ${STATUS_STYLE[selected.status]}`}>{statusLabel[selected.status]}</span></div><div className="mt-5 space-y-4"><div className="flex gap-3"><span className="text-[#8956E8]">♙</span><div><div className="text-[10px] text-ink-soft">Professional</div><div className="mt-1 text-xs font-bold">{selected.professional.name}</div><div className="text-[10px] text-ink-soft">{proTypeLabel[selected.professional.professionalType]}</div></div></div><div className="flex gap-3"><span>▣</span><div><div className="text-[10px] text-ink-soft">Date & time</div><div className="mt-1 text-xs font-semibold">{new Date(selected.requestedTime).toLocaleString()}</div></div></div>{selected.notes && <div className="flex gap-3"><span>▤</span><div><div className="text-[10px] text-ink-soft">Notes</div><div className="mt-1 text-xs leading-5">{selected.notes}</div></div></div>}{selected.outcome && <div className="rounded-xl bg-teal-100 p-3 text-xs"><b>{t.outcomeLabel}</b><p className="mt-1">{selected.outcome}</p></div>}</div></div>}
+          <form id="book-appointment" onSubmit={(e) => void handleRequest(e)} className="rounded-2xl border border-line bg-white p-5 shadow-sm">
+            <h3 className="mb-4 text-sm font-bold">{t.requestNewTime}</h3>
             <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">{t.professionalType}</label>
             <select
               className="mb-3.5 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm"
@@ -563,13 +567,14 @@ function UserView({ toast, language }: { toast: (message: string, type?: "succes
             <button
               type="submit"
               disabled={submitting || !professionalId}
-              className="w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
+              className="w-full rounded-xl bg-teal-700 px-[26px] py-[12px] text-[13px] font-semibold text-white transition hover:bg-teal-900 disabled:opacity-50"
             >
               {submitting ? t.requesting : t.requestAppointment}
             </button>
           </form>
-        </div>
+        </aside>
       </div>
+      </>}
 
       <ConfirmModal
         open={cancelTarget !== null}

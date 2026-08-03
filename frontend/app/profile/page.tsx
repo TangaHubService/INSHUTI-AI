@@ -259,22 +259,21 @@ export default function ProfilePage() {
 
   return (
     <AppShell active="/profile" session={{ kind: "user", user }}>
-      <div className="mx-auto max-w-[1160px]">
-        <section className="pb-3">
-          <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
-            {t.eyebrow}
-          </span>
-          <h1 className="mt-3 font-display text-[34px] text-teal-900">{t.title}</h1>
+      <div className="mx-auto max-w-[1120px] pb-14">
+        <section><h1 className="font-display text-[34px] text-teal-900">{t.eyebrow}</h1><p className="mt-1 text-sm text-ink-soft">Manage your account and preferences.</p></section>
+
+        <section className="mt-5 flex flex-col items-center gap-5 rounded-2xl border border-line bg-white p-5 shadow-sm sm:flex-row">
+          <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-[#D8EEE9] text-3xl font-bold text-teal-700">{user.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</div>
+          <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h2 className="text-xl font-bold">{user.name}</h2><span className="rounded-full bg-teal-100 px-3 py-1 text-[10px] font-bold text-success">{ROLE_LABEL[language][user.role] ?? user.role}</span></div><p className="mt-1 text-[11px] uppercase text-ink-soft">{user.role.replaceAll("_", " ")}</p><div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-ink-soft"><span>✉ {user.email}</span>{user.phone && <span>☎ {user.phone}</span>}{(user.district || user.province) && <span>⌖ {[user.district, user.province].filter(Boolean).join(", ")}</span>}</div></div>
         </section>
 
-        <section className="grid grid-cols-1 gap-4 pb-16 lg:grid-cols-[1.2fr_1fr]">
-            <form onSubmit={(e) => void handleSave(e)} className="card p-6">
-              <div className="mb-4 flex items-center gap-3">
-                <span className="rounded-full bg-teal-100 px-3 py-1 text-[12px] font-bold text-teal-700">
-                  {ROLE_LABEL[language][user.role] ?? user.role}
-                </span>
-                <span className="text-[13px] text-ink-soft">{user.email}</span>
-              </div>
+        <div className="mt-4 flex gap-6 overflow-x-auto border-b border-line px-2"><span className="border-b-2 border-teal-700 px-1 py-3 text-xs font-semibold text-teal-900">Account</span><Link href="/notifications" className="border-b-2 border-transparent px-1 py-3 text-xs text-ink-soft">Preferences</Link><span className="border-b-2 border-transparent px-1 py-3 text-xs text-ink-soft">Privacy & safety</span></div>
+
+        <section className="mt-4 space-y-4">
+            <form onSubmit={(e) => void handleSave(e)} className="rounded-2xl border border-line bg-white p-5 shadow-sm">
+              <div className="mb-5 flex items-center justify-between"><div><h3 className="text-sm font-bold text-teal-900">Personal information</h3><p className="mt-1 text-[10px] text-ink-soft">Update the details stored on your Inshuti account.</p></div><button type="submit" disabled={saving} className="rounded-lg border border-line px-4 py-2 text-[11px] font-semibold text-teal-700">{saving ? t.saving : t.saveChanges}</button></div>
+              <div className="grid gap-4 lg:grid-cols-3">
+              <div>
 
               <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">{t.name}</label>
               <input
@@ -283,6 +282,7 @@ export default function ProfilePage() {
                 onChange={(e) => setName(e.target.value)}
               />
               <p className="mb-2.5 mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.name}</p>
+              </div><div>
 
               <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">{t.phone}</label>
               <input
@@ -291,6 +291,7 @@ export default function ProfilePage() {
                 onChange={(e) => setPhone(e.target.value)}
               />
               <p className="mb-2.5 mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.phone}</p>
+              </div><div>
 
               <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">{t.preferredLanguage}</label>
               <select
@@ -302,9 +303,10 @@ export default function ProfilePage() {
                   <option key={lang} value={lang}>{LANGUAGE_OPTION_LABEL[lang]}</option>
                 ))}
               </select>
+              </div></div>
 
-              <p className="mb-3 text-xs text-ink-soft">{LOCATION_LABEL[language].note}</p>
-              <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="my-4 border-t border-line" /><p className="mb-3 text-xs text-ink-soft">{LOCATION_LABEL[language].note}</p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {(Object.keys(location) as Array<keyof typeof location>).map((field) => (
                   <label key={field} className="text-[12.5px] font-bold text-ink-soft">
                     {LOCATION_LABEL[language][field]}
@@ -312,49 +314,28 @@ export default function ProfilePage() {
                   </label>
                 ))}
               </div>
-
-              <button
-                type="submit"
-                disabled={saving}
-                className="rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
-              >
-                {saving ? t.saving : t.saveChanges}
-              </button>
             </form>
 
-            <div className="flex flex-col gap-4">
+            <div className="grid gap-4 lg:grid-cols-2">
               {user.role === "TEENAGER" && (
-                <div className="card p-6">
-                  <h3 className="mb-2 text-base text-teal-900">{t.anonymousMode}</h3>
-                  <p className="mb-4 text-[13px] leading-[1.6] text-ink-soft">
+                <div className="rounded-2xl border border-line bg-white p-5 shadow-sm">
+                  <div className="flex items-center justify-between"><h3 className="text-sm font-bold text-teal-900">Privacy & safety</h3><button type="button" onClick={toggleAnonymousMode} className={`rounded-full px-3 py-1.5 text-[10px] font-semibold ${anonymousMode ? "bg-teal-100 text-teal-700" : "bg-gold-100 text-[#8A5E1E]"}`}>{anonymousMode ? t.anonymousOn : t.anonymousOff}</button></div>
+                  <h4 className="mt-4 text-xs font-semibold">{t.anonymousMode}</h4><p className="mt-2 text-[11px] leading-5 text-ink-soft">
                     {t.anonymousModeDesc}
                   </p>
-                  <button
-                    type="button"
-                    onClick={toggleAnonymousMode}
-                    className={`rounded-full px-4 py-2 text-[13px] font-semibold ${
-                      anonymousMode ? "bg-teal-100 text-teal-700" : "bg-gold-100 text-[#8A5E1E]"
-                    }`}
-                  >
-                    {t.anonymousMode}: {anonymousMode ? t.anonymousOn : t.anonymousOff}
-                  </button>
                 </div>
               )}
-              <div className="card p-6">
-                <h3 className="mb-2 text-base text-teal-900">{t.notifications}</h3>
-                <p className="mb-4 text-[13px] leading-[1.6] text-ink-soft">
+              <div className="rounded-2xl border border-line bg-white p-5 shadow-sm">
+                <h3 className="text-sm font-bold text-teal-900">{t.notifications}</h3>
+                <p className="mt-3 text-[11px] leading-5 text-ink-soft">
                   {t.notificationsDesc}
                 </p>
-                <Link href="/notifications" className="text-[13px] font-semibold text-teal-700">
+                <Link href="/notifications" className="mt-4 inline-block text-[11px] font-semibold text-teal-700">
                   {t.notificationPreferences}
                 </Link>
               </div>
-              <div className="card border border-red-200 p-6">
-                <button type="button" onClick={() => void handleDeactivate()} className="text-[13px] font-semibold text-red-700">
-                  {t.deactivate}
-                </button>
-              </div>
             </div>
+            <div className="rounded-2xl border border-red-200 bg-[#FFF8F7] p-5"><h3 className="text-sm font-bold text-red-800">Account & security</h3><p className="mt-2 text-[11px] text-ink-soft">Deactivation removes access and anonymizes the personal details linked to this account.</p><button type="button" onClick={() => void handleDeactivate()} className="mt-4 rounded-lg border border-red-300 px-4 py-2 text-[11px] font-semibold text-red-700">{t.deactivate}</button></div>
           </section>
       </div>
     </AppShell>

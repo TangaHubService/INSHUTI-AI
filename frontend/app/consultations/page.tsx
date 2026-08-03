@@ -1,32 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 
-import { useToast } from "@/lib/useToast";
 import { AppShell } from "@/components/AppShell";
 import { FullPageLoading, PageLoading } from "@/components/Spinner";
 import { useLanguage } from "@/lib/LanguageContext";
+import { getChatList, type ChatListItem, type ConsultationStatus } from "@/lib/userApiClient";
 import { useRequireUser } from "@/lib/useUserAuth";
-import {
-  getChatList,
-  type ChatListItem,
-} from "@/lib/userApiClient";
+import { useToast } from "@/lib/useToast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+type Filter = "ALL" | "ACTIVE" | "RESOLVED" | "ESCALATED";
 
-function timeLabel(iso: string): string {
-  const d = new Date(iso);
-  const now = new Date();
-  const diff = now.getTime() - d.getTime();
-  if (diff < 86400000) return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  if (diff < 604800000) return d.toLocaleDateString([], { weekday: "short" });
-  return d.toLocaleDateString([], { day: "2-digit", month: "short" });
-}
+const STATUS_STYLE: Record<ConsultationStatus, string> = {
+  PENDING: "bg-gold-100 text-[#8A5E1E]", ASSIGNED: "bg-[#EEE8FF] text-[#7444C8]", IN_PROGRESS: "bg-[#E9F3FF] text-[#256AAF]",
+  RESOLVED: "bg-teal-100 text-success", ESCALATED: "bg-coral-100 text-coral-dark",
+};
 
-function firstLine(text: string): string {
-  return text.replace(/\n.*/, "").slice(0, 80);
+const COPY = {
+  EN: { title: "Consultations", subtitle: "Connect with health professionals for private and confidential support.", total: "Total consultations", resolved: "Resolved", active: "Active", escalated: "Escalated", all: "All consultations", empty: "No consultations yet. Ask to speak with a health worker from the AI chat.", professional: "Need to talk to a professional?", proBody: "Our healthcare professionals are here to support you confidentially.", book: "Start from AI chat", how: "How consultations work", confidential: "Private & confidential", qualified: "Qualified professionals", flexible: "Reply when convenient", safe: "Safe & supportive", crisis: "In an emergency?", crisisBody: "If you or someone you know is in immediate danger, reach out right away.", resources: "View crisis resources" },
+  RW: { title: "Kugisha inama", subtitle: "Vugana n'abakozi b'ubuzima mu ibanga.", total: "Inama zose", resolved: "Zarangiye", active: "Zikomeje", escalated: "Zihutirwa", all: "Inama zose", empty: "Nta nama urasaba. Saba umukozi w'ubuzima muri chat ya AI.", professional: "Ukeneye umukozi w'ubuzima?", proBody: "Abakozi bacu biteguye kugufasha mu ibanga.", book: "Tangirira muri chat", how: "Uko inama zikora", confidential: "Ni ibanga", qualified: "Abakozi babishoboye", flexible: "Subizwa igihe bibereye", safe: "Umutekano n'inkunga", crisis: "Hari ikibazo cyihutirwa?", crisisBody: "Niba hari uri mu kaga, saba ubufasha ako kanya.", resources: "Reba ubufasha bwihutirwa" },
+  FR: { title: "Consultations", subtitle: "Échangez avec des professionnels de santé en toute confidentialité.", total: "Total", resolved: "Terminées", active: "Actives", escalated: "Escaladées", all: "Toutes les consultations", empty: "Aucune consultation. Demandez un professionnel depuis le chat IA.", professional: "Besoin d'un professionnel ?", proBody: "Nos professionnels vous accompagnent en toute confidentialité.", book: "Commencer dans le chat", how: "Comment ça marche", confidential: "Privé et confidentiel", qualified: "Professionnels qualifiés", flexible: "Réponse flexible", safe: "Sûr et bienveillant", crisis: "Une urgence ?", crisisBody: "En cas de danger immédiat, demandez de l'aide sans attendre.", resources: "Voir les ressources d'urgence" },
+  SW: { title: "Mashauriano", subtitle: "Ungana na wahudumu wa afya kwa msaada wa siri.", total: "Jumla", resolved: "Yaliyokamilika", active: "Yanayoendelea", escalated: "Ya dharura", all: "Mashauriano yote", empty: "Hakuna mashauriano. Omba mhudumu kupitia gumzo la AI.", professional: "Unahitaji mhudumu wa afya?", proBody: "Wahudumu wetu wako tayari kukusaidia kwa siri.", book: "Anza kwenye gumzo", how: "Jinsi yanavyofanya kazi", confidential: "Siri na faragha", qualified: "Wataalamu waliohitimu", flexible: "Jibu kwa wakati unaofaa", safe: "Salama na yenye msaada", crisis: "Dharura?", crisisBody: "Ikiwa kuna hatari ya haraka, tafuta msaada sasa.", resources: "Ona msaada wa dharura" },
+};
+
+function Stat({ icon, color, value, label }: { icon: string; color: string; value: number; label: string }) {
+  return <div className="flex items-center gap-4 rounded-2xl border border-line bg-white p-4 shadow-sm"><span className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: `${color}15`, color }}><svg width="22" height="22"><use href={`#${icon}`} /></svg></span><div><div className="text-xl font-bold">{value}</div><div className="mt-1 text-[11px] text-ink-soft">{label}</div><div className="mt-1 text-[9px] text-ink-soft">All time</div></div></div>;
 }
 
 export default function ConsultationsPage() {
@@ -35,125 +36,48 @@ export default function ConsultationsPage() {
   const { user, loading: authLoading } = useRequireUser();
   const [chats, setChats] = useState<ChatListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<Filter>("ALL");
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
   const socketRef = useRef<Socket | null>(null);
+  const t = COPY[language];
 
   useEffect(() => {
     if (authLoading || !user) return;
     let cancelled = false;
-
-    async function load() {
-      try {
-        const data = await getChatList();
-        if (!cancelled) setChats(data);
-      } catch {
-        if (!cancelled) toast("Failed to load chats", "error");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
+    const load = async () => { try { const data = await getChatList(); if (!cancelled) setChats(data); } catch { if (!cancelled) toast("Failed to load consultations", "error"); } finally { if (!cancelled) setLoading(false); } };
     void load();
-
-    socketRef.current = io(`${API_URL}/chat-list`, {
-      withCredentials: true,
-      transports: ["websocket", "polling"],
-    });
-
-    socketRef.current.on("user:online", (data: { userId: string; online: boolean }) => {
-      if (!cancelled) {
-        setOnlineUsers((prev) => {
-          const next = new Set(prev);
-          if (data.online) next.add(data.userId);
-          else next.delete(data.userId);
-          return next;
-        });
-      }
-    });
-
-      socketRef.current.on("message:new", () => {
-      if (!cancelled) {
-        void load();
-      }
-    });
-
-    return () => {
-      cancelled = true;
-      if (socketRef.current) { socketRef.current.disconnect(); socketRef.current = null; }
-    };
-    // toast is a stable provider callback; reconnect only when identity changes.
+    socketRef.current = io(`${API_URL}/chat-list`, { withCredentials: true, transports: ["websocket", "polling"] });
+    socketRef.current.on("user:online", ({ userId, online }: { userId: string; online: boolean }) => setOnlineUsers((previous) => {
+      const next = new Set(previous);
+      if (online) next.add(userId);
+      else next.delete(userId);
+      return next;
+    }));
+    socketRef.current.on("message:new", () => void load());
+    return () => { cancelled = true; socketRef.current?.disconnect(); socketRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user]);
 
+  const stats = useMemo(() => ({ resolved: chats.filter((c) => c.status === "RESOLVED").length, active: chats.filter((c) => ["PENDING", "ASSIGNED", "IN_PROGRESS"].includes(c.status)).length, escalated: chats.filter((c) => c.status === "ESCALATED").length }), [chats]);
+  const visible = chats.filter((chat) => filter === "ALL" || (filter === "ACTIVE" ? ["PENDING", "ASSIGNED", "IN_PROGRESS"].includes(chat.status) : chat.status === filter));
   if (authLoading || !user) return <FullPageLoading />;
 
-  const t = (key: string) => {
-    const labels: Record<string, Record<string, string>> = {
-      eyebrow: { EN: "Messages", RW: "Ubutumwa", FR: "Messages", SW: "Jumbe" },
-      empty: { EN: "No conversations yet. Ask to talk to a health worker from the AI chat.", RW: "Nta biganiro bihari. Saba kuvugana n'umukozi w'ubuzima mu kiganiro.", FR: "Aucune conversation. Demandez à parler à un professionnel depuis le chat.", SW: "Hakuna mazungumzo. Omba kuzungumza na mhudumu wa afya kutoka kwenye mazungumzo." },
-      online: { EN: "Online", RW: "Ariho", FR: "En ligne", SW: "Ana mtandao" },
-      offline: { EN: "Offline", RW: "Ntariho", FR: "Hors ligne", SW: "Hana mtandao" },
-    };
-    return labels[key]?.[language] ?? labels[key]?.EN ?? key;
-  };
-
-  return (
-    <AppShell active="/consultations" session={{ kind: "user", user }}>
-      <div className="mx-auto max-w-[860px]">
-        <div className="pb-3">
-          <h1 className="font-display text-[28px] text-teal-900">{t("eyebrow")}</h1>
-        </div>
-
-        <div className="card py-1.5">
-          {loading && <PageLoading />}
-          {!loading && chats.length === 0 && (
-            <p className="px-5 py-8 text-center text-[13.5px] text-ink-soft">{t("empty")}</p>
-          )}
-          {chats.map((chat) => {
-            const isOnline = chat.otherParty ? onlineUsers.has(chat.otherParty.id) : false;
-            return (
-              <Link
-                key={chat.id}
-                href={`/consultations/${chat.id}`}
-                className="flex items-center gap-3 border-b border-line px-4 py-3.5 last:border-b-0 hover:bg-paper-2"
-              >
-                <div className="relative shrink-0">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100 text-sm font-bold text-teal-700">
-                    {chat.otherParty?.name?.charAt(0)?.toUpperCase() ?? "?"}
-                  </div>
-                  {isOnline && (
-                    <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500" />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="truncate text-[14px] font-semibold text-ink">
-                      {chat.otherParty?.name ?? (user.role === "HEALTHCARE_PROFESSIONAL" ? "Anonymous User" : "Health Worker")}
-                    </span>
-                    {chat.lastMessage && (
-                      <span className="shrink-0 text-[11px] text-ink-soft">{timeLabel(chat.lastMessage.createdAt)}</span>
-                    )}
-                  </div>
-                  <div className="mt-0.5 flex items-center justify-between gap-2">
-                    <span className="truncate text-[13px] text-ink-soft">
-                      {chat.lastMessage ? firstLine(chat.lastMessage.content) : "No messages yet"}
-                    </span>
-                    <div className="flex shrink-0 items-center gap-2">
-                      {chat.unreadCount > 0 && (
-                        <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-coral px-1.5 text-[10px] font-bold text-white">
-                          {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
-                        </span>
-                      )}
-                      <span className={`text-[10px] ${isOnline ? "text-green-600" : "text-ink-soft"}`}>
-                        {isOnline ? t("online") : t("offline")}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-    </AppShell>
-  );
+  return <AppShell active="/consultations" session={{ kind: "user", user }}><div className="mx-auto max-w-[1240px] pb-10">
+    <header><h1 className="text-[30px] font-bold text-ink">{t.title}</h1><p className="mt-1 text-sm text-ink-soft">{t.subtitle}</p></header>
+    <div className="mt-6 grid gap-5 xl:grid-cols-[1fr_330px]">
+      <main className="min-w-0 space-y-5">
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Stat icon="i-users" color="#8657E8" value={chats.length} label={t.total} /><Stat icon="i-check" color="#159A68" value={stats.resolved} label={t.resolved} /><Stat icon="i-clock" color="#F2A01B" value={stats.active} label={t.active} /><Stat icon="i-alert-triangle" color="#F05268" value={stats.escalated} label={t.escalated} /></section>
+        <section className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
+          <div className="flex gap-5 overflow-x-auto border-b border-line px-5 pt-3">{(["ALL", "ACTIVE", "RESOLVED", "ESCALATED"] as Filter[]).map((value) => <button key={value} onClick={() => setFilter(value)} className={`whitespace-nowrap border-b-2 px-1 py-3 text-xs font-semibold ${filter === value ? "border-teal-700 text-teal-900" : "border-transparent text-ink-soft"}`}>{value === "ALL" ? t.all : value.charAt(0) + value.slice(1).toLowerCase()}</button>)}</div>
+          {loading && <PageLoading />}{!loading && visible.length === 0 && <p className="px-6 py-12 text-center text-sm text-ink-soft">{t.empty}</p>}
+          {visible.map((chat) => { const online = chat.otherParty ? onlineUsers.has(chat.otherParty.id) : false; return <Link key={chat.id} href={`/consultations/${chat.id}`} className="flex items-center gap-4 border-b border-line px-5 py-5 last:border-0 hover:bg-paper-2"><span className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base font-bold ${chat.status === "RESOLVED" ? "bg-teal-100 text-success" : chat.status === "ESCALATED" ? "bg-coral-100 text-coral-dark" : "bg-[#EEE8FF] text-[#7444C8]"}`}>{chat.otherParty?.name?.[0]?.toUpperCase() ?? "?"}{online && <i className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500" />}</span><span className="min-w-0 flex-1"><strong className="block truncate text-sm">{chat.otherParty?.name ?? (user.role === "HEALTHCARE_PROFESSIONAL" ? "User awaiting support" : "Awaiting professional assignment")}</strong><span className="mt-1 block truncate text-[11px] text-ink-soft">{chat.lastMessage?.content ?? "No professional messages yet"}</span><span className="mt-1 block text-[10px] text-ink-soft">Requested {new Date(chat.createdAt).toLocaleDateString()} · Priority {chat.priority}</span></span><span className="text-right"><b className={`inline-block rounded-full px-3 py-1 text-[10px] ${STATUS_STYLE[chat.status]}`}>{chat.status.replace("_", " ")}</b>{chat.unreadCount > 0 && <span className="mt-2 block text-[10px] font-semibold text-coral">{chat.unreadCount} unread</span>}</span><span className="text-xl text-ink-soft">›</span></Link>; })}
+        </section>
+      </main>
+      <aside className="space-y-4">
+        <section className="rounded-2xl bg-gradient-to-br from-[#F7F1FF] to-white p-5 shadow-sm"><h2 className="text-base font-bold">{t.professional}</h2><p className="mt-2 text-[11px] leading-5 text-ink-soft">{t.proBody}</p><Link href="/chat" className="mt-4 inline-flex rounded-xl bg-[#7444C8] px-4 py-2.5 text-[11px] font-semibold text-white">{t.book}</Link></section>
+        <section className="rounded-2xl border border-line bg-white p-5 shadow-sm"><h2 className="text-sm font-bold">{t.how}</h2><div className="mt-4 space-y-4">{[["i-lock",t.confidential],["i-user-check",t.qualified],["i-clock",t.flexible],["i-shield",t.safe]].map(([icon,label]) => <div key={label} className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F3F0FF] text-[#7444C8]"><svg width="16" height="16"><use href={`#${icon}`} /></svg></span><span className="text-[11px] font-semibold">{label}</span></div>)}</div></section>
+        <section className="rounded-2xl border border-coral-100 bg-[#FFF7F6] p-5"><h2 className="text-sm font-bold">{t.crisis}</h2><p className="mt-2 text-[11px] leading-5 text-ink-soft">{t.crisisBody}</p><Link href="/chat" className="mt-4 block rounded-xl bg-coral px-4 py-2.5 text-center text-[11px] font-semibold text-white">{t.resources}</Link></section>
+      </aside>
+    </div>
+  </div></AppShell>;
 }

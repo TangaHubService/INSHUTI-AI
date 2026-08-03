@@ -54,21 +54,21 @@ export function ChatMessage({
   return (
     <motion.div
       layout
-      className={`mb-6 ${isUser ? "flex flex-col items-end" : ""}`}
+      className={`group mb-5 ${isUser ? "flex flex-col items-end" : ""}`}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
     >
-      <div className={`flex items-start gap-4 w-full max-w-[768px] mx-auto ${isUser ? "flex-row-reverse" : ""}`}>
+      <div className={`mx-auto flex w-full max-w-[820px] items-start gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
         {/* Avatar */}
         {isUser ? (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#5436DA]">
-            <span className="text-sm font-medium text-white">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-100 ring-2 ring-white">
+            <span className="text-sm font-bold text-teal-700">
               {message.content.charAt(0).toUpperCase() || "U"}
             </span>
           </div>
         ) : (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#10A37F]">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-900 shadow-sm ring-2 ring-white">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
               <rect x="4" y="7" width="16" height="12" rx="4" />
               <path d="M12 3v4M8 13h.01M16 13h.01" strokeLinecap="round" />
@@ -77,13 +77,13 @@ export function ChatMessage({
         )}
 
         {/* Content */}
-        <div className={`min-w-0 ${isUser ? "max-w-[80%]" : "max-w-[90%] sm:max-w-[92%]"}`}>
+        <div className={`min-w-0 ${isUser ? "max-w-[82%]" : "max-w-[92%] sm:max-w-[88%]"}`}>
           {/* Message bubble */}
           <div
-            className={`text-[15px] leading-[1.7] ${
+            className={`text-[13px] leading-[1.65] shadow-sm ${
               isUser
-                ? "rounded-2xl rounded-br-[4px] bg-[#10A37F] px-4 py-2.5 text-white"
-                : "text-[#333] dark:text-[#ECECF1]"
+                ? "rounded-2xl rounded-tr-[5px] border border-[#BFD9D3] bg-[#EDF7F4] px-4 py-3 text-ink dark:border-[#31534F] dark:bg-[#17302D] dark:text-[#ECECF1]"
+                : "rounded-2xl rounded-tl-[5px] border border-line bg-white px-4 py-3.5 text-[#263B38] dark:border-[#3C3C3C] dark:bg-[#1F1F1F] dark:text-[#ECECF1]"
             }`}
           >
             {isUser ? (
@@ -118,7 +118,7 @@ export function ChatMessage({
           </div>
 
           {/* Footer row */}
-          <div className={`flex items-center gap-1 mt-1 ${isUser ? "justify-end" : ""}`}>
+          <div className={`mt-1.5 flex items-center gap-1 ${isUser ? "justify-end" : ""}`}>
             <span className="px-1 text-[11px] text-[#B0B0B0]">{message.time}</span>
             {!isUser && (
               <div className="opacity-0 transition group-hover:opacity-100 flex items-center gap-0.5">

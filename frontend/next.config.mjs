@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const developmentConnections = process.env.NODE_ENV === "development" ? " http://localhost:4000 ws://localhost:4000" : "";
+
 const nextConfig = {
   async headers() {
     return [
@@ -10,7 +12,7 @@ const nextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=(self)" },
-          { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https: wss:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" },
+          { key: "Content-Security-Policy", value: `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https: wss:${developmentConnections}; frame-ancestors 'none'; base-uri 'self'; form-action 'self'` },
         ],
       },
     ];

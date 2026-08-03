@@ -18,6 +18,7 @@ const mockUser = {
   sector: null,
   cell: null,
   notificationPrefs: "{}",
+  appPreferences: "{}",
   active: true,
   loginAttempts: 0,
   lockedUntil: null,

@@ -109,6 +109,48 @@ export async function deactivateMyAccount(password: string): Promise<void> {
   }
 }
 
+export interface AppPreferences {
+  theme: "LIGHT" | "DARK" | "SYSTEM";
+  responseStyle: "FRIENDLY" | "CONCISE" | "DETAILED";
+  autoDetectLanguage: boolean;
+  saveConversations: boolean;
+  healthReminders: boolean;
+  largeText: boolean;
+  reducedMotion: boolean;
+  highContrast: boolean;
+}
+
+export async function getAppPreferences(): Promise<AppPreferences> {
+  const res = await apiFetch("/api/users/me/preferences");
+  if (!res.ok) throw new Error("Failed to load settings");
+  const data: { preferences: AppPreferences } = await res.json();
+  return data.preferences;
+}
+
+export async function updateAppPreferences(input: Partial<AppPreferences>): Promise<AppPreferences> {
+  const res = await apiFetch("/api/users/me/preferences", { method: "PUT", body: JSON.stringify(input) });
+  if (!res.ok) throw new Error("Failed to save settings");
+  const data: { preferences: AppPreferences } = await res.json();
+  return data.preferences;
+}
+
+export async function changeMyPassword(currentPassword: string, newPassword: string): Promise<void> {
+  const res = await apiFetch("/api/users/me/password", { method: "PATCH", body: JSON.stringify({ currentPassword, newPassword }) });
+  if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(body.error ?? "Failed to change password"); }
+}
+
+export async function downloadMyData(): Promise<void> {
+  const res = await apiFetch("/api/users/me/export");
+  if (!res.ok) throw new Error("Failed to export account data");
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `inshuti-data-${new Date().toISOString().slice(0, 10)}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 export type AppointmentStatus = "REQUESTED" | "CONFIRMED" | "RESCHEDULED" | "CANCELLED" | "COMPLETED";
 
 export interface Professional {

@@ -7,11 +7,10 @@ import { useEffect, useState } from "react";
 import { Logo } from "@/components/Logo";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
-import { SiteFooter } from "@/components/SiteFooter";
 import { useLanguage } from "@/lib/LanguageContext";
 import { NAV } from "@/lib/i18nCommon";
 import { logout as logoutAdmin, type AdminRole, type AdminUser } from "@/lib/adminApiClient";
-import { logoutUser, type UserProfile, type UserRole } from "@/lib/userApiClient";
+import { getAppPreferences, logoutUser, type UserProfile, type UserRole } from "@/lib/userApiClient";
 
 export type AppSession = { kind: "admin"; admin: AdminUser } | { kind: "user"; user: UserProfile };
 
@@ -44,6 +43,7 @@ function userNavItems(role: UserRole, nav: (typeof NAV)["EN"]): { href: string; 
         { href: "/facility-locator", label: nav.findCare, icon: "i-map-pin" },
         { href: "/notifications", label: nav.notifications, icon: "i-bell" },
         { href: "/profile", label: nav.profile, icon: "i-user-check" },
+        { href: "/settings", label: "Settings", icon: "i-gear" },
       ];
     case "HEALTHCARE_PROFESSIONAL":
       return [
@@ -52,12 +52,14 @@ function userNavItems(role: UserRole, nav: (typeof NAV)["EN"]): { href: string; 
         { href: "/appointments", label: nav.appointments, icon: "i-calendar" },
         { href: "/notifications", label: nav.notifications, icon: "i-bell" },
         { href: "/profile", label: nav.profile, icon: "i-user-check" },
+        { href: "/settings", label: "Settings", icon: "i-gear" },
       ];
     case "GOVERNMENT_USER":
       return [
         { href: "/government", label: nav.dashboard, icon: "i-grid" },
         { href: "/notifications", label: nav.notifications, icon: "i-bell" },
         { href: "/profile", label: nav.profile, icon: "i-user-check" },
+        { href: "/settings", label: "Settings", icon: "i-gear" },
       ];
     default:
       return [
@@ -69,6 +71,7 @@ function userNavItems(role: UserRole, nav: (typeof NAV)["EN"]): { href: string; 
         { href: "/facility-locator", label: nav.findCare, icon: "i-map-pin" },
         { href: "/notifications", label: nav.notifications, icon: "i-bell" },
         { href: "/profile", label: nav.profile, icon: "i-user-check" },
+        { href: "/settings", label: "Settings", icon: "i-gear" },
       ];
   }
 }
@@ -104,6 +107,18 @@ export function AppShell({
   useEffect(() => {
     setCollapsed(localStorage.getItem(COLLAPSE_KEY) === "true");
   }, []);
+
+  useEffect(() => {
+    if (session.kind !== "user") return;
+    void getAppPreferences().then((preferences) => {
+      const root = document.documentElement;
+      const dark = preferences.theme === "DARK" || (preferences.theme === "SYSTEM" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      root.classList.toggle("dark", dark);
+      root.classList.toggle("large-text", preferences.largeText);
+      root.classList.toggle("reduce-motion", preferences.reducedMotion);
+      root.classList.toggle("high-contrast", preferences.highContrast);
+    }).catch(() => {});
+  }, [session]);
 
   function toggleCollapsed() {
     const next = !collapsed;
@@ -241,7 +256,6 @@ export function AppShell({
         ) : (
           <div className="flex-1 px-5 pb-[60px] pt-7 sm:px-8">{children}</div>
         )}
-        <SiteFooter />
       </div>
     </div>
   );

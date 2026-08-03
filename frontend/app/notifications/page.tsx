@@ -189,6 +189,7 @@ export default function NotificationsPage() {
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
   const [saving, setSaving] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [filter, setFilter] = useState<"ALL" | "APPOINTMENTS" | "CONSULTATIONS" | "SYSTEM">("ALL");
 
   function applicationServerKey(value: string): ArrayBuffer {
     const padded = `${value}${"=".repeat((4 - value.length % 4) % 4)}`.replace(/-/g, "+").replace(/_/g, "/");
@@ -259,25 +260,40 @@ export default function NotificationsPage() {
 
   if (authLoading || !user) return <FullPageLoading />;
 
+  const filtered = notifications.filter((notification) => {
+    if (filter === "ALL") return true;
+    if (filter === "APPOINTMENTS") return notification.type === "APPOINTMENT_REMINDER";
+    if (filter === "CONSULTATIONS") return notification.type === "CONSULTATION_UPDATE" || notification.type === "REFERRAL";
+    return notification.type === "REGISTRATION_CONFIRMATION" || notification.type === "PASSWORD_RESET";
+  });
+  const groups = filtered.reduce<Record<string, AppNotification[]>>((result, notification) => {
+    const created = new Date(notification.createdAt);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+    const key = created >= today ? "Today" : created >= yesterday ? "Yesterday" : "Earlier";
+    (result[key] ??= []).push(notification);
+    return result;
+  }, {});
+  const iconFor = (type: NotificationType) => type === "APPOINTMENT_REMINDER" ? "i-calendar" : type === "CONSULTATION_UPDATE" || type === "REFERRAL" ? "i-stethoscope" : type === "PASSWORD_RESET" ? "i-lock" : "i-info";
+  const colorFor = (type: NotificationType) => type === "APPOINTMENT_REMINDER" ? "#239B6B" : type === "CONSULTATION_UPDATE" || type === "REFERRAL" ? "#8956E8" : type === "PASSWORD_RESET" ? "#F0A01E" : "#3C8ED8";
+
   return (
     <AppShell active="/notifications" session={{ kind: "user", user }}>
-      <div className="mx-auto max-w-[1160px]">
-        <section className="pb-3">
-          <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
-            {t.eyebrow}
-          </span>
-          <h1 className="mt-3 font-display text-[34px] text-teal-900">{t.title}</h1>
-          <p className="mt-[10px] max-w-[520px] text-[14.5px] leading-[1.6] text-ink-soft">
-            {t.subtitle}
-          </p>
-        </section>
+      <div className="mx-auto max-w-[1120px] pb-14">
+        <section className="flex items-start justify-between gap-4"><div><h1 className="font-display text-[34px] text-teal-900">{t.eyebrow}</h1><p className="mt-1 text-sm text-ink-soft">{t.subtitle}</p></div>{notifications.some((n) => !n.read) && <button onClick={() => void handleMarkAll()} className="mt-2 flex items-center gap-2 text-[11px] font-semibold text-success"><span>✓</span>{t.markAllRead}</button>}</section>
+        <div className="mt-6 flex gap-2 overflow-x-auto pb-1">{(["ALL", "APPOINTMENTS", "CONSULTATIONS", "SYSTEM"] as const).map((value) => <button key={value} onClick={() => setFilter(value)} className={`rounded-xl border px-4 py-2 text-[11px] font-semibold ${filter === value ? "border-teal-700 bg-teal-700 text-white" : "border-line bg-white text-ink-soft"}`}>{value.charAt(0) + value.slice(1).toLowerCase()}</button>)}</div>
 
-        <section className="grid grid-cols-1 items-start gap-4 pb-16 pt-5 lg:grid-cols-[1fr_1.1fr]">
-            <div className="card p-5">
+        <section className="grid items-start gap-5 pt-5 xl:grid-cols-[1fr_340px]">
+            <div className="space-y-5">
+              {filtered.length === 0 && <div className="rounded-2xl border border-line bg-white px-5 py-12 text-center text-sm text-ink-soft">{t.noNotifications}</div>}
+              {Object.entries(groups).map(([group, items]) => <div key={group}><h2 className="mb-2 px-1 text-[12px] font-bold text-teal-900">{group}</h2><div className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">{items.map((n) => { const color = colorFor(n.type); return <button key={n.id} onClick={() => void handleNotificationClick(n)} className={`flex w-full items-center gap-4 border-b border-line px-5 py-4 text-left last:border-0 hover:bg-paper-2 ${n.read ? "" : "bg-[#FBFEFD]"}`}><span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full" style={{ color, background: `${color}14` }}>{!n.read && <i className="absolute -left-4 h-2 w-2 rounded-full bg-success" />}<svg width="21" height="21"><use href={`#${iconFor(n.type)}`} /></svg></span><span className="min-w-0 flex-1"><strong className="block text-[12px] text-ink">{n.title}</strong><span className="mt-1 block text-[11px] leading-5 text-ink-soft">{n.body}</span><span className="mt-1 block text-[9.5px] text-ink-soft">{relativeTime(n.createdAt, language)}</span></span>{NOTIFICATION_LINK[n.type] && <span className="text-xl text-ink-soft">›</span>}</button>; })}</div></div>)}
+            </div>
+
+            <aside className="rounded-2xl border border-line bg-white p-5 shadow-sm xl:sticky xl:top-5">
               <h3 className="mb-4 text-base text-teal-900">{t.preferences}</h3>
               {prefs && (
                 <>
-                  <div className="grid grid-cols-[1.4fr_repeat(3,0.7fr)] items-center gap-y-3 text-[13px]">
+                  <div className="grid grid-cols-[1.4fr_repeat(3,0.7fr)] items-center gap-y-3 text-[11px]">
                     <span />
                     {(["IN_APP", "EMAIL", "SMS"] as NotificationChannel[]).map((channel) => (
                       <span key={channel} className="text-center font-bold text-ink-soft">{CHANNEL_LABEL[language][channel]}</span>
@@ -301,46 +317,19 @@ export default function NotificationsPage() {
                   <button
                     onClick={() => void handleSave()}
                     disabled={saving}
-                    className="mt-5 w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
+                    className="mt-5 w-full rounded-xl bg-teal-700 px-5 py-3 text-[12px] font-semibold text-white transition hover:bg-teal-900 disabled:opacity-50"
                   >
                     {saving ? t.saving : t.savePreferences}
                   </button>
                   <p className="mt-3 text-[12px] leading-[1.5] text-ink-soft">
                     {t.smsNote}
                   </p>
-                  <button type="button" onClick={() => void enablePush()} disabled={pushEnabled} className="mt-3 w-full rounded-full border border-teal-700 px-4 py-2 text-sm font-semibold text-teal-700 disabled:opacity-60">
+                  <button type="button" onClick={() => void enablePush()} disabled={pushEnabled} className="mt-3 w-full rounded-xl border border-teal-700 px-4 py-2.5 text-[11px] font-semibold text-teal-700 disabled:opacity-60">
                     {pushEnabled ? "Push notifications enabled" : "Enable browser push notifications"}
                   </button>
                 </>
               )}
-            </div>
-
-            <div className="card py-1.5">
-              <div className="flex items-center justify-between px-5 pb-1.5 pt-[14px]">
-                <h3 className="text-base text-teal-900">{t.recent}</h3>
-                {notifications.some((n) => !n.read) && (
-                  <button onClick={() => void handleMarkAll()} className="text-[13px] font-semibold text-ink-soft transition hover:text-teal-700">
-                    {t.markAllRead}
-                  </button>
-                )}
-              </div>
-
-              {notifications.length === 0 && (
-                <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">{t.noNotifications}</p>
-              )}
-
-              {notifications.map((n) => (
-                <button
-                  key={n.id}
-                  onClick={() => void handleNotificationClick(n)}
-                  className={`block w-full border-b border-line px-5 py-4 text-left last:border-b-0 transition ${n.read ? "hover:bg-paper-2" : "bg-teal-100/30 hover:bg-teal-100/50"}`}
-                >
-                  <div className="text-sm font-semibold text-ink">{n.title}</div>
-                  <div className="mt-1 text-[13px] text-ink-soft">{n.body}</div>
-                  <div className="mt-1.5 text-[11px] text-ink-soft">{relativeTime(n.createdAt, language)}</div>
-                </button>
-              ))}
-            </div>
+            </aside>
           </section>
       </div>
     </AppShell>

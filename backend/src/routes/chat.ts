@@ -25,6 +25,28 @@ const chatRequestSchema = z.object({
 
 const OPEN_CONVERSATION_WINDOW_MS = 30 * 60 * 1000;
 
+type ChatPreferences = {
+  autoDetectLanguage?: boolean;
+  responseStyle?: "FRIENDLY" | "CONCISE" | "DETAILED";
+};
+
+function decodeChatPreferences(value: string | undefined): ChatPreferences {
+  if (!value) return {};
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return parsed && typeof parsed === "object" ? parsed as ChatPreferences : {};
+  } catch {
+    return {};
+  }
+}
+
+function responseStyleInstruction(style: ChatPreferences["responseStyle"]): string | undefined {
+  if (style === "CONCISE") return "Keep the answer concise and direct while preserving essential safety information.";
+  if (style === "DETAILED") return "Give a clear, detailed explanation in accessible language, with practical next steps where helpful.";
+  if (style === "FRIENDLY") return "Use a warm, friendly, supportive tone appropriate for a young person.";
+  return undefined;
+}
+
 async function getOrCreateConversation(sessionId: string, language: Language, userId: string | null) {
   const latest = await prisma.conversation.findFirst({
     where: { sessionId, userId },
@@ -90,13 +112,17 @@ router.post("/", async (req, res) => {
 
   const sessionId = getOrCreateSessionId(req, res);
   const settings = await prisma.appSettings.findUnique({ where: { id: "singleton" } });
+  const signedInUser = getUserFromRequest(req);
+  const userRecord = signedInUser
+    ? await prisma.user.findUnique({ where: { id: signedInUser.userId }, select: { appPreferences: true } })
+    : null;
+  const chatPreferences = decodeChatPreferences(userRecord?.appPreferences);
 
   const requestedLanguage = parsed.data.language ?? "EN";
-  const language = settings?.autoDetectLanguage
+  const language = (chatPreferences.autoDetectLanguage ?? settings?.autoDetectLanguage ?? true)
     ? detectLanguage(message, requestedLanguage)
     : requestedLanguage;
 
-  const signedInUser = getUserFromRequest(req);
   const conversation = await getOrCreateConversation(sessionId, language, anonymousMode ? null : signedInUser?.userId ?? null);
 
   const previousMessages = await prisma.message.findMany({
@@ -145,7 +171,7 @@ router.post("/", async (req, res) => {
   const topTopic = retrievedArticles[0]?.topic ?? null;
 
   const systemPrompt = buildSystemPrompt(retrievedArticles, language, {
-    responseStyleNote: settings?.responseStyleNote,
+    responseStyleNote: [settings?.responseStyleNote, responseStyleInstruction(chatPreferences.responseStyle)].filter(Boolean).join(" ") || undefined,
     restrictToKnowledgeBase: settings?.restrictToKnowledgeBase ?? true,
   });
 

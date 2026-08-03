@@ -1,160 +1,236 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { getHistory, type ConversationSummary } from "@/lib/apiClient";
 import { AppShell } from "@/components/AppShell";
-import { PageLoading, FullPageLoading } from "@/components/Spinner";
+import { FullPageLoading, PageLoading } from "@/components/Spinner";
+import { getHistory, type ConversationSummary } from "@/lib/apiClient";
 import { useLanguage } from "@/lib/LanguageContext";
+import { getMyAppointments, type Appointment } from "@/lib/userApiClient";
 import { useRequireUser } from "@/lib/useUserAuth";
-import { getNotifications, type AppNotification } from "@/lib/userApiClient";
 
-const QUICK_TOPICS = [
-  { icon: "i-droplet", bg: "bg-coral-100", fg: "text-coral-dark", name: "Menstrual Health" },
-  { icon: "i-baby", bg: "bg-gold-100", fg: "text-[#8A5E1E]", name: "Pregnancy" },
-  { icon: "i-heart", bg: "bg-teal-100", fg: "text-teal-700", name: "Relationships" },
-  { icon: "i-pill", bg: "bg-coral-100", fg: "text-coral-dark", name: "Family Planning" },
-  { icon: "i-shield", bg: "bg-teal-100", fg: "text-teal-700", name: "HIV & STIs" },
-  { icon: "i-mind", bg: "bg-gold-100", fg: "text-[#8A5E1E]", name: "Mental Health" },
+const TOPICS = [
+  { slug: "menstrual-health", name: "Menstrual Health", color: "#E9567D", icon: "i-droplet" },
+  { slug: "pregnancy", name: "Pregnancy", color: "#F5A623", icon: "i-baby" },
+  { slug: "relationships", name: "Relationships", color: "#4CB686", icon: "i-heart" },
+  { slug: "family-planning", name: "Family Planning", color: "#4F91DA", icon: "i-pill" },
+  { slug: "hiv-stis", name: "HIV & STIs", color: "#9561D8", icon: "i-shield" },
+  { slug: "mental-health", name: "Mental Health", color: "#2DAEA5", icon: "i-mind" },
 ];
 
-function relativeTime(iso: string): string {
-  const date = new Date(iso);
-  const diffMs = Date.now() - date.getTime();
-  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-  if (diffDays <= 0) return `Today, ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays} days ago`;
-  const weeks = Math.floor(diffDays / 7);
-  return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
+const COPY = {
+  EN: {
+    welcome: "Welcome back to Inshuti. We're here for your health, your choices, your future.", chat: "Start chatting",
+    conversations: "Conversations", appointments: "Appointments", streak: "Learning streak", xp: "XP points", explored: "Topics explored",
+    journey: "Your health learning journey", journeySub: "Topics you've explored", activity: "Conversations over time", top: "Top topics",
+    recent: "Recent conversations", upcoming: "Upcoming appointments", tips: "Health tips for you", viewAll: "View all",
+    noChats: "Your private conversations will appear here.", noAppointments: "No upcoming appointments.", book: "Book an appointment",
+    tipTitle: "Small steps matter", tipBody: "Rest, drink water, and ask for support whenever something feels uncertain.",
+    talk: "Need to talk to someone?", talkBody: "You can ask a health professional for private support.", findCare: "Find care",
+    emergency: "In an emergency or need immediate help?", emergencyBody: "You're not alone. Reach someone you trust or contact a professional.", crisis: "View crisis resources",
+  },
+  RW: {
+    welcome: "Murakaza neza muri Inshuti. Turi hano ku buzima bwawe, amahitamo yawe n'ejo hazaza.", chat: "Tangira kuganira",
+    conversations: "Ibiganiro", appointments: "Gahunda", streak: "Iminsi yo kwiga", xp: "Amanota XP", explored: "Insanganyamatsiko",
+    journey: "Urugendo rwawe rwo kwiga ubuzima", journeySub: "Insanganyamatsiko wasuzumye", activity: "Ibiganiro uko iminsi ishira", top: "Insanganyamatsiko zikuru",
+    recent: "Ibiganiro bya vuba", upcoming: "Gahunda ziri imbere", tips: "Inama z'ubuzima", viewAll: "Reba byose",
+    noChats: "Ibiganiro byawe by'ibanga bizagaragara hano.", noAppointments: "Nta gahunda iri imbere.", book: "Fata gahunda",
+    tipTitle: "Intambwe nto zirafasha", tipBody: "Ruhuka, unywe amazi kandi usabe ubufasha igihe hari icyo utumva neza.",
+    talk: "Ukeneye uwo muganira?", talkBody: "Wasaba umukozi w'ubuzima ubufasha bw'ibanga.", findCare: "Shaka ubufasha",
+    emergency: "Hari ikibazo cyihutirwa?", emergencyBody: "Nturi wenyine. Hamagara uwo wizera cyangwa umukozi w'ubuzima.", crisis: "Reba nimero z'ubutabazi",
+  },
+  FR: {
+    welcome: "Bienvenue sur Inshuti. Nous sommes là pour votre santé, vos choix et votre avenir.", chat: "Commencer à discuter",
+    conversations: "Conversations", appointments: "Rendez-vous", streak: "Série d'apprentissage", xp: "Points XP", explored: "Sujets explorés",
+    journey: "Votre parcours d'apprentissage santé", journeySub: "Sujets que vous avez explorés", activity: "Conversations au fil du temps", top: "Sujets principaux",
+    recent: "Conversations récentes", upcoming: "Rendez-vous à venir", tips: "Conseils santé", viewAll: "Tout voir",
+    noChats: "Vos conversations privées apparaîtront ici.", noAppointments: "Aucun rendez-vous à venir.", book: "Prendre rendez-vous",
+    tipTitle: "Les petits pas comptent", tipBody: "Reposez-vous, buvez de l'eau et demandez de l'aide lorsque vous avez un doute.",
+    talk: "Besoin de parler à quelqu'un ?", talkBody: "Demandez un soutien privé à un professionnel de santé.", findCare: "Trouver des soins",
+    emergency: "Une urgence ou besoin d'aide immédiate ?", emergencyBody: "Vous n'êtes pas seul·e. Contactez une personne de confiance ou un professionnel.", crisis: "Voir les ressources d'urgence",
+  },
+  SW: {
+    welcome: "Karibu tena Inshuti. Tuko hapa kwa afya yako, maamuzi yako na maisha yako ya baadaye.", chat: "Anza kuzungumza",
+    conversations: "Mazungumzo", appointments: "Miadi", streak: "Mfululizo wa kujifunza", xp: "Pointi za XP", explored: "Mada ulizochunguza",
+    journey: "Safari yako ya kujifunza afya", journeySub: "Mada ulizochunguza", activity: "Mazungumzo kwa muda", top: "Mada kuu",
+    recent: "Mazungumzo ya hivi karibuni", upcoming: "Miadi inayokuja", tips: "Vidokezo vya afya", viewAll: "Ona yote",
+    noChats: "Mazungumzo yako ya siri yataonekana hapa.", noAppointments: "Hakuna miadi inayokuja.", book: "Weka miadi",
+    tipTitle: "Hatua ndogo ni muhimu", tipBody: "Pumzika, kunywa maji na uombe msaada wakati jambo halieleweki.",
+    talk: "Unahitaji kuzungumza na mtu?", talkBody: "Unaweza kuomba msaada wa siri kutoka kwa mhudumu wa afya.", findCare: "Tafuta huduma",
+    emergency: "Dharura au unahitaji msaada sasa?", emergencyBody: "Hauko peke yako. Wasiliana na mtu unayemwamini au mhudumu wa afya.", crisis: "Ona rasilimali za dharura",
+  },
+};
+
+function initials(name: string) {
+  return name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function relativeTime(iso: string) {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (days <= 0) return "Today";
+  if (days === 1) return "Yesterday";
+  return `${days} days ago`;
+}
+
+function topicFor(conversation: ConversationSummary) {
+  const value = `${conversation.topic?.slug ?? ""} ${conversation.topic?.nameEn ?? ""}`.toLowerCase();
+  return TOPICS.find((topic) => value.includes(topic.slug) || value.includes(topic.name.toLowerCase())) ?? TOPICS[5];
+}
+
+function Stat({ icon, color, value, label, helper }: { icon: string; color: string; value: string | number; label: string; helper: string }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3 px-4 py-4 lg:border-r lg:border-line lg:last:border-r-0">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}18`, color }}>
+        <svg width="21" height="21"><use href={`#${icon}`} /></svg>
+      </div>
+      <div className="min-w-0">
+        <div className="text-[21px] font-bold leading-none text-ink">{value}</div>
+        <div className="mt-1 truncate text-xs text-ink-soft">{label}</div>
+        <div className="mt-1 text-[10.5px] font-semibold" style={{ color }}>{helper}</div>
+      </div>
+    </div>
+  );
+}
+
+function Panel({ title, subtitle, children, action }: { title: string; subtitle?: string; children: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-line/70 bg-white shadow-sm">
+      <div className="flex items-start justify-between gap-4 px-5 pb-3 pt-4">
+        <div><h2 className="text-[15px] font-bold text-ink">{title}</h2>{subtitle && <p className="mt-1 text-xs text-ink-soft">{subtitle}</p>}</div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
 }
 
 export default function TeenDashboardPage() {
   const { user, loading: authLoading } = useRequireUser();
   const { language } = useLanguage();
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
-  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const t = COPY[language];
 
   useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-    Promise.all([getHistory(), getNotifications()])
-      .then(([history, n]) => {
+    if (!user) return;
+    Promise.all([getHistory(), getMyAppointments()])
+      .then(([history, appointmentList]) => {
         setConversations(history.conversations);
-        setNotifications(n.notifications);
+        setAppointments(appointmentList);
       })
       .finally(() => setLoading(false));
   }, [user]);
 
+  const dashboard = useMemo(() => {
+    const counts = new Map(TOPICS.map((topic) => [topic.slug, 0]));
+    conversations.forEach((conversation) => {
+      const topic = topicFor(conversation);
+      counts.set(topic.slug, (counts.get(topic.slug) ?? 0) + 1);
+    });
+    const explored = [...counts.values()].filter(Boolean).length;
+    const lastSeven = Array.from({ length: 7 }, (_, index) => {
+      const day = new Date();
+      day.setHours(0, 0, 0, 0);
+      day.setDate(day.getDate() - (6 - index));
+      const next = new Date(day); next.setDate(next.getDate() + 1);
+      return { label: day.toLocaleDateString([], { weekday: "short" }), count: conversations.filter((item) => {
+        const created = new Date(item.createdAt); return created >= day && created < next;
+      }).length };
+    });
+    const activeDays = new Set(conversations.map((item) => new Date(item.createdAt).toDateString())).size;
+    return { counts, explored, lastSeven, activeDays, xp: conversations.length * 20 + explored * 15 };
+  }, [conversations]);
+
   if (authLoading || !user) return <FullPageLoading />;
+  const upcoming = appointments.filter((item) => item.status !== "CANCELLED" && new Date(item.requestedTime) >= new Date()).slice(0, 2);
+  const maxActivity = Math.max(1, ...dashboard.lastSeven.map((day) => day.count));
+  const points = dashboard.lastSeven.map((day, index) => `${12 + index * 46},${90 - (day.count / maxActivity) * 65}`).join(" ");
+  const exploredPercent = Math.round((dashboard.explored / TOPICS.length) * 100);
 
   return (
     <AppShell active="/dashboard" session={{ kind: "user", user }}>
-      <div className="mx-auto max-w-[1160px]">
-        <section className="pb-3">
-          <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
-            Welcome back
-          </span>
-          <h1 className="mt-3 font-display text-[34px] text-teal-900">Hi, {user.name.split(" ")[0]}</h1>
-          <p className="mt-[10px] max-w-[560px] text-[14.5px] leading-[1.6] text-ink-soft">
-            Ask anything, pick up a past conversation, or explore a topic below.
-          </p>
-          <Link
-            href="/chat"
-            className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-[10px] text-[13.5px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark hover:shadow-lg"
-          >
-            Start chatting
-          </Link>
+      <div className="mx-auto max-w-[1240px] space-y-4 pb-8">
+        <section className="grid gap-4 xl:grid-cols-[1.45fr_0.95fr]">
+          <div className="flex items-center justify-between rounded-2xl bg-[radial-gradient(circle_at_top_right,#fff1ec,transparent_45%)] px-1 py-2">
+            <div>
+              <h1 className="font-display text-[30px] font-bold text-ink sm:text-[34px]">Hi, {user.name.split(" ")[0]}! <span aria-hidden="true">👋</span></h1>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-ink-soft">{t.welcome}</p>
+              <Link href="/chat" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-coral px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:-translate-y-0.5 hover:bg-coral-dark">
+                <svg width="17" height="17"><use href="#i-chat" /></svg>{t.chat}
+              </Link>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 rounded-2xl border border-[#F0E2DE] bg-gradient-to-r from-[#FFF5F2] to-white p-4 shadow-sm">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-[#FBE4E3] text-2xl font-bold text-coral-dark">{initials(user.name)}</div>
+            <div><p className="text-[15px] font-bold leading-6 text-ink">“You’re doing great taking care of yourself.”</p><p className="mt-1 text-xs text-ink-soft">Small steps today, a healthier tomorrow.</p><span className="mt-2 block text-coral">♥</span></div>
+          </div>
         </section>
 
-        {loading ? (
-          <PageLoading />
-        ) : (
-          <section className="grid grid-cols-1 gap-4 pb-16 pt-8 lg:grid-cols-[1.2fr_1fr]">
-            <div>
-              <div className="card p-[22px] mb-4">
-                <h3 className="mb-4 text-base text-teal-900">Quick topics</h3>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {QUICK_TOPICS.map((topic) => (
-                    <Link
-                      key={topic.name}
-                      href={`/chat?topic=${topic.icon}`}
-                      className="flex flex-col items-start gap-2 rounded-[var(--radius-md)] border border-line px-3.5 py-3 transition hover:bg-paper-2 hover:shadow-sm"
-                    >
-                      <div className={`flex h-[26px] w-[26px] items-center justify-center rounded-lg ${topic.bg} ${topic.fg}`}>
-                        <svg width="14" height="14">
-                          <use href={`#${topic.icon}`} />
-                        </svg>
-                      </div>
-                      <span className="text-[12.5px] font-semibold text-ink">{topic.name}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
+        {loading ? <PageLoading /> : <>
+          <section className="grid overflow-hidden rounded-2xl border border-line/70 bg-white shadow-sm sm:grid-cols-2 lg:grid-cols-5">
+            <Stat icon="i-chat" color="#28A76F" value={conversations.length} label={t.conversations} helper="Private history" />
+            <Stat icon="i-calendar" color="#9561D8" value={upcoming.length} label={t.appointments} helper="Upcoming" />
+            <Stat icon="i-activity" color="#F5A623" value={dashboard.activeDays} label={t.streak} helper="Active days" />
+            <Stat icon="i-star" color="#3888E8" value={dashboard.xp} label={t.xp} helper={`Level ${Math.max(1, Math.floor(dashboard.xp / 200) + 1)}`} />
+            <Stat icon="i-heart" color="#E95668" value={dashboard.explored} label={t.explored} helper="Keep learning" />
+          </section>
 
-              <div className="card py-1.5">
-                <div className="flex items-center justify-between px-5 pb-1.5 pt-[14px]">
-                  <h3 className="text-base text-teal-900">Recent conversations</h3>
-                  <Link href="/my-space" className="text-[12.5px] font-semibold text-teal-700 transition hover:text-teal-900">
-                    View all \u2192
-                  </Link>
+          <section className="grid gap-4 xl:grid-cols-[0.92fr_1.06fr_0.98fr]">
+            <Panel title={t.journey} subtitle={t.journeySub}>
+              <div className="flex items-center gap-5 px-5 pb-5 pt-2">
+                <div className="relative h-32 w-32 shrink-0 rounded-full" style={{ background: `conic-gradient(${TOPICS.map((topic, index) => `${topic.color} ${index * 16.66}% ${(index + 1) * 16.66}%`).join(",")})` }}>
+                  <div className="absolute inset-5 flex flex-col items-center justify-center rounded-full bg-white"><span className="text-2xl font-bold text-ink">{exploredPercent}%</span><span className="text-[10px] text-ink-soft">Explored</span></div>
                 </div>
-                {conversations.length === 0 && (
-                  <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">
-                    No conversations yet.{" "}
-                    <Link href="/chat" className="font-semibold text-teal-700">
-                      Start one now
-                    </Link>
-                    .
-                  </p>
-                )}
-                {conversations.slice(0, 5).map((conversation) => (
-                  <Link
-                    href="/chat"
-                    className="flex items-center gap-[14px] border-b border-line px-5 py-3 last:border-b-0 transition hover:bg-paper-2"
-                    key={conversation.id}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-semibold text-ink">
-                        &quot;{conversation.firstUserMessage ?? "\u2026"}&quot;
-                      </div>
-                      <div className="mt-[3px] text-xs text-ink-soft">
-                        {conversation.topic
-                          ? language === "RW"
-                            ? conversation.topic.nameRw
-                            : conversation.topic.nameEn
-                          : "General"}{" "}
-                        \u00B7 {relativeTime(conversation.createdAt)}
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+                <div className="min-w-0 flex-1 space-y-2">{TOPICS.map((topic) => <div key={topic.slug} className="flex items-center gap-2 text-[10.5px]"><span className="h-2 w-2 rounded-full" style={{ background: topic.color }} /><span className="min-w-0 flex-1 truncate text-ink-soft">{topic.name}</span><b className="text-ink">{dashboard.counts.get(topic.slug) ?? 0}</b></div>)}</div>
               </div>
-            </div>
+            </Panel>
 
-            <div className="card py-1.5">
-              <div className="px-5 pb-1.5 pt-[14px] text-base text-teal-900">Recent notifications</div>
-              {notifications.length === 0 && (
-                <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">Nothing new.</p>
-              )}
-              {notifications.slice(0, 6).map((n) => (
-                <div key={n.id} className="border-b border-line px-5 py-3 last:border-b-0">
-                  <div className="text-sm font-semibold text-ink">{n.title}</div>
-                  <div className="mt-1 text-xs text-ink-soft">{n.body}</div>
-                </div>
-              ))}
-              <div className="px-5 py-3">
-                <Link href="/notifications" className="text-[12.5px] font-semibold text-teal-700 transition hover:text-teal-900">
-                  View all \u2192
-                </Link>
+            <Panel title={t.activity} action={<span className="rounded-lg border border-line px-3 py-1.5 text-[11px] text-ink-soft">Last 7 days</span>}>
+              <div className="px-5 pb-4">
+                <svg viewBox="0 0 300 110" className="h-[145px] w-full overflow-visible" role="img" aria-label={t.activity}>
+                  {[25, 50, 75, 100].map((y) => <line key={y} x1="10" x2="292" y1={y} y2={y} stroke="#E9E5DD" strokeWidth="1" />)}
+                  <defs><linearGradient id="activity-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#31A879" stopOpacity=".25" /><stop offset="1" stopColor="#31A879" stopOpacity="0" /></linearGradient></defs>
+                  <polygon points={`12,100 ${points} 288,100`} fill="url(#activity-fill)" />
+                  <polyline points={points} fill="none" stroke="#209B6B" strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" />
+                  {dashboard.lastSeven.map((day, index) => <g key={day.label}><circle cx={12 + index * 46} cy={90 - (day.count / maxActivity) * 65} r="3.5" fill="white" stroke="#209B6B" strokeWidth="2" /><text x={12 + index * 46} y="108" textAnchor="middle" fontSize="8" fill="#687975">{day.label}</text></g>)}
+                </svg>
               </div>
+            </Panel>
+
+            <Panel title={t.top}>
+              <div className="space-y-3 px-5 pb-5 pt-1">{[...TOPICS].sort((a, b) => (dashboard.counts.get(b.slug) ?? 0) - (dashboard.counts.get(a.slug) ?? 0)).map((topic) => {
+                const count = dashboard.counts.get(topic.slug) ?? 0;
+                return <div key={topic.slug} className="grid grid-cols-[105px_1fr_20px] items-center gap-2 text-[10.5px]"><span className="truncate text-ink">{topic.name}</span><div className="h-2 rounded-full bg-paper-2"><div className="h-full rounded-full" style={{ backgroundColor: topic.color, width: `${count ? Math.max(18, count / Math.max(1, conversations.length) * 100) : 0}%` }} /></div><span className="text-right font-semibold text-ink">{count}</span></div>;
+              })}</div>
+            </Panel>
+          </section>
+
+          <section className="grid gap-4 xl:grid-cols-[1fr_1.15fr_1fr]">
+            <Panel title={t.recent} action={<Link href="/my-space" className="text-[11px] font-semibold text-teal-700">{t.viewAll}</Link>}>
+              <div className="pb-2">{conversations.length === 0 ? <p className="px-5 pb-5 text-xs text-ink-soft">{t.noChats}</p> : conversations.slice(0, 4).map((conversation) => {
+                const topic = topicFor(conversation); return <Link key={conversation.id} href="/chat" className="flex items-center gap-3 border-t border-line/70 px-4 py-3 transition hover:bg-paper-2"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: `${topic.color}15`, color: topic.color }}><svg width="15" height="15"><use href={`#${topic.icon}`} /></svg></span><span className="min-w-0 flex-1"><span className="block truncate text-[11.5px] font-medium text-ink">{conversation.firstUserMessage ?? "Private conversation"}</span><span className="mt-0.5 block text-[10px] text-ink-soft">{topic.name} · {relativeTime(conversation.createdAt)}</span></span><span className="text-ink-soft">›</span></Link>;
+              })}</div>
+            </Panel>
+
+            <Panel title={t.upcoming} action={<Link href="/appointments" className="text-[11px] font-semibold text-teal-700">{t.viewAll}</Link>}>
+              <div className="px-4 pb-4">{upcoming.length === 0 ? <div className="rounded-xl bg-paper-2 p-4 text-xs text-ink-soft">{t.noAppointments} <Link href="/appointments" className="font-semibold text-teal-700">{t.book}</Link></div> : upcoming.map((appointment) => {
+                const date = new Date(appointment.requestedTime); return <div key={appointment.id} className="mb-2 flex items-center gap-3 rounded-xl border border-line p-3 last:mb-0"><div className="w-12 rounded-lg border border-[#B9DDC9] text-center"><div className="bg-[#E7F5EC] py-1 text-[8px] font-bold text-success">{date.toLocaleDateString([], { month: "short" }).toUpperCase()}</div><div className="py-1 text-base font-bold">{date.getDate()}</div></div><div className="min-w-0 flex-1"><div className="truncate text-[11.5px] font-semibold">{appointment.professional.name}</div><div className="mt-1 text-[10px] text-ink-soft">{date.toLocaleDateString()} · {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div></div><span className="rounded-full bg-teal-100 px-2 py-1 text-[9px] font-semibold text-success">{appointment.status}</span></div>;
+              })}</div>
+            </Panel>
+
+            <div className="space-y-4">
+              <Panel title={t.tips}><div className="flex gap-3 px-5 pb-5"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-100 text-teal-700"><svg width="19" height="19"><use href="#i-sparkles" /></svg></span><div><div className="text-xs font-bold">{t.tipTitle}</div><p className="mt-1 text-[11px] leading-5 text-ink-soft">{t.tipBody}</p></div></div></Panel>
+              <div className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm"><div><div className="text-xs font-bold">{t.talk}</div><div className="mt-1 text-[10px] text-ink-soft">{t.talkBody}</div></div><Link href="/facility-locator" className="shrink-0 rounded-xl bg-teal-700 px-4 py-2 text-[11px] font-semibold text-white">{t.findCare}</Link></div>
             </div>
           </section>
-        )}
+
+          <section className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-[#CDE5DF] bg-gradient-to-r from-[#EFF9F6] to-white p-5 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-4"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#D9F2E8] text-success"><svg width="21" height="21"><use href="#i-shield" /></svg></span><div><h2 className="text-[14px] font-bold">{t.emergency}</h2><p className="mt-1 text-[11px] text-ink-soft">{t.emergencyBody}</p></div></div>
+            <Link href="/chat" className="rounded-xl bg-teal-700 px-5 py-2.5 text-[11px] font-semibold text-white">{t.crisis}</Link>
+          </section>
+        </>}
       </div>
     </AppShell>
   );

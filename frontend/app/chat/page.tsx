@@ -87,6 +87,13 @@ const GREETING: Record<Language, string> = {
   SW: "Muraho! Mimi ni **Inshuti** — unaweza kuniuliza chochote kuhusu mwili wako, mahusiano, au afya yako. Mazungumzo haya ni **siri**. Nini kichwani mwako leo?",
 };
 
+const BACK_LABEL: Record<Language, string> = {
+  EN: "Back",
+  RW: "Subira inyuma",
+  FR: "Retour",
+  SW: "Rudi",
+};
+
 function nowLabel() {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
@@ -335,6 +342,14 @@ function ChatPageInner() {
     void send(input);
   }
 
+  function goBack() {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/");
+    }
+  }
+
   const hasMessages = messages.length > 1;
 
   return (
@@ -374,23 +389,38 @@ function ChatPageInner() {
       {/* Main area */}
       <div className="flex flex-1 flex-col min-w-0">
         {/* Minimal top bar */}
-        <div className="flex h-12 items-center justify-between px-4 border-b border-[#E5E5E5] dark:border-[#333] shrink-0">
-          <button
-            type="button"
-            onClick={() => setMobileSidebarOpen(true)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#666] hover:bg-[#F0F0F0] dark:text-[#A0A0A0] dark:hover:bg-[#333] lg:hidden"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+        <div className="grid h-12 shrink-0 grid-cols-[1fr_auto_1fr] items-center border-b border-[#E5E5E5] px-3 dark:border-[#333]">
+          <div className="flex items-center gap-1 justify-self-start">
+            <button
+              type="button"
+              onClick={goBack}
+              className="flex h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#555] transition hover:bg-[#F0F0F0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 dark:text-[#D0D0D0] dark:hover:bg-[#333]"
+              aria-label={BACK_LABEL[language]}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="m15 18-6-6 6-6" />
+              </svg>
+              <span className="hidden sm:inline">{BACK_LABEL[language]}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileSidebarOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-[#666] hover:bg-[#F0F0F0] dark:text-[#A0A0A0] dark:hover:bg-[#333] lg:hidden"
+              aria-label="Open chat history"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-[#333] dark:text-[#ECECF1]">Inshuti</span>
           </div>
           <button
             type="button"
             onClick={() => setDarkMode((d) => !d)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#666] hover:bg-[#F0F0F0] dark:text-[#A0A0A0] dark:hover:bg-[#333]"
+            className="flex h-9 w-9 items-center justify-center justify-self-end rounded-lg text-[#666] hover:bg-[#F0F0F0] dark:text-[#A0A0A0] dark:hover:bg-[#333]"
+            aria-label={darkMode ? "Use light theme" : "Use dark theme"}
           >
             {darkMode ? (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">

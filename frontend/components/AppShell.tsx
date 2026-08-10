@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Logo } from "@/components/Logo";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
+import { PrivateMessagesBell } from "@/components/PrivateMessagesBell";
 import { useLanguage } from "@/lib/LanguageContext";
 import { NAV } from "@/lib/i18nCommon";
 import { logout as logoutAdmin, type AdminRole, type AdminUser } from "@/lib/adminApiClient";
@@ -33,7 +34,9 @@ const ADMIN_ROLE_LABEL: Record<AdminRole, string> = {
   MODERATOR: "Moderator",
 };
 
-function userNavItems(role: UserRole, nav: (typeof NAV)["EN"]): { href: string; label: string; icon: string }[] {
+type UserNavItem = { href: string; label: string; icon: string; badge?: number };
+
+function userNavItems(role: UserRole, nav: (typeof NAV)["EN"]): UserNavItem[] {
   switch (role) {
     case "PARENT_GUARDIAN":
       return [
@@ -51,8 +54,9 @@ function userNavItems(role: UserRole, nav: (typeof NAV)["EN"]): { href: string; 
         { href: "/professional", label: nav.dashboard, icon: "i-grid" },
         { href: "/consultations", label: nav.consultations, icon: "i-stethoscope" },
         { href: "/appointments", label: nav.appointments, icon: "i-calendar" },
+        { href: "/consultations?view=messages", label: "Messages", icon: "i-chat" },
         { href: "/notifications", label: nav.notifications, icon: "i-bell" },
-        { href: "/profile", label: nav.profile, icon: "i-user-check" },
+        { href: "/library", label: "Knowledge Base", icon: "i-book" },
         { href: "/settings", label: "Settings", icon: "i-gear" },
         { href: "/help-resources", label: "Help & Resources", icon: "i-file" },
       ];
@@ -143,29 +147,34 @@ export function AppShell({
   const roleLabel = session.kind === "admin"
     ? ADMIN_ROLE_LABEL[session.admin.role]
     : session.user.role.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-  const navItems =
+  const navItems: UserNavItem[] =
     session.kind === "admin"
       ? ADMIN_NAV_ITEMS.filter(
           (item) => !item.minRole || ADMIN_ROLE_RANK[session.admin.role] >= ADMIN_ROLE_RANK[item.minRole],
         )
       : userNavItems(session.user.role, nav);
+  const isProfessional = session.kind === "user" && session.user.role === "HEALTHCARE_PROFESSIONAL";
 
   return (
-    <div className="flex min-h-screen bg-paper-2">
+    <div className={`flex min-h-screen ${isProfessional ? "bg-[#FAF9F7]" : "bg-paper-2"}`}>
       {mobileOpen && (
         <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden" onClick={() => setMobileOpen(false)} />
       )}
       <aside
-        className={`fixed top-0 z-50 flex h-screen w-[260px] flex-shrink-0 flex-col bg-[var(--admin-bg)] px-4 py-[22px] text-[#DCEBE8] transition-all duration-300 ease-out lg:sticky lg:translate-x-0 ${
+        className={`fixed top-0 z-50 flex h-screen w-[260px] flex-shrink-0 flex-col overflow-y-auto px-4 py-[22px] text-[#DCEBE8] transition-all duration-300 ease-out lg:sticky lg:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
-        } ${collapsed ? "lg:w-[76px]" : "lg:w-[260px]"}`}
+        } ${collapsed ? "lg:w-[76px]" : "lg:w-[260px]"} ${
+          isProfessional
+            ? "bg-[radial-gradient(circle_at_20%_84%,#0A5A54_0%,#034C47_33%,#053C39_76%,#062F2D_100%)]"
+            : "bg-[var(--admin-bg)]"
+        }`}
       >
         <div
-          className={`flex items-center pb-[26px] px-2 ${collapsed ? "flex-col gap-2" : "justify-between gap-2.5"}`}
+          className={`flex items-center px-2 ${isProfessional ? "pb-[30px]" : "pb-[26px]"} ${collapsed ? "flex-col gap-2" : "justify-between gap-2.5"}`}
         >
           <div className="flex items-center gap-2.5">
-            <Logo size={26} />
-            {!collapsed && <span className="font-display text-[19px] font-bold text-white">Inshuti</span>}
+            <Logo size={isProfessional ? 34 : 26} />
+            {!collapsed && <span className={`font-display font-bold text-white ${isProfessional ? "text-[24px]" : "text-[19px]"}`}>Inshuti</span>}
           </div>
           <button
             type="button"
@@ -178,37 +187,50 @@ export function AppShell({
             </svg>
           </button>
         </div>
-        <nav className="flex flex-1 flex-col gap-[3px]">
+        <nav className={`flex flex-1 flex-col ${isProfessional ? "gap-[5px]" : "gap-[3px]"}`}>
           {navItems.map((item) => {
             const isActive = active === item.href;
             return (
               <Link
-                key={item.href}
+                key={`${item.href}-${item.label}`}
                 href={item.href}
                 title={collapsed ? item.label : undefined}
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-[11px] rounded-[var(--radius-sm)] px-3 py-[10px] text-sm font-semibold transition-all duration-150 ${
+                onClick={(event) => {
+                  if (item.href === "/consultations?view=messages") {
+                    event.preventDefault();
+                    window.dispatchEvent(new CustomEvent("private-messages:open", { detail: {} }));
+                  }
+                  setMobileOpen(false);
+                }}
+                className={`flex items-center gap-[11px] rounded-[var(--radius-sm)] px-3 text-sm font-semibold transition-all duration-150 ${isProfessional ? "py-[11px]" : "py-[10px]"} ${
                   isActive
-                    ? "bg-coral text-white shadow-sm"
+                    ? isProfessional
+                      ? "bg-gradient-to-r from-[#FF604F] to-[#F35649] text-white shadow-[0_7px_18px_rgba(238,76,61,0.2)]"
+                      : "bg-coral text-white shadow-sm"
                     : "text-[#B7D6D1] hover:bg-[var(--admin-bg-2)] hover:text-white"
                 }`}
               >
                 <svg className="h-[18px] w-[18px] flex-shrink-0" width="18" height="18">
                   <use href={`#${item.icon}`} />
                 </svg>
-                {!collapsed && item.label}
+                {!collapsed && <span className="min-w-0 flex-1">{item.label}</span>}
+                {!collapsed && item.badge && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#F05B4D] px-1 text-[10px] font-bold text-white">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}
         </nav>
-        <div className="mt-2.5 flex items-center gap-2.5 border-t border-[var(--admin-line)] px-2.5 pt-[14px]">
-          <div className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full bg-gold text-[13px] font-bold text-[#5A3E11]">
+        <div className={`mt-2.5 flex items-center gap-2.5 border-t border-[var(--admin-line)] px-2.5 ${isProfessional ? "py-[17px]" : "pt-[14px]"}`}>
+          <div className={`flex flex-shrink-0 items-center justify-center rounded-full bg-gold font-bold text-white ${isProfessional ? "h-[46px] w-[46px] text-[16px]" : "h-[34px] w-[34px] text-[13px] text-[#5A3E11]"}`}>
             {initials(name)}
           </div>
               {!collapsed && (
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13.5px] font-bold text-white">{name}</div>
-                  <div className="text-[11.5px] text-[#7FA79F]">{roleLabel}</div>
+                  <div className={`${isProfessional ? "mt-0.5 text-[9.5px] uppercase leading-[14px] text-[#B9D7D2]" : "text-[11.5px] text-[#7FA79F]"}`}>{roleLabel}</div>
                 </div>
               )}
           <button onClick={() => void handleLogout()} title="Log out" className="transition-opacity hover:opacity-80">
@@ -217,10 +239,26 @@ export function AppShell({
             </svg>
           </button>
         </div>
+        {isProfessional && !collapsed && (
+          <div className="mt-0 border-t border-[#1A5D57] pt-[17px]">
+            <div className="rounded-xl border border-[#17625C] bg-[#084B47]/70 p-[18px] shadow-[inset_0_1px_0_rgba(255,255,255,0.025)]">
+              <div className="text-[13px] font-bold text-white">Quick Help</div>
+              <div className="mt-4 flex items-center gap-2 text-[10.5px] text-[#C3DAD6]">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#2B7D75] text-white">
+                  <svg width="16" height="16"><use href="#i-phone" /></svg>
+                </span>
+                <span>Need immediate support?</span>
+              </div>
+              <Link href="/help-resources" className="mt-4 flex h-12 items-center justify-center rounded-lg bg-gradient-to-r from-[#FF6150] to-[#F35448] text-[12px] font-bold text-white shadow-[0_6px_16px_rgba(238,76,61,0.2)]">
+                Crisis Resources
+              </Link>
+            </div>
+          </div>
+        )}
       </aside>
 
       <div className="min-w-0 flex-1 flex flex-col">
-        <div className="flex items-center justify-between border-b border-line bg-white px-5 py-4 sm:px-8">
+        <div className={`flex items-center justify-between border-b border-line bg-white px-5 sm:px-8 ${isProfessional ? "h-[66px] py-[10px]" : "py-4"}`}>
           <button
             type="button"
             onClick={() => setMobileOpen((o) => !o)}
@@ -243,14 +281,15 @@ export function AppShell({
           )}
           <div className="flex items-center gap-3">
             {session.kind === "user" && <LanguageSwitcher value={language} onChange={setLanguage} />}
+            {session.kind === "user" && <PrivateMessagesBell role={session.user.role} />}
             {session.kind === "user" && <NotificationBell />}
             <div className="flex items-center gap-2">
-              <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-teal-100 text-[13px] font-bold text-teal-700">
+              <div className={`flex items-center justify-center rounded-full bg-teal-100 font-bold text-teal-700 ${isProfessional ? "h-[40px] w-[40px] text-[14px]" : "h-[34px] w-[34px] text-[13px]"}`}>
                 {initials(name)}
               </div>
               <div className="hidden text-left text-sm sm:block">
                 <div className="font-semibold text-ink">{name}</div>
-                <div className="text-[11px] text-ink-soft">{roleLabel}</div>
+                <div className={`${isProfessional ? "text-[9.5px] uppercase text-ink-soft" : "text-[11px] text-ink-soft"}`}>{roleLabel}</div>
               </div>
             </div>
           </div>
@@ -258,7 +297,7 @@ export function AppShell({
         {flush ? (
           <div className="flex flex-1 flex-col">{children}</div>
         ) : (
-          <div className="flex-1 px-5 pb-[60px] pt-7 sm:px-8">{children}</div>
+          <div className={`flex-1 px-5 pb-[60px] sm:px-8 ${isProfessional ? "pt-[27px]" : "pt-7"}`}>{children}</div>
         )}
       </div>
     </div>

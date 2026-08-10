@@ -33,6 +33,7 @@ export function setupConsultationSocket(io: SocketIOServer): void {
 
     onlineUsers.add(payload.userId);
     socket.join("online");
+    socket.join(payload.userId);
 
     socket.on("disconnect", () => {
       onlineUsers.delete(payload.userId);
@@ -120,6 +121,10 @@ export function setupConsultationSocket(io: SocketIOServer): void {
           ? consultation.user.name
           : (consultation.professional?.user.name ?? "Professional"),
       });
+      chatListNamespace.to(consultation.userId).emit("message:new", { consultationId });
+      if (consultation.professional?.userId) {
+        chatListNamespace.to(consultation.professional.userId).emit("message:new", { consultationId });
+      }
     });
 
     socket.on("messages:read", async (messageIds: string[]) => {
@@ -133,6 +138,10 @@ export function setupConsultationSocket(io: SocketIOServer): void {
         messageIds,
         readAt: now.toISOString(),
       });
+      chatListNamespace.to(consultation.userId).emit("messages:read", { consultationId });
+      if (consultation.professional?.userId) {
+        chatListNamespace.to(consultation.professional.userId).emit("messages:read", { consultationId });
+      }
     });
 
     socket.on("typing:start", () => {
@@ -141,6 +150,39 @@ export function setupConsultationSocket(io: SocketIOServer): void {
 
     socket.on("typing:stop", () => {
       socket.to(consultationId).emit("typing:stop", { userId });
+    });
+
+    socket.on("call:offer", (payload: { type?: string; offer?: unknown }) => {
+      if ((payload?.type !== "audio" && payload?.type !== "video") || !payload.offer) return;
+      const incomingCall = {
+        type: payload.type,
+        offer: payload.offer,
+        consultationId,
+        callerId: userId,
+        callerName: isUser ? consultation.user.name : (consultation.professional?.user.name ?? "Professional"),
+      };
+      socket.to(consultationId).emit("call:offer", incomingCall);
+      if (otherUserId) chatListNamespace.to(otherUserId).emit("call:incoming", incomingCall);
+    });
+
+    socket.on("call:answer", (payload: { answer?: unknown }) => {
+      if (!payload?.answer) return;
+      socket.to(consultationId).emit("call:answer", { answer: payload.answer, userId });
+    });
+
+    socket.on("call:ice-candidate", (payload: { candidate?: unknown }) => {
+      if (!payload?.candidate) return;
+      socket.to(consultationId).emit("call:ice-candidate", { candidate: payload.candidate, userId });
+    });
+
+    socket.on("call:decline", () => {
+      socket.to(consultationId).emit("call:decline", { userId });
+      if (otherUserId) chatListNamespace.to(otherUserId).emit("call:cancelled", { consultationId });
+    });
+
+    socket.on("call:end", () => {
+      socket.to(consultationId).emit("call:end", { userId });
+      if (otherUserId) chatListNamespace.to(otherUserId).emit("call:cancelled", { consultationId });
     });
 
     socket.on("disconnect", () => {

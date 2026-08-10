@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { decryptMessage, encryptMessage } from "./messageCrypto.js";
+import { decryptMessage, decryptMessageForDisplay, encryptMessage } from "./messageCrypto.js";
 
 describe("consultation message encryption", () => {
   it("round trips with authenticated AES-GCM", () => {
@@ -18,5 +18,12 @@ describe("consultation message encryption", () => {
     parts[3] = ciphertext.toString("base64url");
     const tampered = parts.join(":");
     expect(() => decryptMessage(tampered)).toThrow();
+    expect(decryptMessageForDisplay(tampered)).toBe("[This message could not be decrypted]");
+  });
+
+  it("keeps legacy plaintext consultation messages readable", () => {
+    expect(decryptMessageForDisplay("A message saved before encryption was enabled.")).toBe(
+      "A message saved before encryption was enabled.",
+    );
   });
 });

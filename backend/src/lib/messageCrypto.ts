@@ -26,6 +26,16 @@ export function decryptMessage(payload: string): string {
   throw new Error("Unsupported encrypted message format");
 }
 
+/** Reads encrypted consultation messages while preserving pre-encryption legacy rows. */
+export function decryptMessageForDisplay(payload: string): string {
+  try {
+    return decryptMessage(payload);
+  } catch {
+    const looksEncrypted = payload.startsWith("v2:") || /^[a-f\d]+:[a-f\d]+$/i.test(payload);
+    return looksEncrypted ? "[This message could not be decrypted]" : payload;
+  }
+}
+
 export function messagePreview(payload: string, maxLength = 100): string {
   try {
     return decryptMessage(payload).slice(0, maxLength);

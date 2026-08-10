@@ -104,6 +104,12 @@ export function SiteHeader({
       {user && <NotificationBell />}
       {user ? (
         <>
+          <span className="inline-flex max-w-[160px] items-center gap-1.5 truncate text-[14px] font-semibold text-teal-900" title={user.name}>
+            <svg width="15" height="15" className="shrink-0">
+              <use href="#i-user-check" />
+            </svg>
+            <span className="truncate">{user.name}</span>
+          </span>
           <Link
             href={dashboardPathForRole(user.role)}
             className="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-sm)] border-[1.5px] border-teal-700 px-4 py-[9px] text-[13px] font-semibold text-teal-700 transition-all duration-150 hover:-translate-y-px hover:bg-teal-100"

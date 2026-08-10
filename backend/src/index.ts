@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import { createApp } from "./app.js";
 import { env } from "./lib/env.js";
 import { setupConsultationSocket } from "./lib/consultationSocket.js";
+import { setupGroupCallSocket } from "./lib/groupCallSocket.js";
 import { processDueAppointmentReminders } from "./lib/notifications.js";
 import { purgeExpiredAnonymousConversations } from "./lib/retention.js";
 
@@ -18,6 +19,7 @@ const io = new Server(server, {
 });
 
 setupConsultationSocket(io);
+setupGroupCallSocket(io);
 
 const reminderTimer = setInterval(() => {
   void processDueAppointmentReminders().catch((error) => console.error("appointment reminder worker failed", error));

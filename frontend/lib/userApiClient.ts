@@ -430,6 +430,28 @@ export async function getConsultationFiles(consultationId: string): Promise<File
   return data.attachments;
 }
 
+export async function openConsultationFile(id: string): Promise<void> {
+  const blobUrl = await getConsultationFileUrl(id);
+  const link = document.createElement("a");
+  link.href = blobUrl;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+}
+
+export async function getConsultationFileUrl(id: string): Promise<string> {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+  const res = await fetch(`${API_URL}/api/uploads/${id}`, { credentials: "include" });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Failed to open attachment (${res.status})`);
+  }
+  return URL.createObjectURL(await res.blob());
+}
+
 export async function sendConsultationMessage(id: string, content: string): Promise<void> {
   const res = await apiFetch(`/api/consultations/${id}/messages`, { method: "POST", body: JSON.stringify({ content }) });
   if (!res.ok) {

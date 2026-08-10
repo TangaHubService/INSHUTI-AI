@@ -5,7 +5,7 @@ import { prisma } from "../lib/prisma.js";
 import { requireUser, type AuthenticatedUserRequest } from "../lib/userAuth.js";
 import { routeConsultation, reassignConsultation, escalateConsultation } from "../lib/consultationRouter.js";
 import { requireAdmin } from "../lib/auth.js";
-import { decryptMessage, encryptMessage, messagePreview } from "../lib/messageCrypto.js";
+import { decryptMessageForDisplay, encryptMessage, messagePreview } from "../lib/messageCrypto.js";
 import { SESSION_COOKIE_NAME } from "../lib/session.js";
 
 const router = Router();
@@ -186,7 +186,7 @@ router.get("/:id/messages", requireUser, async (req: AuthenticatedUserRequest, r
     messages: messages.map((m) => ({
       id: m.id,
       role: m.role,
-      content: decryptMessage(m.content),
+      content: decryptMessageForDisplay(m.content),
       createdAt: m.createdAt,
       readAt: m.readAt,
       senderId: m.role === "USER" ? consultation.user.id : (consultation.professional?.user.id ?? null),
@@ -209,6 +209,7 @@ router.get("/chat-list", requireUser, async (req: AuthenticatedUserRequest, res)
           conversation: {
             include: {
               messages: {
+                where: { consultationId: { not: null } },
                 orderBy: { createdAt: "desc" },
                 take: 1,
               },
@@ -224,6 +225,7 @@ router.get("/chat-list", requireUser, async (req: AuthenticatedUserRequest, res)
           conversation: {
             include: {
               messages: {
+                where: { consultationId: { not: null } },
                 orderBy: { createdAt: "desc" },
                 take: 1,
               },

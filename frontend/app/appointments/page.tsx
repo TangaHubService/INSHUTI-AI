@@ -1,10 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { useToast } from "@/lib/useToast";
 import { ConfirmModal } from "@/components/Modal";
 import { AppShell } from "@/components/AppShell";
+import { Drawer } from "@/components/Drawer";
+import { ProfessionalAppointmentsView } from "@/components/ProfessionalAppointmentsView";
 import { PageLoading, FullPageLoading } from "@/components/Spinner";
 import type { Language } from "@/lib/apiClient";
 import { useLanguage } from "@/lib/LanguageContext";
@@ -13,15 +16,11 @@ import { VALIDATION } from "@/lib/validationMessages";
 import {
   cancelAppointment,
   getMyAppointments,
-  getProfessionalCalendar,
   getProfessionals,
-  recordAppointmentOutcome,
   requestAppointment,
   rescheduleAppointment,
-  respondToAppointment,
   type Appointment,
   type Professional,
-  type ProfessionalAppointment,
   type ProfessionalType,
 } from "@/lib/userApiClient";
 
@@ -309,32 +308,47 @@ export default function AppointmentsPage() {
   const { toast } = useToast();
   const { language } = useLanguage();
   const { user, loading: authLoading } = useRequireUser();
+  const [bookOpen, setBookOpen] = useState(false);
   const t = COPY[language];
 
   if (authLoading || !user) return <FullPageLoading />;
 
+  const isProfessional = user.role === "HEALTHCARE_PROFESSIONAL";
+
   return (
     <AppShell active="/appointments" session={{ kind: "user", user }}>
-      <div className="mx-auto max-w-[1160px]">
+      <div className={`mx-auto ${isProfessional ? "max-w-[1248px]" : "max-w-[1160px]"}`}>
         <section className="flex items-start justify-between gap-5 pb-3">
-          <div><h1 className="font-display text-[34px] text-teal-900">{t.eyebrow}</h1>
-          <p className="mt-1 max-w-[620px] text-[13px] leading-[1.6] text-ink-soft">
-            {user.role === "HEALTHCARE_PROFESSIONAL" ? t.subtitlePro : "Book, manage, and track your appointments."}
-          </p></div>
-          {user.role !== "HEALTHCARE_PROFESSIONAL" && <a href="#book-appointment" className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-teal-700 px-5 py-3 text-[11px] font-semibold text-white shadow-sm hover:bg-teal-900"><span className="text-base">＋</span>{t.requestAppointment}</a>}
+          {isProfessional ? (
+            <div>
+              <span className="font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-[#EF5144]">Appointments</span>
+              <div className="mt-3 flex items-center gap-3">
+                <h1 className="font-display text-[32px] font-bold leading-none text-[#073F3B]">Appointments</h1>
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#DFF1ED] text-[#087A70]"><svg width="21" height="21"><use href="#i-calendar" /></svg></span>
+              </div>
+              <p className="mt-3 max-w-[660px] text-[12px] leading-[1.6] text-[#587079]">{t.subtitlePro}</p>
+            </div>
+          ) : (
+            <div><h1 className="font-display text-[34px] text-teal-900">{t.eyebrow}</h1><p className="mt-1 max-w-[620px] text-[13px] leading-[1.6] text-ink-soft">Book, manage, and track your appointments.</p></div>
+          )}
+          {isProfessional ? (
+            <Link href="/consultations?view=patients" className="mt-[19px] inline-flex shrink-0 items-center gap-2 rounded-lg bg-[linear-gradient(180deg,#08776E,#075D57)] px-5 py-3 text-[10px] font-semibold text-white shadow-[0_5px_13px_rgba(7,96,88,.18)]"><span className="text-sm">＋</span>New Appointment</Link>
+          ) : (
+            <button type="button" onClick={() => setBookOpen(true)} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-teal-700 px-5 py-3 text-[11px] font-semibold text-white shadow-sm hover:bg-teal-900"><span className="text-base">＋</span>{t.requestAppointment}</button>
+          )}
         </section>
 
-        {user.role === "HEALTHCARE_PROFESSIONAL" ? (
-          <ProfessionalView language={language} />
+        {isProfessional ? (
+          <ProfessionalAppointmentsView />
         ) : (
-          <UserView toast={toast} language={language} />
+          <UserView toast={toast} language={language} bookOpen={bookOpen} onOpenBook={() => setBookOpen(true)} onCloseBook={() => setBookOpen(false)} />
         )}
       </div>
     </AppShell>
   );
 }
 
-function UserView({ toast, language }: { toast: (message: string, type?: "success" | "error" | "info") => void; language: Language }) {
+function UserView({ toast, language, bookOpen, onOpenBook, onCloseBook }: { toast: (message: string, type?: "success" | "error" | "info") => void; language: Language; bookOpen: boolean; onOpenBook: () => void; onCloseBook: () => void }) {
   const t = COPY[language];
   const v = VALIDATION[language];
   const proTypeLabel = PROFESSIONAL_TYPE_LABEL[language];
@@ -456,7 +470,7 @@ function UserView({ toast, language }: { toast: (message: string, type?: "succes
         <div className="space-y-5">
         <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
           <div className="flex gap-5 overflow-x-auto border-b border-line px-5 pt-3">{statCards.map((stat) => <button key={stat.key} onClick={() => setFilter(stat.key)} className={`whitespace-nowrap border-b-2 px-1 py-3 text-xs font-semibold ${filter === stat.key ? "border-teal-700 text-teal-900" : "border-transparent text-ink-soft"}`}>{stat.label}</button>)}</div>
-          {filtered.length === 0 && <div className="flex min-h-[350px] flex-col items-center justify-center px-6 py-12 text-center"><span className="flex h-20 w-20 items-center justify-center rounded-full bg-[#EEE8FF] text-[#8956E8]"><svg width="34" height="34"><use href="#i-calendar" /></svg></span><h3 className="mt-5 text-lg font-bold text-ink">{filter === "UPCOMING" ? "No upcoming appointments" : `No ${statCards.find((item) => item.key === filter)?.label.toLowerCase()} appointments`}</h3><p className="mt-2 max-w-[390px] text-xs leading-5 text-ink-soft">{filter === "UPCOMING" ? "When you book care, your appointment details and confirmation status will appear here. Choose a professional and a time that works for you." : "There are no appointments in this category yet. You can switch tabs or book a new appointment whenever you need support."}</p><div className="mt-5 flex flex-wrap justify-center gap-3"><a href="#book-appointment" className="rounded-xl bg-teal-700 px-5 py-2.5 text-[11px] font-semibold text-white">Book an appointment</a><a href="/facility-locator" className="rounded-xl border border-teal-700 px-5 py-2.5 text-[11px] font-semibold text-teal-700">Find nearby care</a></div><div className="mt-7 flex flex-wrap justify-center gap-5 text-[10px] text-ink-soft"><span>✓ Private and confidential</span><span>✓ Qualified professionals</span><span>✓ Flexible scheduling</span></div></div>}
+          {filtered.length === 0 && <div className="flex min-h-[350px] flex-col items-center justify-center px-6 py-12 text-center"><span className="flex h-20 w-20 items-center justify-center rounded-full bg-[#EEE8FF] text-[#8956E8]"><svg width="34" height="34"><use href="#i-calendar" /></svg></span><h3 className="mt-5 text-lg font-bold text-ink">{filter === "UPCOMING" ? "No upcoming appointments" : `No ${statCards.find((item) => item.key === filter)?.label.toLowerCase()} appointments`}</h3><p className="mt-2 max-w-[390px] text-xs leading-5 text-ink-soft">{filter === "UPCOMING" ? "When you book care, your appointment details and confirmation status will appear here. Choose a professional and a time that works for you." : "There are no appointments in this category yet. You can switch tabs or book a new appointment whenever you need support."}</p><div className="mt-5 flex flex-wrap justify-center gap-3"><button type="button" onClick={onOpenBook} className="rounded-xl bg-teal-700 px-5 py-2.5 text-[11px] font-semibold text-white">Book an appointment</button><a href="/facility-locator" className="rounded-xl border border-teal-700 px-5 py-2.5 text-[11px] font-semibold text-teal-700">Find nearby care</a></div><div className="mt-7 flex flex-wrap justify-center gap-5 text-[10px] text-ink-soft"><span>✓ Private and confidential</span><span>✓ Qualified professionals</span><span>✓ Flexible scheduling</span></div></div>}
           {filtered.map((appt) => {
             const { day, month, time } = formatDateTime(appt.requestedTime);
             const canManage = appt.status !== "CANCELLED" && appt.status !== "COMPLETED";
@@ -515,66 +529,69 @@ function UserView({ toast, language }: { toast: (message: string, type?: "succes
             );
           })}
         </div>
-        <div className="flex items-center justify-between rounded-2xl border border-[#CDE5DF] bg-gradient-to-r from-[#EFF9F6] to-white p-5"><div><h3 className="text-sm font-bold">Need help choosing the right appointment?</h3><p className="mt-1 text-[11px] text-ink-soft">Choose a professional type below or find nearby care.</p></div><a href="#book-appointment" className="rounded-xl bg-teal-700 px-4 py-2 text-[11px] font-semibold text-white">{t.requestAppointment}</a></div>
+        <div className="flex items-center justify-between rounded-2xl border border-[#CDE5DF] bg-gradient-to-r from-[#EFF9F6] to-white p-5"><div><h3 className="text-sm font-bold">Need help choosing the right appointment?</h3><p className="mt-1 text-[11px] text-ink-soft">Open the booking form to choose a professional and a time that works for you.</p></div><button type="button" onClick={onOpenBook} className="rounded-xl bg-teal-700 px-4 py-2 text-[11px] font-semibold text-white">{t.requestAppointment}</button></div>
         </div>
 
         <aside className="space-y-4">
+          <button type="button" onClick={onOpenBook} className="flex w-full items-center justify-center gap-2 rounded-xl bg-teal-700 px-5 py-3 text-[12px] font-semibold text-white shadow-sm hover:bg-teal-900"><span className="text-base">＋</span>{t.requestAppointment}</button>
           {selected && <div className="rounded-2xl border border-line bg-white p-5 shadow-sm"><div className="flex items-center justify-between"><h3 className="text-sm font-bold">Appointment details</h3><span className={`rounded-full px-3 py-1 text-[10px] font-semibold ${STATUS_STYLE[selected.status]}`}>{statusLabel[selected.status]}</span></div><div className="mt-5 space-y-4"><div className="flex gap-3"><span className="text-[#8956E8]">♙</span><div><div className="text-[10px] text-ink-soft">Professional</div><div className="mt-1 text-xs font-bold">{selected.professional.name}</div><div className="text-[10px] text-ink-soft">{proTypeLabel[selected.professional.professionalType]}</div></div></div><div className="flex gap-3"><span>▣</span><div><div className="text-[10px] text-ink-soft">Date & time</div><div className="mt-1 text-xs font-semibold">{new Date(selected.requestedTime).toLocaleString()}</div></div></div>{selected.notes && <div className="flex gap-3"><span>▤</span><div><div className="text-[10px] text-ink-soft">Notes</div><div className="mt-1 text-xs leading-5">{selected.notes}</div></div></div>}{selected.outcome && <div className="rounded-xl bg-teal-100 p-3 text-xs"><b>{t.outcomeLabel}</b><p className="mt-1">{selected.outcome}</p></div>}</div></div>}
-          <form id="book-appointment" onSubmit={(e) => void handleRequest(e)} className="rounded-2xl border border-line bg-white p-5 shadow-sm">
-            <h3 className="mb-4 text-sm font-bold">{t.requestNewTime}</h3>
-            <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">{t.professionalType}</label>
-            <select
-              className="mb-3.5 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm"
-              value={professionalType}
-              onChange={(e) => setProfessionalType(e.target.value as ProfessionalType)}
-            >
-              {(Object.keys(proTypeLabel) as ProfessionalType[]).map((k) => (
-                <option key={k} value={k}>{proTypeLabel[k]}</option>
-              ))}
-            </select>
-
-            <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">{t.professional}</label>
-            <select
-              className={`w-full rounded-[10px] border bg-paper-2 px-3.5 py-3 text-sm ${errors.professionalId ? "border-danger" : "border-line"}`}
-              value={professionalId}
-              onChange={(e) => setProfessionalId(e.target.value)}
-            >
-              {professionals.length === 0 && <option value="">{t.noneAvailable}</option>}
-              {professionals.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}{p.specialization ? ` · ${p.specialization}` : ""}{p.availability ? ` — ${p.availability}` : ""}</option>
-              ))}
-            </select>
-            <p className="mb-1 mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.professionalId}</p>
-
-            <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">{t.preferredTime}</label>
-            <input
-              type="datetime-local"
-              className={`w-full rounded-[10px] border bg-paper-2 px-3.5 py-3 text-sm ${errors.requestedTime ? "border-danger" : "border-line"}`}
-              min={minDateTime}
-              value={requestedTime}
-              onChange={(e) => setRequestedTime(e.target.value)}
-            />
-            <p className="mb-3.5 mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.requestedTime}</p>
-
-            <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">{t.reasonOptional}</label>
-            <textarea
-              className="mb-4 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm"
-              rows={3}
-              placeholder={t.reasonPlaceholder}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-
-            <button
-              type="submit"
-              disabled={submitting || !professionalId}
-              className="w-full rounded-xl bg-teal-700 px-[26px] py-[12px] text-[13px] font-semibold text-white transition hover:bg-teal-900 disabled:opacity-50"
-            >
-              {submitting ? t.requesting : t.requestAppointment}
-            </button>
-          </form>
         </aside>
       </div>
+
+      <Drawer open={bookOpen} onClose={onCloseBook} title={t.requestAppointment}>
+        <form onSubmit={(e) => void handleRequest(e)} className="space-y-0">
+          <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">{t.professionalType}</label>
+          <select
+            className="mb-3.5 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm"
+            value={professionalType}
+            onChange={(e) => setProfessionalType(e.target.value as ProfessionalType)}
+          >
+            {(Object.keys(proTypeLabel) as ProfessionalType[]).map((k) => (
+              <option key={k} value={k}>{proTypeLabel[k]}</option>
+            ))}
+          </select>
+
+          <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">{t.professional}</label>
+          <select
+            className={`w-full rounded-[10px] border bg-paper-2 px-3.5 py-3 text-sm ${errors.professionalId ? "border-danger" : "border-line"}`}
+            value={professionalId}
+            onChange={(e) => setProfessionalId(e.target.value)}
+          >
+            {professionals.length === 0 && <option value="">{t.noneAvailable}</option>}
+            {professionals.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}{p.specialization ? ` · ${p.specialization}` : ""}{p.availability ? ` — ${p.availability}` : ""}</option>
+            ))}
+          </select>
+          <p className="mb-1 mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.professionalId}</p>
+
+          <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">{t.preferredTime}</label>
+          <input
+            type="datetime-local"
+            className={`w-full rounded-[10px] border bg-paper-2 px-3.5 py-3 text-sm ${errors.requestedTime ? "border-danger" : "border-line"}`}
+            min={minDateTime}
+            value={requestedTime}
+            onChange={(e) => setRequestedTime(e.target.value)}
+          />
+          <p className="mb-3.5 mt-1 min-h-[14px] text-xs font-semibold text-danger">{errors.requestedTime}</p>
+
+          <label className="mb-1 block text-[12.5px] font-bold text-ink-soft">{t.reasonOptional}</label>
+          <textarea
+            className="mb-4 w-full rounded-[10px] border border-line bg-paper-2 px-3.5 py-3 text-sm"
+            rows={3}
+            placeholder={t.reasonPlaceholder}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+
+          <button
+            type="submit"
+            disabled={submitting || !professionalId}
+            className="w-full rounded-xl bg-teal-700 px-[26px] py-[12px] text-[13px] font-semibold text-white transition hover:bg-teal-900 disabled:opacity-50"
+          >
+            {submitting ? t.requesting : t.requestAppointment}
+          </button>
+        </form>
+      </Drawer>
       </>}
 
       <ConfirmModal
@@ -587,125 +604,6 @@ function UserView({ toast, language }: { toast: (message: string, type?: "succes
         onConfirm={() => cancelTarget && void handleCancel(cancelTarget)}
         onCancel={() => setCancelTarget(null)}
       />
-    </section>
-  );
-}
-
-function ProfessionalView({ language }: { language: Language }) {
-  const { toast } = useToast();
-  const t = COPY[language];
-  const v = VALIDATION[language];
-  const statusLabel = STATUS_LABEL[language];
-  const [appointments, setAppointments] = useState<ProfessionalAppointment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [outcomeDraft, setOutcomeDraft] = useState<Record<string, string>>({});
-
-  async function load() {
-    setLoading(true);
-    try {
-      setAppointments(await getProfessionalCalendar());
-    } catch {
-      toast(t.errLoadCalendar, "error");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function handleRespond(id: string, accept: boolean) {
-    try {
-      await respondToAppointment(id, accept);
-      toast(accept ? t.successConfirmed : t.successDeclined, "success");
-      await load();
-    } catch (err) {
-      toast(err instanceof Error ? err.message : t.errRespondFailed, "error");
-    }
-  }
-
-  async function handleOutcome(id: string) {
-    const outcome = outcomeDraft[id]?.trim();
-    if (!outcome) {
-      toast(v.required, "error");
-      return;
-    }
-    try {
-      await recordAppointmentOutcome(id, outcome);
-      toast(t.successOutcome, "success");
-      setOutcomeDraft((prev) => ({ ...prev, [id]: "" }));
-      await load();
-    } catch (err) {
-      toast(err instanceof Error ? err.message : t.errOutcomeFailed, "error");
-    }
-  }
-
-  return (
-    <section className="pb-16 pt-5">
-      <div className="card py-1.5">
-        <div className="flex items-center justify-between px-5 pb-1.5 pt-[14px]">
-          <h3 className="text-base text-teal-900">{t.calendar}</h3>
-        </div>
-
-        {loading && <PageLoading />}
-
-        {!loading && appointments.length === 0 && (
-          <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">{t.noneAssigned}</p>
-        )}
-
-        {appointments.map((appt) => {
-          const { day, month, time } = formatDateTime(appt.requestedTime);
-          return (
-            <div key={appt.id} className="border-b border-line px-[18px] py-4 last:border-b-0">
-              <div className="flex items-center gap-[14px]">
-                <div className="flex h-[46px] w-[46px] flex-shrink-0 flex-col items-center justify-center rounded-2xl bg-teal-100 text-teal-700">
-                  <span className="text-[15px] font-bold leading-none">{day}</span>
-                  <span className="text-[10px] font-semibold uppercase leading-none">{month}</span>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold text-ink">{appt.user.name}</div>
-                  <div className="mt-[3px] text-xs text-ink-soft">{time}{appt.notes ? ` · ${appt.notes}` : ""}</div>
-                  {appt.outcome && <div className="mt-1 text-xs italic text-ink-soft">{t.outcomeLabel}: {appt.outcome}</div>}
-                </div>
-                <span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold ${STATUS_STYLE[appt.status] ?? "bg-teal-100 text-teal-700"}`}>
-                  {statusLabel[appt.status] ?? appt.status}
-                </span>
-              </div>
-
-              {(appt.status === "REQUESTED" || appt.status === "RESCHEDULED") && (
-                <div className="mt-3 flex gap-2 pl-[60px]">
-                  <button onClick={() => void handleRespond(appt.id, true)} className="rounded-full bg-teal-700 px-3 py-1.5 text-[12px] font-semibold text-white">
-                    {t.accept}
-                  </button>
-                  <button onClick={() => void handleRespond(appt.id, false)} className="rounded-full border border-coral-dark px-3 py-1.5 text-[12px] font-semibold text-coral-dark">
-                    {t.decline}
-                  </button>
-                </div>
-              )}
-
-              {appt.status === "CONFIRMED" && (
-                <div className="mt-3 flex flex-wrap items-center gap-2 pl-[60px]">
-                  <input
-                    className="min-w-[220px] flex-1 rounded-[10px] border border-line bg-paper-2 px-3 py-1.5 text-xs"
-                    placeholder={t.outcomePlaceholder}
-                    value={outcomeDraft[appt.id] ?? ""}
-                    onChange={(e) => setOutcomeDraft((prev) => ({ ...prev, [appt.id]: e.target.value }))}
-                  />
-                  <button
-                    onClick={() => void handleOutcome(appt.id)}
-                    disabled={!outcomeDraft[appt.id]?.trim()}
-                    className="rounded-full bg-teal-700 px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
-                  >
-                    {t.markCompleted}
-                  </button>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
     </section>
   );
 }

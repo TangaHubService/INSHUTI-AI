@@ -111,7 +111,10 @@ router.patch("/:id/reschedule", requireUser, async (req: AuthenticatedUserReques
   }
 
   const appointment = await prisma.appointment.findUnique({ where: { id: req.params.id as string } });
-  if (!appointment || appointment.userId !== req.user!.userId) {
+  const professional = await prisma.healthcareProfessional.findUnique({ where: { userId: req.user!.userId } });
+  const isOwner = appointment?.userId === req.user!.userId;
+  const isAssignedProfessional = !!professional && appointment?.professionalId === professional.id;
+  if (!appointment || (!isOwner && !isAssignedProfessional)) {
     res.status(404).json({ error: "Appointment not found" });
     return;
   }
@@ -122,8 +125,21 @@ router.patch("/:id/reschedule", requireUser, async (req: AuthenticatedUserReques
 
   const updated = await prisma.appointment.update({
     where: { id: appointment.id },
-    data: { requestedTime: parsed.data.requestedTime, status: "RESCHEDULED", reminderSentAt: null },
+    data: {
+      requestedTime: parsed.data.requestedTime,
+      status: isAssignedProfessional ? "CONFIRMED" : "RESCHEDULED",
+      reminderSentAt: null,
+    },
   });
+
+  if (isAssignedProfessional) {
+    await notifyUser({
+      userId: appointment.userId,
+      type: "CONSULTATION_UPDATE",
+      title: "Appointment rescheduled",
+      body: `Your healthcare professional rescheduled your appointment for ${updated.requestedTime.toLocaleString()}.`,
+    });
+  }
 
   res.json({ appointment: updated });
 });

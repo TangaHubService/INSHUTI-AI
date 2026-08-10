@@ -330,6 +330,14 @@ export function IconSprite() {
             strokeLinejoin="round"
           />
         </symbol>
+        <symbol id="i-video" viewBox="0 0 24 24">
+          <rect x="3" y="6" width="13" height="12" rx="2.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <path d="m16 10 5-3v10l-5-3Z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+        </symbol>
+        <symbol id="i-mic" viewBox="0 0 24 24">
+          <rect x="9" y="3" width="6" height="12" rx="3" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </symbol>
 
         <symbol id="i-attach" viewBox="0 0 24 24">
           <path d="M14 5.5v9.5a3 3 0 0 1-6 0V5a4.5 4.5 0 0 1 9 0v10a6 6 0 0 1-12 0V8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />

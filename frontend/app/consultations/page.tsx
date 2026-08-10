@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 
 import { AppShell } from "@/components/AppShell";
+import { ProfessionalConsultationsView } from "@/components/ProfessionalConsultationsView";
 import { FullPageLoading, PageLoading } from "@/components/Spinner";
 import { useLanguage } from "@/lib/LanguageContext";
 import { getChatList, type ChatListItem, type ConsultationStatus } from "@/lib/userApiClient";
@@ -62,15 +63,30 @@ export default function ConsultationsPage() {
   const visible = chats.filter((chat) => filter === "ALL" || (filter === "ACTIVE" ? ["PENDING", "ASSIGNED", "IN_PROGRESS"].includes(chat.status) : chat.status === filter));
   if (authLoading || !user) return <FullPageLoading />;
 
+  if (user.role === "HEALTHCARE_PROFESSIONAL") {
+    return <AppShell active="/consultations" session={{ kind: "user", user }}><ProfessionalConsultationsView chats={chats} loading={loading} onlineUsers={onlineUsers} /></AppShell>;
+  }
+
   return <AppShell active="/consultations" session={{ kind: "user", user }}><div className="mx-auto max-w-[1240px] pb-10">
-    <header><h1 className="text-[30px] font-bold text-ink">{t.title}</h1><p className="mt-1 text-sm text-ink-soft">{t.subtitle}</p></header>
+    <header className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-[30px] font-bold text-ink">{t.title}</h1><p className="mt-1 text-sm text-ink-soft">{t.subtitle}</p></div>
+      <Link href="/call" className="flex items-center gap-2 rounded-xl bg-teal-700 px-4 py-2.5 text-[11px] font-semibold text-white hover:bg-teal-900"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>Start group call</Link>
+    </header>
     <div className="mt-6 grid gap-5 xl:grid-cols-[1fr_330px]">
       <main className="min-w-0 space-y-5">
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Stat icon="i-users" color="#8657E8" value={chats.length} label={t.total} /><Stat icon="i-check" color="#159A68" value={stats.resolved} label={t.resolved} /><Stat icon="i-clock" color="#F2A01B" value={stats.active} label={t.active} /><Stat icon="i-close" color="#F05268" value={stats.escalated} label={t.escalated} /></section>
         <section className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
           <div className="flex gap-5 overflow-x-auto border-b border-line px-5 pt-3">{(["ALL", "ACTIVE", "RESOLVED", "ESCALATED"] as Filter[]).map((value) => <button key={value} onClick={() => setFilter(value)} className={`whitespace-nowrap border-b-2 px-1 py-3 text-xs font-semibold ${filter === value ? "border-teal-700 text-teal-900" : "border-transparent text-ink-soft"}`}>{value === "ALL" ? t.all : value.charAt(0) + value.slice(1).toLowerCase()}</button>)}</div>
           {loading && <PageLoading />}{!loading && visible.length === 0 && <div className="flex min-h-[390px] flex-col items-center justify-center px-6 py-12 text-center"><span className="flex h-20 w-20 items-center justify-center rounded-full bg-[#EEE8FF] text-[#7444C8]"><svg width="35" height="35"><use href="#i-stethoscope" /></svg></span><h3 className="mt-5 text-lg font-bold">{filter === "ALL" ? "No consultations yet" : `No ${filter.toLowerCase()} consultations`}</h3><p className="mt-2 max-w-[420px] text-xs leading-5 text-ink-soft">{filter === "ALL" ? "When you need private support, ask Inshuti to connect you with a qualified health professional. Your consultation and replies will appear here." : "There are no consultations in this category. Choose another tab or start a private conversation whenever you need support."}</p><div className="mt-5 flex gap-3"><Link href="/chat" className="rounded-xl bg-[#7444C8] px-5 py-2.5 text-[11px] font-semibold text-white">Talk to Inshuti</Link><Link href="/facility-locator" className="rounded-xl border border-teal-700 px-5 py-2.5 text-[11px] font-semibold text-teal-700">Find nearby care</Link></div><div className="mt-7 flex flex-wrap justify-center gap-5 text-[10px] text-ink-soft"><span>🔒 Private</span><span>✓ Qualified professionals</span><span>♡ Safe and supportive</span></div></div>}
-          {visible.map((chat) => { const online = chat.otherParty ? onlineUsers.has(chat.otherParty.id) : false; return <Link key={chat.id} href={`/consultations/${chat.id}`} className="flex items-center gap-4 border-b border-line px-5 py-5 last:border-0 hover:bg-paper-2"><span className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base font-bold ${chat.status === "RESOLVED" ? "bg-teal-100 text-success" : chat.status === "ESCALATED" ? "bg-coral-100 text-coral-dark" : "bg-[#EEE8FF] text-[#7444C8]"}`}>{chat.otherParty?.name?.[0]?.toUpperCase() ?? "?"}{online && <i className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500" />}</span><span className="min-w-0 flex-1"><strong className="block truncate text-sm">{chat.otherParty?.name ?? (user.role === "HEALTHCARE_PROFESSIONAL" ? "User awaiting support" : "Awaiting professional assignment")}</strong><span className="mt-1 block truncate text-[11px] text-ink-soft">{chat.lastMessage?.content ?? "No professional messages yet"}</span><span className="mt-1 block text-[10px] text-ink-soft">Requested {new Date(chat.createdAt).toLocaleDateString()} · Priority {chat.priority}</span></span><span className="text-right"><b className={`inline-block rounded-full px-3 py-1 text-[10px] ${STATUS_STYLE[chat.status]}`}>{chat.status.replace("_", " ")}</b>{chat.unreadCount > 0 && <span className="mt-2 block text-[10px] font-semibold text-coral">{chat.unreadCount} unread</span>}</span><span className="text-xl text-ink-soft">›</span></Link>; })}
+          {visible.map((chat) => {
+            const online = chat.otherParty ? onlineUsers.has(chat.otherParty.id) : false;
+            return (
+              <button type="button" key={chat.id} onClick={() => window.dispatchEvent(new CustomEvent("private-messages:open", { detail: { chatId: chat.id } }))} className="flex w-full items-center gap-4 border-b border-line px-5 py-5 text-left last:border-0 hover:bg-paper-2">
+                <span className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base font-bold ${chat.status === "RESOLVED" ? "bg-teal-100 text-success" : chat.status === "ESCALATED" ? "bg-coral-100 text-coral-dark" : "bg-[#EEE8FF] text-[#7444C8]"}`}>{chat.otherParty?.name?.[0]?.toUpperCase() ?? "?"}{online && <i className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500" />}</span>
+                <span className="min-w-0 flex-1"><strong className="block truncate text-sm">{chat.otherParty?.name ?? (user.role === "HEALTHCARE_PROFESSIONAL" ? "User awaiting support" : "Awaiting professional assignment")}</strong><span className="mt-1 block truncate text-[11px] text-ink-soft">{chat.lastMessage?.content ?? "No professional messages yet"}</span><span className="mt-1 block text-[10px] text-ink-soft">Requested {new Date(chat.createdAt).toLocaleDateString()} · Priority {chat.priority}</span></span>
+                <span className="text-right"><b className={`inline-block rounded-full px-3 py-1 text-[10px] ${STATUS_STYLE[chat.status]}`}>{chat.status.replace("_", " ")}</b>{chat.unreadCount > 0 && <span className="mt-2 block text-[10px] font-semibold text-coral">{chat.unreadCount} unread</span>}</span><span className="text-xl text-ink-soft">›</span>
+              </button>
+            );
+          })}
         </section>
       </main>
       <aside className="space-y-4">

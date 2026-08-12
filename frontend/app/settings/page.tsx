@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { ConfirmModal } from "@/components/Modal";
 import { FullPageLoading, PageLoading } from "@/components/Spinner";
 import { clearHistory } from "@/lib/apiClient";
 import { changeMyPassword, downloadMyData, getAppPreferences, updateAppPreferences, type AppPreferences } from "@/lib/userApiClient";
@@ -34,6 +35,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [passwords, setPasswords] = useState({ current: "", next: "", confirm: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 
   useEffect(() => { if (user) void getAppPreferences().then(setPreferences).catch(() => toast("Could not load settings", "error")); }, [user, toast]);
 
@@ -53,7 +55,7 @@ export default function SettingsPage() {
     catch (error) { toast(error instanceof Error ? error.message : "Could not change password", "error"); }
   }
 
-  async function handleClear() { if (!window.confirm("Clear the anonymous chat history stored for this browser?")) return; try { await clearHistory(); toast("Chat history cleared", "success"); } catch { toast("Could not clear chat history", "error"); } }
+  async function handleClear() { setConfirmClearOpen(false); try { await clearHistory(); toast("Chat history cleared", "success"); } catch { toast("Could not clear chat history", "error"); } }
   if (authLoading || !user) return <FullPageLoading />;
 
   return <AppShell active="/settings" session={{ kind: "user", user }}><div className="mx-auto max-w-[1080px] pb-14">
@@ -72,9 +74,19 @@ export default function SettingsPage() {
         <Row icon="i-activity" color="#8956E8" title="Reduce motion" description="Reduce interface animation and movement." control={<Toggle label="Reduce motion" checked={preferences.reducedMotion} onChange={() => void save({ reducedMotion: !preferences.reducedMotion })} />} />
         <Row icon="i-eye" color="#E99B19" title="High contrast" description="Increase visual contrast for controls and text." control={<Toggle label="High contrast" checked={preferences.highContrast} onChange={() => void save({ highContrast: !preferences.highContrast })} />} />
       </section>
-      <section className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm"><h2 className="px-5 pt-4 text-sm font-bold">Data & storage</h2><Row icon="i-trash" color="#F05268" title="Clear chat history" description="Remove anonymous AI conversations associated with this browser." control={<button onClick={() => void handleClear()} className="rounded-lg border border-coral px-4 py-2 text-[11px] font-semibold text-coral-dark">Clear</button>} /><Row icon="i-download" color="#3986D7" title="Export my data" description="Download a JSON copy of the account data stored by Inshuti." control={<button onClick={() => void downloadMyData().catch(() => toast("Could not export data", "error"))} className="rounded-lg border border-teal-700 px-4 py-2 text-[11px] font-semibold text-teal-700">Export</button>} /></section>
+      <section className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm"><h2 className="px-5 pt-4 text-sm font-bold">Data & storage</h2><Row icon="i-trash" color="#F05268" title="Clear chat history" description="Remove anonymous AI conversations associated with this browser." control={<button onClick={() => setConfirmClearOpen(true)} className="rounded-lg border border-coral px-4 py-2 text-[11px] font-semibold text-coral-dark">Clear</button>} /><Row icon="i-download" color="#3986D7" title="Export my data" description="Download a JSON copy of the account data stored by Inshuti." control={<button onClick={() => void downloadMyData().catch(() => toast("Could not export data", "error"))} className="rounded-lg border border-teal-700 px-4 py-2 text-[11px] font-semibold text-teal-700">Export</button>} /></section>
       <section className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm"><h2 className="px-5 pt-4 text-sm font-bold">Account</h2><Row icon="i-lock" color="#8956E8" title="Change password" description="Verify your current password before choosing a new one." control={<button onClick={() => setShowPassword((value) => !value)} className="text-xl text-ink-soft">›</button>} />{showPassword && <form onSubmit={(event) => void changePassword(event)} className="grid gap-3 border-t border-line bg-paper-2 p-5 sm:grid-cols-3"><input type="password" required placeholder="Current password" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} className="rounded-lg border border-line bg-white px-3 py-2 text-xs" /><input type="password" required placeholder="New password" value={passwords.next} onChange={(e) => setPasswords({ ...passwords, next: e.target.value })} className="rounded-lg border border-line bg-white px-3 py-2 text-xs" /><input type="password" required placeholder="Confirm new password" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} className="rounded-lg border border-line bg-white px-3 py-2 text-xs" /><button className="rounded-lg bg-teal-700 px-4 py-2 text-xs font-semibold text-white sm:col-span-3">Change password</button></form>}</section>
       <section className="flex items-center gap-4 rounded-2xl border border-[#CDE5DF] bg-[#EFF9F6] p-5"><span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#D8F1E8] text-success"><svg width="21" height="21"><use href="#i-lock" /></svg></span><div><h2 className="text-sm font-bold">Your privacy matters</h2><p className="mt-1 text-[10px] text-ink-soft">Your settings are stored securely on your account and can be changed at any time.</p></div><Link href="/privacy" className="ml-auto text-[11px] font-semibold text-teal-700">Learn more →</Link></section>
     </div>}
+    <ConfirmModal
+      open={confirmClearOpen}
+      title="Clear chat history"
+      message="Clear the anonymous chat history stored for this browser?"
+      confirmLabel="Clear"
+      cancelLabel="Cancel"
+      variant="danger"
+      onConfirm={() => void handleClear()}
+      onCancel={() => setConfirmClearOpen(false)}
+    />
   </div></AppShell>;
 }

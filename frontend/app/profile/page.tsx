@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { useToast } from "@/lib/useToast";
 import { AppShell } from "@/components/AppShell";
+import { ConfirmModal } from "@/components/Modal";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useRequireUser } from "@/lib/useUserAuth";
 import { FullPageLoading } from "@/components/Spinner";
@@ -196,6 +197,7 @@ export default function ProfilePage() {
   const [anonymousMode, setAnonymousMode] = useState(true);
   const [location, setLocation] = useState({ province: "", district: "", sector: "", cell: "" });
   const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
+  const [confirmDeactivateOpen, setConfirmDeactivateOpen] = useState(false);
   const v = VALIDATION[language];
 
   useEffect(() => {
@@ -244,7 +246,7 @@ export default function ProfilePage() {
   }
 
   async function handleDeactivate() {
-    if (!window.confirm(t.deactivateConfirm)) return;
+    setConfirmDeactivateOpen(false);
     const password = window.prompt(t.deactivatePrompt);
     if (!password) return;
     try {
@@ -340,10 +342,20 @@ export default function ProfilePage() {
                 </Link>
               </div>
             </div>
-            <div className="rounded-2xl border border-line bg-white p-5 shadow-sm"><h3 className="text-sm font-bold text-teal-900">Account & security</h3><div className="mt-4 divide-y divide-line text-[11px]"><div className="flex items-center gap-3 py-3"><svg width="16" height="16" className="text-ink-soft"><use href="#i-lock" /></svg><span className="text-ink-soft">Anonymous session</span><span className="ml-auto max-w-[55%] truncate font-mono text-[10px]">{user.id}</span></div><div className="flex items-center gap-3 py-3"><svg width="16" height="16" className="text-ink-soft"><use href="#i-shield" /></svg><span className="text-ink-soft">Security</span><span className="ml-auto text-right">Your conversations are private and secure</span></div><div className="flex items-center gap-3 py-3"><svg width="16" height="16" className="text-ink-soft"><use href="#i-globe" /></svg><span className="text-ink-soft">Preferred language</span><span className="ml-auto">{LANGUAGE_OPTION_LABEL[preferredLanguage]}</span></div></div><button type="button" onClick={() => void handleDeactivate()} className="mt-4 text-[10px] font-semibold text-red-700">{t.deactivate}</button></div>
+            <div className="rounded-2xl border border-line bg-white p-5 shadow-sm"><h3 className="text-sm font-bold text-teal-900">Account & security</h3><div className="mt-4 divide-y divide-line text-[11px]"><div className="flex items-center gap-3 py-3"><svg width="16" height="16" className="text-ink-soft"><use href="#i-lock" /></svg><span className="text-ink-soft">Anonymous session</span><span className="ml-auto max-w-[55%] truncate font-mono text-[10px]">{user.id}</span></div><div className="flex items-center gap-3 py-3"><svg width="16" height="16" className="text-ink-soft"><use href="#i-shield" /></svg><span className="text-ink-soft">Security</span><span className="ml-auto text-right">Your conversations are private and secure</span></div><div className="flex items-center gap-3 py-3"><svg width="16" height="16" className="text-ink-soft"><use href="#i-globe" /></svg><span className="text-ink-soft">Preferred language</span><span className="ml-auto">{LANGUAGE_OPTION_LABEL[preferredLanguage]}</span></div></div><button type="button" onClick={() => setConfirmDeactivateOpen(true)} className="mt-4 text-[10px] font-semibold text-red-700">{t.deactivate}</button></div>
             <button type="button" onClick={() => void handleLogout()} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-[#FFF8F7] px-5 py-4 text-[11px] font-semibold text-red-600"><svg width="16" height="16"><use href="#i-logout" /></svg>Log out</button>
           </section>
       </div>
+      <ConfirmModal
+        open={confirmDeactivateOpen}
+        title={t.deactivate}
+        message={t.deactivateConfirm}
+        confirmLabel={t.deactivate}
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={() => void handleDeactivate()}
+        onCancel={() => setConfirmDeactivateOpen(false)}
+      />
     </AppShell>
   );
 }

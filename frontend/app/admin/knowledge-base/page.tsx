@@ -300,7 +300,7 @@ export default function KnowledgeBasePage() {
 
             <div className="flex gap-2.5">
               <button onClick={() => void save()} disabled={saving} className="rounded-full border-[1.5px] border-teal-700 px-4 py-[9px] text-[13px] font-semibold text-teal-700 transition hover:bg-teal-100 disabled:opacity-50">
-                {saving ? "Saving\u2026" : "Save draft"}
+                {saving ? "Saving…" : "Save draft"}
               </button>
               <button onClick={() => void save("REVIEWED")} disabled={saving} className="rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50">
                 {article.status === "REVIEWED" ? "Reviewed \u2713" : "Mark as Reviewed"}

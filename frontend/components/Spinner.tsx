@@ -13,7 +13,7 @@ export function Spinner({ className = "" }: { className?: string }) {
   );
 }
 
-export function PageLoading({ label = "Loading\u2026" }: { label?: string }) {
+export function PageLoading({ label = "Loading…" }: { label?: string }) {
   return (
     <div className="flex items-center gap-2.5 py-10 text-sm text-ink-soft">
       <Spinner />
@@ -32,7 +32,7 @@ export function FullPageLoading() {
             <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
           </svg>
         </div>
-        <span className="text-sm font-semibold text-ink-soft">Loading\u2026</span>
+        <span className="text-sm font-semibold text-ink-soft">Loading…</span>
       </div>
     </div>
   );

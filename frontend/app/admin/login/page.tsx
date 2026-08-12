@@ -40,7 +40,7 @@ const MSG: Record<Language, {
     email: "Email",
     password: "Password",
     login: "Log in",
-    logging: "Logging in\u2026",
+    logging: "Logging in…",
     newHere: "New here?",
     create: "Create an account",
     fill: "Please fill in all fields.",
@@ -56,7 +56,7 @@ const MSG: Record<Language, {
     email: "Imeri",
     password: "Ijambobanga",
     login: "Injira",
-    logging: "Irinjira\u2026",
+    logging: "Irinjira…",
     newHere: "Nshya?",
     create: "Fungura konti",
     fill: "Nyabona uzuzisha imirima yose.",
@@ -72,7 +72,7 @@ const MSG: Record<Language, {
     email: "Email",
     password: "Mot de passe",
     login: "Se connecter",
-    logging: "Connexion\u2026",
+    logging: "Connexion…",
     newHere: "Nouveau ici?",
     create: "Créer un compte",
     fill: "Veuillez remplir tous les champs.",
@@ -88,7 +88,7 @@ const MSG: Record<Language, {
     email: "Barua pepe",
     password: "Neno la siri",
     login: "Ingia",
-    logging: "Inaingia\u2026",
+    logging: "Inaingia…",
     newHere: "Mgeni hapa?",
     create: "Fungua akaunti",
     fill: "Tafadhali jaza sehemu zote.",
@@ -188,7 +188,7 @@ export default function LoginPage() {
                 className={`w-full rounded-[var(--radius-sm)] border bg-paper-2 px-[14px] py-3 text-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-0 placeholder:text-[#9CA8A4] ${
                   errors.password ? "border-danger focus:ring-danger/20" : "border-line focus:border-teal-600 focus:ring-teal-100"
                 }`}
-                placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+                placeholder="••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />

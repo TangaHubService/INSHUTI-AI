@@ -143,7 +143,7 @@ export default function FlaggedContentPage() {
             )}
             {!loading && items.map((item) => (
               <tr key={item.id} className="cursor-pointer border-b border-line last:border-b-0 transition hover:bg-paper-2" onClick={() => void openDetail(item.id)}>
-                <td className="p-3.5 font-semibold text-ink">&#34;\u2026{item.messagePreview}\u2026&#34;</td>
+                <td className="p-3.5 font-semibold text-ink">&#34;…{item.messagePreview}…&#34;</td>
                 <td className="p-3.5">{item.topic?.nameEn ?? "General"}</td>
                 <td className="p-3.5">{REASON_LABEL[item.reason]}</td>
                 <td className="p-3.5">{new Date(item.createdAt).toLocaleDateString()}</td>
@@ -188,7 +188,7 @@ export default function FlaggedContentPage() {
               <textarea className="mb-3 w-full resize-y rounded-[var(--radius-sm)] border border-line bg-paper-2 px-3.5 py-2.5 text-sm" rows={5} value={notes} onChange={(e) => setNotes(e.target.value)} />
               <div className="flex flex-col gap-2">
                 <button onClick={() => void handleSaveNotes()} disabled={saving} className="rounded-full border-[1.5px] border-teal-700 px-4 py-[9px] text-[13px] font-semibold text-teal-700 transition hover:bg-teal-100 disabled:opacity-50">
-                  {saving ? "Saving\u2026" : "Save notes"}
+                  {saving ? "Saving…" : "Save notes"}
                 </button>
                 {detail.item.status !== "RESOLVED" && (
                   <button onClick={() => void handleResolve()} disabled={saving} className="rounded-full bg-coral px-4 py-[9px] text-[13px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50">

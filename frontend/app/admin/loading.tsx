@@ -8,7 +8,7 @@ export default function AdminLoading() {
             <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
           </svg>
         </div>
-        <p className="text-sm font-semibold text-[#9FC3BD]">Loading\u2026</p>
+        <p className="text-sm font-semibold text-[#9FC3BD]">Loading…</p>
       </div>
     </div>
   );

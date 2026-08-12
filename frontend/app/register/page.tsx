@@ -44,7 +44,7 @@ const MSG: Record<Language, {
     name: "Full name", email: "Email", langPref: "Preferred language", password: "Password", passwordPlaceholder: "Min 8 characters",
     profType: "Professional type", specialization: "Specialization", specPlaceholder: "e.g. Pediatrics",
     govLevel: "Government level", region: "Region / District", regionPlaceholder: "District name",
-    create: "Create account", creating: "Creating account\u2026", haveAccount: "Already have an account?", login: "Log in", fill: "Please fill in all required fields.",
+    create: "Create account", creating: "Creating account…", haveAccount: "Already have an account?", login: "Log in", fill: "Please fill in all required fields.",
   },
   RW: {
     heroTitle: "Injira muri Inshuti.",
@@ -53,7 +53,7 @@ const MSG: Record<Language, {
     name: "Izina ryuzuye", email: "Imeri", langPref: "Ururima ukunda", password: "Ijambobanga", passwordPlaceholder: "Byibura inyuguti 8",
     profType: "Ubwoko bw'umwuga", specialization: "Ubuhanga budasanzwe", specPlaceholder: "Urugero: Pediatrics",
     govLevel: "Urwego rwa Leta", region: "Akarere / Uturere", regionPlaceholder: "Izina ry'akarere",
-    create: "Fungura konti", creating: "Ifungura\u2026", haveAccount: "Ufite konti?", login: "Injira", fill: "Nyabona uzuzisha imirima yose.",
+    create: "Fungura konti", creating: "Ifungura…", haveAccount: "Ufite konti?", login: "Injira", fill: "Nyabona uzuzisha imirima yose.",
   },
   FR: {
     heroTitle: "Rejoignez Inshuti.",
@@ -62,7 +62,7 @@ const MSG: Record<Language, {
     name: "Nom complet", email: "Email", langPref: "Langue pr\u00e9f\u00e9r\u00e9e", password: "Mot de passe", passwordPlaceholder: "Min 8 caract\u00e8res",
     profType: "Type professionnel", specialization: "Sp\u00e9cialisation", specPlaceholder: "Ex : P\u00e9diatrie",
     govLevel: "Niveau gouvernemental", region: "R\u00e9gion / District", regionPlaceholder: "Nom du district",
-    create: "Cr\u00e9er un compte", creating: "Cr\u00e9ation\u2026", haveAccount: "D\u00e9j\u00e0 un compte ?", login: "Se connecter", fill: "Veuillez remplir tous les champs obligatoires.",
+    create: "Cr\u00e9er un compte", creating: "Cr\u00e9ation…", haveAccount: "D\u00e9j\u00e0 un compte ?", login: "Se connecter", fill: "Veuillez remplir tous les champs obligatoires.",
   },
   SW: {
     heroTitle: "Jiunge na Inshuti.",
@@ -71,7 +71,7 @@ const MSG: Record<Language, {
     name: "Jina kamili", email: "Barua pepe", langPref: "Lugha unayopendelea", password: "Neno la siri", passwordPlaceholder: "Angalau herufi 8",
     profType: "Aina ya taaluma", specialization: "Utaalamu", specPlaceholder: "Mfano: Pediatrics",
     govLevel: "Kiwango cha serikali", region: "Mkoa / Wilaya", regionPlaceholder: "Jina la wilaya",
-    create: "Fungua akaunti", creating: "Inafungua\u2026", haveAccount: "Tayari una akaunti?", login: "Ingia", fill: "Tafadhali jaza sehemu zote zinazohitajika.",
+    create: "Fungua akaunti", creating: "Inafungua…", haveAccount: "Tayari una akaunti?", login: "Ingia", fill: "Tafadhali jaza sehemu zote zinazohitajika.",
   },
 };
 

@@ -80,7 +80,7 @@ export default function AdminMonitoringPage() {
                 <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
               </svg>
             </div>
-            <span className="text-sm font-semibold text-ink-soft">Loading metrics\u2026</span>
+            <span className="text-sm font-semibold text-ink-soft">Loading metrics…</span>
           </div>
         </div>
       ) : !health ? (

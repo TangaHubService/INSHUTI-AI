@@ -206,7 +206,7 @@ export default function AdminSettingsPage() {
                 />
               </div>
             </div>
-            {saving && <p className="mt-3 text-[12.5px] text-ink-soft">Saving\u2026</p>}
+            {saving && <p className="mt-3 text-[12.5px] text-ink-soft">Saving…</p>}
           </div>
 
           <div className="card p-6">
@@ -291,7 +291,7 @@ export default function AdminSettingsPage() {
             disabled={savingResource}
             className="mt-2 w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
           >
-            {savingResource ? "Saving\u2026" : editingResource ? "Save changes" : "Add resource"}
+            {savingResource ? "Saving…" : editingResource ? "Save changes" : "Add resource"}
           </button>
         </div>
       </Drawer>

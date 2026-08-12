@@ -10,22 +10,22 @@ interface TypingIndicatorProps {
 
 const statusMessages = {
   thinking: {
-    EN: "Thinking\u2026",
-    RW: "Iritekereza\u2026",
-    FR: "Réfléchit\u2026",
-    SW: "Inafikiria\u2026",
+    EN: "Thinking…",
+    RW: "Iritekereza…",
+    FR: "Réfléchit…",
+    SW: "Inafikiria…",
   },
   generating: {
-    EN: "Generating\u2026",
-    RW: "Irimo gusubiza\u2026",
-    FR: "Génère\u2026",
-    SW: "Inazalisha\u2026",
+    EN: "Generating…",
+    RW: "Irimo gusubiza…",
+    FR: "Génère…",
+    SW: "Inazalisha…",
   },
   idle: {
-    EN: "Working\u2026",
-    RW: "Ariko arimo\u2026",
-    FR: "En cours\u2026",
-    SW: "Inaendelea\u2026",
+    EN: "Working…",
+    RW: "Ariko arimo…",
+    FR: "En cours…",
+    SW: "Inaendelea…",
   },
 };
 

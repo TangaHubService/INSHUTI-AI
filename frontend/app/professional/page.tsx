@@ -5,6 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { FullPageLoading } from "@/components/Spinner";
+import { StatCard } from "@/components/ui/StatCard";
+import { Panel } from "@/components/layout/Panel";
+import { DonutChart } from "@/components/charts/DonutChart";
+import { ProgressRow } from "@/components/charts/BarChart";
 import { useRequireUser } from "@/lib/useUserAuth";
 import {
   getProfessionalCalendar,
@@ -30,33 +34,6 @@ function formatTime(iso: string) {
 
 function dateLabel(date: Date) {
   return date.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
-}
-
-function DashboardCard({
-  children,
-  className = "",
-  id,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  id?: string;
-}) {
-  return (
-    <section id={id} className={`rounded-[14px] border border-[#E7E4DE] bg-white shadow-[0_2px_8px_rgba(34,63,58,0.055)] ${className}`}>
-      {children}
-    </section>
-  );
-}
-
-function SectionTitle({ icon, children, color = "#138D7D" }: { icon: string; children: React.ReactNode; color?: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EEF8F6]" style={{ color }}>
-        <Icon name={icon} size={18} />
-      </span>
-      <h2 className="font-body text-[14px] font-bold tracking-[-0.015em] text-[#102E37]">{children}</h2>
-    </div>
-  );
 }
 
 function DoctorIllustration() {
@@ -116,71 +93,34 @@ function HealthTipIllustration() {
   );
 }
 
-function MetricCard({
-  icon,
-  iconColor,
-  iconBg,
-  label,
-  value,
-  action,
-  href,
-}: {
-  icon: string;
-  iconColor: string;
-  iconBg: string;
-  label: string;
-  value: number;
-  action: string;
-  href: string;
-}) {
-  return (
-    <DashboardCard className="flex min-h-[149px] items-center px-[18px] py-5">
-      <span className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: iconBg, color: iconColor }}>
-        <Icon name={icon} size={30} />
-      </span>
-      <div className="ml-4 min-w-0">
-        <div className="truncate text-[12px] font-semibold text-[#17424A]">{label}</div>
-        <div className="mt-2 font-display text-[29px] font-bold leading-none text-[#092D37]">{value}</div>
-        <Link href={href} className="mt-[18px] inline-flex items-center gap-2 text-[11.5px] font-semibold text-[#00776D] transition hover:gap-3">
-          {action} <Icon name="i-arrow" size={15} />
-        </Link>
-      </div>
-    </DashboardCard>
-  );
-}
-
 function ScheduleCard({ appointments }: { appointments: ProfessionalAppointment[] }) {
   const visible = appointments.slice(0, 2);
   return (
-    <DashboardCard className="min-h-[314px] overflow-hidden">
-      <div className="px-[18px] pb-[13px] pt-[20px]">
-        <SectionTitle icon="i-calendar">Today&apos;s Schedule</SectionTitle>
-        <p className="ml-10 mt-0.5 text-[11px] text-[#65777D]">{dateLabel(new Date())}</p>
-      </div>
-      <div className="mx-[18px] border-t border-[#EEECE8]">
+    <Panel title="Today's Schedule" titleIcon="i-calendar" subtitle={dateLabel(new Date())} className="min-h-[314px] overflow-hidden">
+      <div className="mx-[18px] border-t border-line">
         {visible.length === 0 ? (
-          <div className="flex h-[174px] items-center justify-center text-[12px] text-[#738187]">No appointments scheduled for today.</div>
+          <div className="flex h-[174px] items-center justify-center text-[12px] text-ink-soft">No appointments scheduled for today.</div>
         ) : visible.map((appointment) => (
-          <Link href="/appointments" key={appointment.id} className="grid min-h-[86px] grid-cols-[66px_minmax(0,1fr)_auto] items-center gap-[17px] border-b border-[#EEECE8] py-3 transition hover:bg-[#FAFCFB]">
-            <span className="flex h-[60px] items-center justify-center rounded-lg bg-[#EAF6F1] text-[12px] font-bold text-[#174A4C]">
+          <Link href="/appointments" key={appointment.id} className="grid min-h-[86px] grid-cols-[66px_minmax(0,1fr)_auto] items-center gap-[17px] border-b border-line py-3 transition hover:bg-paper-2">
+            <span className="flex h-[60px] items-center justify-center rounded-lg bg-teal-100 text-[12px] font-bold text-teal-900">
               {formatTime(appointment.requestedTime)}
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-[12px] font-bold text-[#17313A]">{appointment.user.name}</span>
-              <span className="mt-1 block truncate text-[10.5px] text-[#60737A]">{appointment.notes?.toLowerCase().includes("follow-up") ? "Follow-up Consultation" : "General Consultation"}</span>
-              <span className="mt-1 flex items-center gap-1 text-[10.5px] font-medium text-[#007A70]"><Icon name="i-chat" size={12} /> Video Call</span>
+              <span className="block truncate text-[12px] font-bold text-ink">{appointment.user.name}</span>
+              <span className="mt-1 block truncate text-[10.5px] text-ink-soft">{appointment.notes?.toLowerCase().includes("follow-up") ? "Follow-up Consultation" : "General Consultation"}</span>
+              <span className="mt-1 flex items-center gap-1 text-[10.5px] font-medium text-teal-700"><Icon name="i-chat" size={12} /> Video Call</span>
             </span>
             <span className="flex items-center gap-3">
-              <span className="hidden rounded-full bg-[#E3F4EE] px-2 py-1 text-[8px] font-bold text-[#17836F] sm:inline">{appointment.status}</span>
-              <span className="text-[#007A70]">›</span>
+              <span className="hidden rounded-full bg-teal-100 px-2 py-1 text-[8px] font-bold text-teal-700 sm:inline">{appointment.status}</span>
+              <span className="text-teal-700">›</span>
             </span>
           </Link>
         ))}
       </div>
-      <Link href="/appointments" className="flex h-[53px] items-center justify-center gap-3 text-[11.5px] font-semibold text-[#00776D]">
+      <Link href="/appointments" className="flex h-[53px] items-center justify-center gap-3 text-[11.5px] font-semibold text-teal-700">
         View full schedule <Icon name="i-arrow" size={15} />
       </Link>
-    </DashboardCard>
+    </Panel>
   );
 }
 
@@ -188,45 +128,36 @@ type OverviewItem = { label: string; count: number; color: string };
 
 function OverviewCard({ items }: { items: OverviewItem[] }) {
   const total = items.reduce((sum, item) => sum + item.count, 0);
-  let start = 0;
-  const stops = items.map((item) => {
-    const end = start + (total ? item.count / total * 100 : 25);
-    const stop = `${item.color} ${start}% ${end}%`;
-    start = end;
-    return stop;
-  });
   return (
-    <DashboardCard id="reports" className="min-h-[314px] overflow-hidden">
-      <div className="flex items-center justify-between px-[18px] pb-3 pt-[20px]">
-        <h2 className="font-body text-[14px] font-bold text-[#102E37]">Consultations Overview</h2>
-        <button type="button" className="flex items-center gap-2 rounded-lg border border-[#E0DFDB] bg-white px-3 py-2 text-[10.5px] font-semibold text-[#17333A]">
+    <Panel
+      id="reports"
+      title="Consultations Overview"
+      action={
+        <button type="button" className="flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-[10.5px] font-semibold text-ink-soft">
           This Week <Icon name="i-chevron-down" size={12} />
         </button>
+      }
+      className="min-h-[314px] overflow-hidden"
+    >
+      <div className="px-[26px] pb-[17px] pt-2">
+        <DonutChart
+          size={160}
+          centerValue={total}
+          centerLabel="Total"
+          data={items.map((item) => ({ label: item.label, value: item.count, color: item.color }))}
+          legendItem={(item) => (
+            <div className="grid grid-cols-[9px_minmax(0,1fr)_auto] items-center gap-2 text-[10.5px] text-ink-soft">
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
+              <span className="truncate">{item.label}</span>
+              <span className="font-semibold text-ink">{item.value} ({total ? Math.round((item.value / total) * 100) : 0}%)</span>
+            </div>
+          )}
+        />
       </div>
-      <div className="flex items-center gap-[26px] px-[26px] pb-[17px] pt-2">
-        <div className="relative flex h-[160px] w-[160px] shrink-0 items-center justify-center rounded-full" style={{ background: total ? `conic-gradient(${stops.join(",")})` : "#EDF1EF" }}>
-          <div className="flex h-[106px] w-[106px] flex-col items-center justify-center rounded-full bg-white shadow-[0_0_0_1px_rgba(255,255,255,.8)]">
-            <span className="font-display text-[29px] font-bold leading-none text-[#102E37]">{total}</span>
-            <span className="mt-1 text-[10.5px] text-[#314E55]">Total</span>
-          </div>
-        </div>
-        <div className="min-w-0 flex-1 space-y-[18px]">
-          {items.map((item) => {
-            const percent = total ? Math.round(item.count / total * 100) : 0;
-            return (
-              <div key={item.label} className="grid grid-cols-[9px_minmax(0,1fr)_auto] items-center gap-2 text-[10.5px] text-[#183941]">
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
-                <span className="truncate">{item.label}</span>
-                <span className="font-semibold text-[#102E37]">{item.count} ({percent}%)</span>
-              </div>
-            );
-          })}
-        </div>
+      <div className="mx-[18px] border-t border-line">
+        <Link href="/professional#reports" className="flex h-[53px] items-center justify-center gap-3 text-[11.5px] font-semibold text-teal-700">View full analytics <Icon name="i-arrow" size={15} /></Link>
       </div>
-      <div className="mx-[18px] border-t border-[#EEECE8]">
-        <Link href="/professional#reports" className="flex h-[53px] items-center justify-center gap-3 text-[11.5px] font-semibold text-[#00776D]">View full analytics <Icon name="i-arrow" size={15} /></Link>
-      </div>
-    </DashboardCard>
+    </Panel>
   );
 }
 
@@ -240,46 +171,42 @@ function RecentActivityCard({ consultations, appointments }: { consultations: Pr
     { icon: "i-calendar", color: "#8757EB", bg: "#F0E8FD", text: `New appointment scheduled with ${appointments[0]?.user.name ?? "Marie Uwimana"}`, time: "1 hour ago" },
   ];
   return (
-    <DashboardCard className="min-h-[278px] px-[18px] py-[20px]">
-      <div className="flex items-center justify-between">
-        <SectionTitle icon="i-activity">Recent Activity</SectionTitle>
-        <Link href="/notifications" className="text-[10.5px] font-semibold text-[#006F66] underline">View all</Link>
-      </div>
-      <div className="relative mt-[21px] space-y-[20px] before:absolute before:bottom-3 before:left-[14px] before:top-3 before:w-px before:bg-[#E5E9E7]">
+    <Panel
+      title="Recent Activity"
+      titleIcon="i-activity"
+      action={<Link href="/notifications" className="text-[10.5px] font-semibold text-teal-700 underline">View all</Link>}
+      className="min-h-[278px]"
+      bodyClassName="px-[18px] pb-[20px]"
+    >
+      <div className="relative mt-[21px] space-y-[20px] before:absolute before:bottom-3 before:left-[14px] before:top-3 before:w-px before:bg-line">
         {activities.map((activity) => (
           <div key={activity.text} className="relative flex items-start gap-4">
             <span className="z-[1] flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full" style={{ background: activity.bg, color: activity.color }}>
               <Icon name={activity.icon} size={15} />
             </span>
             <span className="pt-0.5">
-              <span className="block text-[10.5px] leading-4 text-[#425D64]">{activity.text}</span>
-              <span className="mt-0.5 block text-[10px] text-[#6F8288]">{activity.time}</span>
+              <span className="block text-[10.5px] leading-4 text-ink-soft">{activity.text}</span>
+              <span className="mt-0.5 block text-[10px] text-ink-soft">{activity.time}</span>
             </span>
           </div>
         ))}
       </div>
-    </DashboardCard>
+    </Panel>
   );
 }
 
 function ConditionsCard() {
   return (
-    <DashboardCard className="min-h-[278px] px-[18px] py-[20px]">
-      <SectionTitle icon="i-stethoscope">Top Conditions This Week</SectionTitle>
-      <div className="mt-[18px] space-y-[11px]">
+    <Panel title="Top Conditions This Week" titleIcon="i-stethoscope" className="min-h-[278px]" bodyClassName="px-[18px] pb-[20px]">
+      <div className="space-y-[11px]">
         {CONDITION_ROWS.map((condition) => (
-          <div key={condition.label}>
-            <div className="flex items-center justify-between text-[10.5px] text-[#173941]"><span>{condition.label}</span><b>{condition.percent}%</b></div>
-            <div className="mt-1.5 h-[3px] overflow-hidden rounded-full bg-[#E8EAE8]">
-              <div className="h-full rounded-full" style={{ width: `${condition.percent + 10}%`, background: `linear-gradient(90deg,${condition.color},${condition.fade})` }} />
-            </div>
-          </div>
+          <ProgressRow key={condition.label} label={condition.label} percent={condition.percent} barPercent={condition.percent + 10} color={condition.color} fade={condition.fade} />
         ))}
       </div>
-      <div className="mt-[17px] border-t border-[#EEECE8] pt-[17px] text-center">
-        <Link href="/professional#reports" className="inline-flex items-center gap-3 text-[11.5px] font-semibold text-[#00776D]">View full report <Icon name="i-arrow" size={15} /></Link>
+      <div className="mt-[17px] border-t border-line pt-[17px] text-center">
+        <Link href="/professional#reports" className="inline-flex items-center gap-3 text-[11.5px] font-semibold text-teal-700">View full report <Icon name="i-arrow" size={15} /></Link>
       </div>
-    </DashboardCard>
+    </Panel>
   );
 }
 
@@ -291,20 +218,19 @@ function QuickActions() {
     { icon: "i-edit", title: "Create Note", subtitle: "Add clinical note", href: "/consultations?view=notes", color: "#FF9900", bg: "#FFF4E3", border: "#F5DFB7" },
   ];
   return (
-    <DashboardCard className="min-h-[328px] p-[18px]">
-      <SectionTitle icon="i-sparkle">Quick Actions</SectionTitle>
-      <div className="mt-4 space-y-2.5">
+    <Panel title="Quick Actions" titleIcon="i-sparkle" className="min-h-[328px]" bodyClassName="px-[18px] pb-[18px]">
+      <div className="space-y-2.5">
         {actions.map((action) => (
           <Link key={action.title} href={action.href} className="flex h-[57px] items-center gap-3 rounded-lg border px-3 transition hover:-translate-y-0.5 hover:shadow-sm" style={{ backgroundColor: `${action.bg}99`, borderColor: action.border }}>
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: action.bg, color: action.color }}><Icon name={action.icon} size={20} /></span>
             <span className="min-w-0">
-              <span className="block truncate text-[10.5px] font-bold text-[#18323A]">{action.title}</span>
-              <span className="mt-1 block truncate text-[10px] text-[#65777D]">{action.subtitle}</span>
+              <span className="block truncate text-[10.5px] font-bold text-ink">{action.title}</span>
+              <span className="mt-1 block truncate text-[10px] text-ink-soft">{action.subtitle}</span>
             </span>
           </Link>
         ))}
       </div>
-    </DashboardCard>
+    </Panel>
   );
 }
 
@@ -312,18 +238,16 @@ function RightRail() {
   return (
     <aside className="space-y-[18px] xl:pt-[116px]">
       <QuickActions />
-      <DashboardCard className="relative min-h-[204px] overflow-hidden p-[18px]">
-        <SectionTitle icon="i-heart" color="#F05B50">Health Tip of the Day</SectionTitle>
-        <p className="mt-4 max-w-[195px] text-[10.5px] leading-[21px] text-[#425B62]">Encourage your patients to stay hydrated and get enough sleep. Small daily habits lead to big health improvements.</p>
+      <Panel title="Health Tip of the Day" titleIcon="i-heart" titleIconColor="#F05B50" className="relative min-h-[204px] overflow-hidden" bodyClassName="px-[18px] pb-[18px]">
+        <p className="max-w-[195px] text-[10.5px] leading-[21px] text-ink-soft">Encourage your patients to stay hydrated and get enough sleep. Small daily habits lead to big health improvements.</p>
         <div className="absolute bottom-3 right-3"><HealthTipIllustration /></div>
-      </DashboardCard>
-      <DashboardCard className="min-h-[118px] p-[18px]">
-        <SectionTitle icon="i-shield" color="#19A963">System Status</SectionTitle>
-        <div className="mt-4 flex gap-2.5">
-          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#BFE8CE] text-[#139B58]"><Icon name="i-check" size={10} /></span>
-          <div><div className="text-[10.5px] font-semibold text-[#214149]">All systems operational</div><div className="mt-1 text-[10px] text-[#728187]">Updated just now</div></div>
+      </Panel>
+      <Panel title="System Status" titleIcon="i-shield" titleIconColor="#19A963" className="min-h-[118px]" bodyClassName="px-[18px] pb-[18px]">
+        <div className="flex gap-2.5">
+          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-teal-100 text-teal-700"><Icon name="i-check" size={10} /></span>
+          <div><div className="text-[10.5px] font-semibold text-ink">All systems operational</div><div className="mt-1 text-[10px] text-ink-soft">Updated just now</div></div>
         </div>
-      </DashboardCard>
+      </Panel>
     </aside>
   );
 }
@@ -374,9 +298,9 @@ export default function ProfessionalPortalPage() {
           <div className="min-w-0">
             <header className="relative h-[124px] overflow-hidden">
               <div className="relative z-[1]">
-                <span className="block font-mono text-[11.5px] font-medium uppercase tracking-[0.14em] text-[#F05243]">Healthcare Professional Portal</span>
-                <h1 className="mt-[15px] font-display text-[31px] font-bold leading-none tracking-[-0.025em] text-[#09433F]">Welcome, {user.name.split(" ")[0]} <span aria-hidden="true">👋</span></h1>
-                <p className="mt-3 text-[12.5px] text-[#60747A]">Here&apos;s what&apos;s happening with your practice today.</p>
+                <span className="block font-mono text-[11.5px] font-medium uppercase tracking-[0.14em] text-coral-dark">Healthcare Professional Portal</span>
+                <h1 className="mt-[15px] font-display text-[31px] font-bold leading-none tracking-[-0.025em] text-teal-900">Welcome, {user.name.split(" ")[0]} <span aria-hidden="true">👋</span></h1>
+                <p className="mt-3 text-[12.5px] text-ink-soft">Here&apos;s what&apos;s happening with your practice today.</p>
               </div>
               <div className="absolute -top-[17px] right-[27px] hidden lg:block"><DoctorIllustration /></div>
             </header>
@@ -386,9 +310,9 @@ export default function ProfessionalPortalPage() {
             )}
 
             <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[.9fr_.9fr_1.2fr]">
-              <MetricCard icon="i-users" iconColor="#347FE9" iconBg="#E7F1FD" label="Waiting on you" value={data.waiting} action="View all" href="/consultations" />
-              <MetricCard icon="i-check" iconColor="#14A65C" iconBg="#E2F4EA" label="Resolved consultations" value={data.resolved} action="View all" href="/consultations" />
-              <MetricCard icon="i-calendar" iconColor="#8757EA" iconBg="#F0E8FD" label="Upcoming appointments" value={data.upcoming.length} action="View schedule" href="/appointments" />
+              <StatCard icon="i-users" iconColor="#347FE9" value={data.waiting} label="Waiting on you" href="/consultations" actionLabel="View all" />
+              <StatCard icon="i-check" iconColor="#14A65C" value={data.resolved} label="Resolved consultations" href="/consultations" actionLabel="View all" />
+              <StatCard icon="i-calendar" iconColor="#8757EA" value={data.upcoming.length} label="Upcoming appointments" href="/appointments" actionLabel="View schedule" />
             </section>
 
             <section className="mt-[18px] grid gap-[18px] lg:grid-cols-[1.08fr_.97fr]">

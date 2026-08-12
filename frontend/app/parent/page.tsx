@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { PageLoading, FullPageLoading } from "@/components/Spinner";
+import { Panel } from "@/components/layout/Panel";
 import { useRequireUser } from "@/lib/useUserAuth";
 import { useLanguage } from "@/lib/LanguageContext";
 import { HEALTH_TOPIC_NAMES, PORTAL_COPY } from "@/lib/portalCopy";
@@ -72,28 +73,26 @@ export default function ParentPortalPage() {
           <PageLoading />
         ) : (
           <section className="grid grid-cols-1 gap-4 pb-16 lg:grid-cols-[1.2fr_1fr]">
-            <div>
-              <div className="mb-4 card py-1.5">
-                <div className="flex items-center justify-between px-5 pb-1.5 pt-[14px]">
-                  <h3 className="text-base text-teal-900">{t.upcoming}</h3>
-                  <Link href="/appointments" className="text-[12.5px] font-semibold text-teal-700">{t.manage} →</Link>
-                </div>
-                {upcoming.length === 0 && (
+            <div className="space-y-4">
+              <Panel title={t.upcoming} action={<Link href="/appointments" className="text-[11px] font-semibold text-teal-700">{t.manage} →</Link>}>
+                {upcoming.length === 0 ? (
                   <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">{t.none}</p>
-                )}
-                {upcoming.map((appt) => (
-                  <div key={appt.id} className="flex items-center justify-between border-b border-line px-5 py-3 last:border-b-0">
-                    <div>
-                      <div className="text-sm font-semibold text-ink">{appt.professional.name}</div>
-                      <div className="text-xs text-ink-soft">{formatDateTime(appt.requestedTime)}</div>
-                    </div>
-                    <span className="rounded-full bg-teal-100 px-2.5 py-1 text-[11px] font-bold text-teal-700">{appt.status}</span>
+                ) : (
+                  <div className="pb-1">
+                    {upcoming.map((appt) => (
+                      <div key={appt.id} className="flex items-center justify-between border-t border-line/70 px-5 py-3">
+                        <div>
+                          <div className="text-sm font-semibold text-ink">{appt.professional.name}</div>
+                          <div className="text-xs text-ink-soft">{formatDateTime(appt.requestedTime)}</div>
+                        </div>
+                        <span className="rounded-full bg-teal-100 px-2.5 py-1 text-[11px] font-bold text-teal-700">{appt.status}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
+              </Panel>
 
-              <div className="card p-5">
-                <h3 className="mb-4 text-base text-teal-900">{t.resources}</h3>
+              <Panel title={t.resources} bodyClassName="px-5 pb-5">
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {RESOURCE_TOPICS.map((topic) => (
                     <Link
@@ -108,24 +107,23 @@ export default function ParentPortalPage() {
                     </Link>
                   ))}
                 </div>
-              </div>
+              </Panel>
             </div>
 
-            <div className="card py-1.5">
-              <div className="px-5 pb-1.5 pt-[14px] text-base text-teal-900">{t.recent}</div>
-              {notifications.length === 0 && (
+            <Panel title={t.recent} action={<Link href="/notifications" className="text-[11px] font-semibold text-teal-700">{t.viewAll} →</Link>}>
+              {notifications.length === 0 ? (
                 <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">{t.none}</p>
-              )}
-              {notifications.slice(0, 6).map((n) => (
-                <div key={n.id} className="border-b border-line px-5 py-3 last:border-b-0">
-                  <div className="text-sm font-semibold text-ink">{n.title}</div>
-                  <div className="mt-1 text-xs text-ink-soft">{n.body}</div>
+              ) : (
+                <div className="pb-1">
+                  {notifications.slice(0, 6).map((n) => (
+                    <div key={n.id} className="border-t border-line/70 px-5 py-3">
+                      <div className="text-sm font-semibold text-ink">{n.title}</div>
+                      <div className="mt-1 text-xs text-ink-soft">{n.body}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-              <div className="px-5 py-3">
-                <Link href="/notifications" className="text-[12.5px] font-semibold text-teal-700">{t.viewAll} →</Link>
-              </div>
-            </div>
+              )}
+            </Panel>
           </section>
         )}
       </div>

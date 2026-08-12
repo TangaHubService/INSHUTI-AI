@@ -7,6 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { Drawer } from "@/components/Drawer";
 import { ConfirmModal } from "@/components/Modal";
 import { PageLoading } from "@/components/Spinner";
+import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
 import { useToast } from "@/lib/useToast";
 import {
@@ -24,7 +25,7 @@ const LocationPicker = dynamic(() => import("@/components/LocationPicker").then(
   ssr: false,
   loading: () => (
     <div className="flex h-[240px] w-full items-center justify-center rounded-[var(--radius-md)] border border-line bg-paper-2">
-      <PageLoading label="Loading map\u2026" />
+      <PageLoading label="Loading map…" />
     </div>
   ),
 });
@@ -153,6 +154,28 @@ export default function AdminFacilitiesPage() {
 
   if (authLoading || !admin) return null;
 
+  const columns: DataTableColumn<HealthFacility>[] = [
+    { key: "name", label: "Name", render: (f) => <span className="font-semibold text-ink">{f.name}</span> },
+    { key: "type", label: "Type", render: (f) => TYPE_LABEL[f.type] },
+    { key: "location", label: "Location", render: (f) => `${f.district} District, ${f.sector} Sector` },
+    { key: "contact", label: "Contact", render: (f) => f.contact || "—" },
+    {
+      key: "actions",
+      label: "",
+      align: "right",
+      render: (f) => (
+        <div className="flex items-center justify-end gap-3">
+          <button onClick={() => openEdit(f)} className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-teal-700 transition hover:bg-teal-100">
+            <svg width="14" height="14"><use href="#i-edit" /></svg>
+          </button>
+          <button onClick={() => setDeleteTarget(f)} className="flex h-8 w-8 items-center justify-center rounded-full border border-coral-dark text-coral-dark transition hover:bg-coral-100">
+            <svg width="14" height="14"><use href="#i-trash" /></svg>
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <AppShell active="/admin/facilities" session={{ kind: "admin", admin }}>
       <div className="mb-[22px] flex items-center justify-between">
@@ -172,40 +195,7 @@ export default function AdminFacilitiesPage() {
       {loading && <PageLoading />}
 
       {!loading && (
-        <div className="card overflow-x-auto">
-          <table className="w-full border-collapse text-[13.5px]">
-            <thead>
-              <tr>
-                {["Name", "Type", "Location", "Contact", ""].map((h) => (
-                  <th key={h} className="border-b border-line px-3.5 pb-2.5 pt-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.06em] text-ink-soft">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {facilities.length === 0 && (
-                <tr><td colSpan={5} className="px-3.5 py-6 text-center text-ink-soft">No facilities yet.</td></tr>
-              )}
-              {facilities.map((facility) => (
-                <tr key={facility.id} className="border-b border-line last:border-b-0 transition hover:bg-paper-2">
-                  <td className="p-3.5 font-semibold text-ink">{facility.name}</td>
-                  <td className="p-3.5">{TYPE_LABEL[facility.type]}</td>
-                  <td className="p-3.5">{facility.district} District, {facility.sector} Sector</td>
-                  <td className="p-3.5">{facility.contact || "\u2014"}</td>
-                  <td className="p-3.5">
-                    <div className="flex items-center justify-end gap-3">
-                      <button onClick={() => openEdit(facility)} className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-teal-700 transition hover:bg-teal-100">
-                        <svg width="14" height="14"><use href="#i-edit" /></svg>
-                      </button>
-                      <button onClick={() => setDeleteTarget(facility)} className="flex h-8 w-8 items-center justify-center rounded-full border border-coral-dark text-coral-dark transition hover:bg-coral-100">
-                        <svg width="14" height="14"><use href="#i-trash" /></svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable columns={columns} rows={facilities} keyField="id" emptyMessage="No facilities yet." />
       )}
 
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title={editingId ? "Edit Facility" : "New Facility"}>
@@ -279,7 +269,7 @@ export default function AdminFacilitiesPage() {
             disabled={saving}
             className="mt-2 w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
           >
-            {saving ? "Saving\u2026" : editingId ? "Save changes" : "Add facility"}
+            {saving ? "Saving…" : editingId ? "Save changes" : "Add facility"}
           </button>
         </div>
       </Drawer>

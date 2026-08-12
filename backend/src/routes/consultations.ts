@@ -107,6 +107,62 @@ router.get("/professional", requireUser, async (req: AuthenticatedUserRequest, r
   });
 });
 
+// Admin oversight list — supervisory view only (status/priority/parties),
+// deliberately never includes message content. Full transcripts stay scoped
+// to the consultation's own user/professional via the /:id/messages checks
+// above.
+router.get("/admin", requireAdmin("MODERATOR"), async (req, res) => {
+  const status = typeof req.query.status === "string" ? req.query.status : undefined;
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 25));
+
+  const where = status ? { status } : {};
+
+  const [consultations, total] = await Promise.all([
+    prisma.consultation.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
+      include: {
+        user: { select: { name: true } },
+        professional: { include: { user: { select: { name: true } } } },
+      },
+    }),
+    prisma.consultation.count({ where }),
+  ]);
+
+  res.json({
+    consultations: consultations.map((c) => ({
+      id: c.id,
+      status: c.status,
+      priority: c.priority,
+      userName: c.user.name,
+      professionalName: c.professional ? c.professional.user.name : null,
+      professionalId: c.professionalId,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+    })),
+    total,
+    page,
+    pageCount: Math.max(1, Math.ceil(total / limit)),
+  });
+});
+
+// Minimal, MODERATOR-safe professional picker for the reassign dropdown —
+// intentionally not the broader /api/admin/users listing (SUPER_ADMIN-only),
+// since any admin who can reassign a consultation needs this same data.
+router.get("/admin/professionals", requireAdmin("MODERATOR"), async (_req, res) => {
+  const professionals = await prisma.healthcareProfessional.findMany({
+    where: { approvalStatus: "APPROVED" },
+    include: { user: { select: { name: true } } },
+    orderBy: { user: { name: "asc" } },
+  });
+  res.json({
+    professionals: professionals.map((p) => ({ id: p.id, name: p.user.name, professionalType: p.professionalType })),
+  });
+});
+
 router.patch("/:id/reassign", requireAdmin(), async (req, res) => {
   const parsed = z.object({ professionalId: z.string().min(1) }).safeParse(req.body);
   if (!parsed.success) {

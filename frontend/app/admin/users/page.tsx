@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Drawer } from "@/components/Drawer";
 import { PageLoading } from "@/components/Spinner";
+import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
 import { useToast } from "@/lib/useToast";
 import { PasswordInput } from "@/components/PasswordInput";
@@ -129,6 +130,85 @@ export default function AdminUsersPage() {
 
   if (authLoading || !admin) return null;
 
+  const userColumns: DataTableColumn<ManagedUser>[] = [
+    {
+      key: "name",
+      label: "Name",
+      render: (u) => (
+        <>
+          <div className="text-sm font-semibold text-ink">{u.name}</div>
+          <div className="text-xs text-ink-soft">{u.email}</div>
+        </>
+      ),
+    },
+    { key: "role", label: "Role", render: (u) => <span className="badge-green">{ROLE_LABEL[u.role] ?? u.role}</span> },
+    {
+      key: "approval",
+      label: "Approval",
+      render: (u) =>
+        u.healthcareProfessional ? (
+          <span className={`badge ${APPROVAL_STYLE[u.healthcareProfessional.approvalStatus]}`}>{u.healthcareProfessional.approvalStatus}</span>
+        ) : null,
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (u) => <span className={`badge ${u.active ? "bg-teal-100 text-teal-700" : "bg-coral-100 text-coral-dark"}`}>{u.active ? "Active" : "Deactivated"}</span>,
+    },
+    {
+      key: "actions",
+      label: "",
+      align: "right",
+      render: (u) => (
+        <div className="flex flex-wrap justify-end gap-2">
+          {u.healthcareProfessional && u.healthcareProfessional.approvalStatus !== "APPROVED" && (
+            <button onClick={() => void handleApproval(u.id, "APPROVED")} className="rounded-full bg-teal-700 px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm transition hover:bg-teal-900">
+              Approve
+            </button>
+          )}
+          {u.healthcareProfessional && u.healthcareProfessional.approvalStatus !== "REJECTED" && (
+            <button onClick={() => void handleApproval(u.id, "REJECTED")} className="rounded-full border border-coral-dark px-3 py-1.5 text-[12px] font-semibold text-coral-dark transition hover:bg-coral-100">
+              Reject
+            </button>
+          )}
+          <button onClick={() => void handleToggleActive(u.id, !u.active)} className="rounded-full border border-line px-3 py-1.5 text-[12px] font-semibold text-ink-soft transition hover:bg-paper-2">
+            {u.active ? "Deactivate" : "Activate"}
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const adminColumns: DataTableColumn<ManagedAdmin>[] = [
+    {
+      key: "name",
+      label: "Name",
+      render: (a) => (
+        <>
+          <div className="text-sm font-semibold text-ink">{a.name}</div>
+          <div className="text-xs text-ink-soft">{a.email}</div>
+        </>
+      ),
+    },
+    { key: "role", label: "Role", render: (a) => <span className="badge-green">{a.role}</span> },
+    {
+      key: "status",
+      label: "Status",
+      render: (a) => <span className={`badge ${a.active ? "bg-teal-100 text-teal-700" : "bg-coral-100 text-coral-dark"}`}>{a.active ? "Active" : "Deactivated"}</span>,
+    },
+    {
+      key: "actions",
+      label: "",
+      align: "right",
+      render: (a) =>
+        a.id !== admin.id ? (
+          <button onClick={() => void handleToggleAdminActive(a.id, !a.active)} className="rounded-full border border-line px-3 py-1.5 text-[12px] font-semibold text-ink-soft transition hover:bg-paper-2">
+            {a.active ? "Deactivate" : "Activate"}
+          </button>
+        ) : null,
+    },
+  ];
+
   return (
     <AppShell active="/admin/users" session={{ kind: "admin", admin }}>
       <div className="mb-[22px] flex items-center justify-between">
@@ -149,121 +229,13 @@ export default function AdminUsersPage() {
 
       {!loading && (
         <>
-          <div className="card mb-6">
-            <div className="px-5 pb-1.5 pt-[14px] text-base text-teal-900">App users</div>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-[13.5px]">
-                <thead>
-                  <tr>
-                    {["Name", "Role", "Approval", "Status", ""].map((h) => (
-                      <th key={h} className="border-b border-line px-3.5 pb-2.5 pt-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.06em] text-ink-soft">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.length === 0 && (
-                    <tr><td colSpan={5} className="px-3.5 py-6 text-center text-ink-soft">No users yet.</td></tr>
-                  )}
-                  {users.map((u) => (
-                    <tr key={u.id} className="border-b border-line last:border-b-0 transition hover:bg-paper-2">
-                      <td className="p-3.5">
-                        <div className="text-sm font-semibold text-ink">{u.name}</div>
-                        <div className="text-xs text-ink-soft">{u.email}</div>
-                      </td>
-                      <td className="p-3.5">
-                        <span className="badge-green">
-                          {ROLE_LABEL[u.role] ?? u.role}
-                        </span>
-                      </td>
-                      <td className="p-3.5">
-                        {u.healthcareProfessional && (
-                          <span className={`badge ${APPROVAL_STYLE[u.healthcareProfessional.approvalStatus]}`}>
-                            {u.healthcareProfessional.approvalStatus}
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-3.5">
-                        <span className={`badge ${u.active ? "bg-teal-100 text-teal-700" : "bg-coral-100 text-coral-dark"}`}>
-                          {u.active ? "Active" : "Deactivated"}
-                        </span>
-                      </td>
-                      <td className="p-3.5">
-                        <div className="flex flex-wrap justify-end gap-2">
-                          {u.healthcareProfessional && u.healthcareProfessional.approvalStatus !== "APPROVED" && (
-                            <button
-                              onClick={() => void handleApproval(u.id, "APPROVED")}
-                              className="rounded-full bg-teal-700 px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm transition hover:bg-teal-900"
-                            >
-                              Approve
-                            </button>
-                          )}
-                          {u.healthcareProfessional && u.healthcareProfessional.approvalStatus !== "REJECTED" && (
-                            <button
-                              onClick={() => void handleApproval(u.id, "REJECTED")}
-                              className="rounded-full border border-coral-dark px-3 py-1.5 text-[12px] font-semibold text-coral-dark transition hover:bg-coral-100"
-                            >
-                              Reject
-                            </button>
-                          )}
-                          <button
-                            onClick={() => void handleToggleActive(u.id, !u.active)}
-                            className="rounded-full border border-line px-3 py-1.5 text-[12px] font-semibold text-ink-soft transition hover:bg-paper-2"
-                          >
-                            {u.active ? "Deactivate" : "Activate"}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <div className="mb-2 text-base text-teal-900">App users</div>
+          <div className="mb-6">
+            <DataTable columns={userColumns} rows={users} keyField="id" emptyMessage="No users yet." />
           </div>
 
-          <div className="card">
-            <div className="px-5 pb-1.5 pt-[14px] text-base text-teal-900">Admin team</div>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-[13.5px]">
-                <thead>
-                  <tr>
-                    {["Name", "Role", "Status", ""].map((h) => (
-                      <th key={h} className="border-b border-line px-3.5 pb-2.5 pt-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.06em] text-ink-soft">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {admins.map((a) => (
-                    <tr key={a.id} className="border-b border-line last:border-b-0 transition hover:bg-paper-2">
-                      <td className="p-3.5">
-                        <div className="text-sm font-semibold text-ink">{a.name}</div>
-                        <div className="text-xs text-ink-soft">{a.email}</div>
-                      </td>
-                      <td className="p-3.5">
-                        <span className="badge-green">{a.role}</span>
-                      </td>
-                      <td className="p-3.5">
-                        <span className={`badge ${a.active ? "bg-teal-100 text-teal-700" : "bg-coral-100 text-coral-dark"}`}>
-                          {a.active ? "Active" : "Deactivated"}
-                        </span>
-                      </td>
-                      <td className="p-3.5">
-                        {a.id !== admin.id && (
-                          <div className="flex justify-end">
-                            <button
-                              onClick={() => void handleToggleAdminActive(a.id, !a.active)}
-                              className="rounded-full border border-line px-3 py-1.5 text-[12px] font-semibold text-ink-soft transition hover:bg-paper-2"
-                            >
-                              {a.active ? "Deactivate" : "Activate"}
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <div className="mb-2 text-base text-teal-900">Admin team</div>
+          <DataTable columns={adminColumns} rows={admins} keyField="id" emptyMessage="No admins yet." />
         </>
       )}
 
@@ -308,7 +280,7 @@ export default function AdminUsersPage() {
             disabled={creating}
             className="w-full rounded-full bg-coral px-[26px] py-[13px] text-[15px] font-semibold text-white shadow-btn transition hover:-translate-y-px hover:bg-coral-dark disabled:opacity-50"
           >
-            {creating ? "Creating\u2026" : "Create admin"}
+            {creating ? "Creating…" : "Create admin"}
           </button>
         </form>
       </Drawer>

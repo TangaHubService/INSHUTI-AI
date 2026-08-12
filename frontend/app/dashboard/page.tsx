@@ -5,6 +5,11 @@ import { useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { FullPageLoading, PageLoading } from "@/components/Spinner";
+import { StatCard } from "@/components/ui/StatCard";
+import { Panel } from "@/components/layout/Panel";
+import { DonutChart } from "@/components/charts/DonutChart";
+import { LineChart } from "@/components/charts/LineChart";
+import { BarChart } from "@/components/charts/BarChart";
 import { getHistory, type ConversationSummary } from "@/lib/apiClient";
 import { useLanguage } from "@/lib/LanguageContext";
 import { getMyAppointments, type Appointment } from "@/lib/userApiClient";
@@ -78,33 +83,6 @@ function topicFor(conversation: ConversationSummary) {
   return TOPICS.find((topic) => value.includes(topic.slug) || value.includes(topic.name.toLowerCase())) ?? TOPICS[5];
 }
 
-function Stat({ icon, color, value, label, helper }: { icon: string; color: string; value: string | number; label: string; helper: string }) {
-  return (
-    <div className="flex min-w-0 items-center gap-3 px-4 py-4 lg:border-r lg:border-line lg:last:border-r-0">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}18`, color }}>
-        <svg width="21" height="21"><use href={`#${icon}`} /></svg>
-      </div>
-      <div className="min-w-0">
-        <div className="text-[21px] font-bold leading-none text-ink">{value}</div>
-        <div className="mt-1 truncate text-xs text-ink-soft">{label}</div>
-        <div className="mt-1 text-[10.5px] font-semibold" style={{ color }}>{helper}</div>
-      </div>
-    </div>
-  );
-}
-
-function Panel({ title, subtitle, children, action }: { title: string; subtitle?: string; children: React.ReactNode; action?: React.ReactNode }) {
-  return (
-    <section className="rounded-2xl border border-line/70 bg-white shadow-sm">
-      <div className="flex items-start justify-between gap-4 px-5 pb-3 pt-4">
-        <div><h2 className="text-[15px] font-bold text-ink">{title}</h2>{subtitle && <p className="mt-1 text-xs text-ink-soft">{subtitle}</p>}</div>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
-
 export default function TeenDashboardPage() {
   const { user, loading: authLoading } = useRequireUser();
   const { language } = useLanguage();
@@ -145,8 +123,6 @@ export default function TeenDashboardPage() {
 
   if (authLoading || !user) return <FullPageLoading />;
   const upcoming = appointments.filter((item) => item.status !== "CANCELLED" && new Date(item.requestedTime) >= new Date()).slice(0, 2);
-  const maxActivity = Math.max(1, ...dashboard.lastSeven.map((day) => day.count));
-  const points = dashboard.lastSeven.map((day, index) => `${12 + index * 46},${90 - (day.count / maxActivity) * 65}`).join(" ");
   const exploredPercent = Math.round((dashboard.explored / TOPICS.length) * 100);
 
   return (
@@ -170,40 +146,41 @@ export default function TeenDashboardPage() {
 
         {loading ? <PageLoading /> : <>
           <section className="grid overflow-hidden rounded-2xl border border-line/70 bg-white shadow-sm sm:grid-cols-2 lg:grid-cols-5">
-            <Stat icon="i-chat" color="#28A76F" value={conversations.length} label={t.conversations} helper="Private history" />
-            <Stat icon="i-calendar" color="#9561D8" value={upcoming.length} label={t.appointments} helper="Upcoming" />
-            <Stat icon="i-activity" color="#F5A623" value={dashboard.activeDays} label={t.streak} helper="Active days" />
-            <Stat icon="i-star" color="#3888E8" value={dashboard.xp} label={t.xp} helper={`Level ${Math.max(1, Math.floor(dashboard.xp / 200) + 1)}`} />
-            <Stat icon="i-heart" color="#E95668" value={dashboard.explored} label={t.explored} helper="Keep learning" />
+            <StatCard bare icon="i-chat" iconColor="#28A76F" value={conversations.length} label={t.conversations} helper="Private history" />
+            <StatCard bare icon="i-calendar" iconColor="#9561D8" value={upcoming.length} label={t.appointments} helper="Upcoming" />
+            <StatCard bare icon="i-activity" iconColor="#F5A623" value={dashboard.activeDays} label={t.streak} helper="Active days" />
+            <StatCard bare icon="i-star" iconColor="#3888E8" value={dashboard.xp} label={t.xp} helper={`Level ${Math.max(1, Math.floor(dashboard.xp / 200) + 1)}`} />
+            <StatCard bare icon="i-heart" iconColor="#E95668" value={dashboard.explored} label={t.explored} helper="Keep learning" />
           </section>
 
           <section className="grid gap-4 xl:grid-cols-[0.92fr_1.06fr_0.98fr]">
             <Panel title={t.journey} subtitle={t.journeySub}>
-              <div className="flex items-center gap-5 px-5 pb-5 pt-2">
-                <div className="relative h-32 w-32 shrink-0 rounded-full" style={{ background: `conic-gradient(${TOPICS.map((topic, index) => `${topic.color} ${index * 16.66}% ${(index + 1) * 16.66}%`).join(",")})` }}>
-                  <div className="absolute inset-5 flex flex-col items-center justify-center rounded-full bg-white"><span className="text-2xl font-bold text-ink">{exploredPercent}%</span><span className="text-[10px] text-ink-soft">Explored</span></div>
-                </div>
-                <div className="min-w-0 flex-1 space-y-2">{TOPICS.map((topic) => <div key={topic.slug} className="flex items-center gap-2 text-[10.5px]"><span className="h-2 w-2 rounded-full" style={{ background: topic.color }} /><span className="min-w-0 flex-1 truncate text-ink-soft">{topic.name}</span><b className="text-ink">{dashboard.counts.get(topic.slug) ?? 0}</b></div>)}</div>
+              <div className="px-5 pb-5 pt-2">
+                <DonutChart
+                  mode="equal"
+                  size={128}
+                  centerValue={`${exploredPercent}%`}
+                  centerLabel="Explored"
+                  data={TOPICS.map((topic) => ({ label: topic.name, value: dashboard.counts.get(topic.slug) ?? 0, color: topic.color }))}
+                />
               </div>
             </Panel>
 
             <Panel title={t.activity} action={<span className="rounded-lg border border-line px-3 py-1.5 text-[11px] text-ink-soft">Last 7 days</span>}>
               <div className="px-5 pb-4">
-                <svg viewBox="0 0 300 110" className="h-[145px] w-full overflow-visible" role="img" aria-label={t.activity}>
-                  {[25, 50, 75, 100].map((y) => <line key={y} x1="10" x2="292" y1={y} y2={y} stroke="#E9E5DD" strokeWidth="1" />)}
-                  <defs><linearGradient id="activity-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#31A879" stopOpacity=".25" /><stop offset="1" stopColor="#31A879" stopOpacity="0" /></linearGradient></defs>
-                  <polygon points={`12,100 ${points} 288,100`} fill="url(#activity-fill)" />
-                  <polyline points={points} fill="none" stroke="#209B6B" strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" />
-                  {dashboard.lastSeven.map((day, index) => <g key={day.label}><circle cx={12 + index * 46} cy={90 - (day.count / maxActivity) * 65} r="3.5" fill="white" stroke="#209B6B" strokeWidth="2" /><text x={12 + index * 46} y="108" textAnchor="middle" fontSize="8" fill="#687975">{day.label}</text></g>)}
-                </svg>
+                <LineChart ariaLabel={t.activity} data={dashboard.lastSeven.map((day) => ({ label: day.label, value: day.count }))} />
               </div>
             </Panel>
 
             <Panel title={t.top}>
-              <div className="space-y-3 px-5 pb-5 pt-1">{[...TOPICS].sort((a, b) => (dashboard.counts.get(b.slug) ?? 0) - (dashboard.counts.get(a.slug) ?? 0)).map((topic) => {
-                const count = dashboard.counts.get(topic.slug) ?? 0;
-                return <div key={topic.slug} className="grid grid-cols-[105px_1fr_20px] items-center gap-2 text-[10.5px]"><span className="truncate text-ink">{topic.name}</span><div className="h-2 rounded-full bg-paper-2"><div className="h-full rounded-full" style={{ backgroundColor: topic.color, width: `${count ? Math.max(18, count / Math.max(1, conversations.length) * 100) : 0}%` }} /></div><span className="text-right font-semibold text-ink">{count}</span></div>;
-              })}</div>
+              <div className="px-5 pb-5 pt-1">
+                <BarChart
+                  orientation="horizontal"
+                  data={[...TOPICS]
+                    .sort((a, b) => (dashboard.counts.get(b.slug) ?? 0) - (dashboard.counts.get(a.slug) ?? 0))
+                    .map((topic) => ({ label: topic.name, value: dashboard.counts.get(topic.slug) ?? 0, color: topic.color }))}
+                />
+              </div>
             </Panel>
           </section>
 

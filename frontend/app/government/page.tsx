@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { PageLoading, FullPageLoading } from "@/components/Spinner";
+import { StatCard } from "@/components/ui/StatCard";
+import { Panel } from "@/components/layout/Panel";
+import { BarChart } from "@/components/charts/BarChart";
 import { useRequireUser } from "@/lib/useUserAuth";
 import { getGovernmentStats, type GovernmentStats } from "@/lib/userApiClient";
 import { useLanguage } from "@/lib/LanguageContext";
 import { PORTAL_COPY } from "@/lib/portalCopy";
-
-const TOPIC_BAR_COLORS = ["bg-coral", "bg-teal-600", "bg-gold", "bg-teal-700", "bg-coral-dark", "bg-teal-100"];
 
 export default function GovernmentPortalPage() {
   const { language } = useLanguage();
@@ -32,7 +33,6 @@ export default function GovernmentPortalPage() {
 
   const langSplit = stats?.languageSplit ?? {};
   const totalLanguage = Object.values(langSplit).reduce((a, b) => a + b, 0);
-  const maxTopicCount = stats ? Math.max(1, ...stats.topicEngagement.map((t) => t.count)) : 1;
 
   return (
     <AppShell active="/government" session={{ kind: "user", user }}>
@@ -55,44 +55,23 @@ export default function GovernmentPortalPage() {
         ) : (
           <section className="pb-16">
             <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="card p-5">
-                <div className="text-[12.5px] font-semibold text-ink-soft">{t.totalConversations}</div>
-                <div className="mt-2 font-display text-[30px] text-teal-900">{stats.totalConversations}</div>
-              </div>
-              <div className="card p-5">
-                <div className="text-[12.5px] font-semibold text-ink-soft">{t.referred}</div>
-                <div className="mt-2 font-display text-[30px] text-teal-900">{stats.referralCount}</div>
-              </div>
-              <div className="card p-5">
-                <div className="text-[12.5px] font-semibold text-ink-soft">{t.consultationsResolved}</div>
-                <div className="mt-2 font-display text-[30px] text-teal-900">{stats.consultationsByStatus.RESOLVED ?? 0}</div>
-              </div>
-              <div className="card p-5">
-                <div className="text-[12.5px] font-semibold text-ink-soft">{t.appointmentsCompleted}</div>
-                <div className="mt-2 font-display text-[30px] text-teal-900">{stats.appointmentsByStatus.COMPLETED ?? 0}</div>
-              </div>
+              <StatCard icon="i-chat" value={stats.totalConversations} label={t.totalConversations} />
+              <StatCard icon="i-arrow" value={stats.referralCount} label={t.referred} />
+              <StatCard icon="i-check" value={stats.consultationsByStatus.RESOLVED ?? 0} label={t.consultationsResolved} />
+              <StatCard icon="i-calendar" value={stats.appointmentsByStatus.COMPLETED ?? 0} label={t.appointmentsCompleted} />
             </div>
 
             <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
-              <div className="card p-5">
-                <h3 className="mb-4 text-base text-teal-900">{t.topicEngagement}</h3>
+              <Panel title={t.topicEngagement} bodyClassName="px-5 pb-5">
                 {stats.topicEngagement.length === 0 && <p className="text-sm text-ink-soft">{t.noTopic}</p>}
-                <div className="flex h-40 items-end gap-3.5 pt-2.5">
-                  {stats.topicEngagement.map((entry, i) => (
-                    <div key={entry.topic.id} className="flex flex-1 flex-col items-center gap-2">
-                      <div className="flex h-full w-full items-end">
-                        <div
-                          className={`w-full rounded-t-lg ${TOPIC_BAR_COLORS[i % TOPIC_BAR_COLORS.length]}`}
-                          style={{ height: `${(entry.count / maxTopicCount) * 100}%` }}
-                        />
-                      </div>
-                      <div className="text-center text-[11px] font-semibold text-ink-soft">{language === "RW" ? entry.topic.nameRw : language === "FR" ? entry.topic.nameFr : language === "SW" ? entry.topic.nameSw : entry.topic.nameEn}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="card p-5">
-                <h3 className="mb-4 text-base text-teal-900">{t.languageSplit}</h3>
+                <BarChart
+                  data={stats.topicEngagement.map((entry) => ({
+                    label: language === "RW" ? entry.topic.nameRw : language === "FR" ? entry.topic.nameFr : language === "SW" ? entry.topic.nameSw : entry.topic.nameEn,
+                    value: entry.count,
+                  }))}
+                />
+              </Panel>
+              <Panel title={t.languageSplit} bodyClassName="px-5 pb-5">
                 <div className="flex flex-col gap-2">
                   {Object.entries(langSplit).map(([lang, count]) => (
                     <div key={lang} className="flex items-center justify-between text-[13px] font-semibold text-ink-soft">
@@ -101,12 +80,10 @@ export default function GovernmentPortalPage() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </Panel>
             </div>
 
-            <div className="card p-5">
-              <h3 className="mb-1 text-base text-teal-900">{t.facilitiesDistrict}</h3>
-              <p className="mb-4 text-[12.5px] text-ink-soft">Facility totals follow the selected government scope where facility location data is available.</p>
+            <Panel title={t.facilitiesDistrict} subtitle="Facility totals follow the selected government scope where facility location data is available." bodyClassName="px-5 pb-5">
               <div className="grid grid-cols-2 gap-x-8 gap-y-2 sm:grid-cols-3">
                 {Object.entries(stats.facilitiesByDistrict).map(([district, count]) => (
                   <div key={district} className="flex items-center justify-between text-[13px] font-semibold text-ink-soft">
@@ -118,7 +95,7 @@ export default function GovernmentPortalPage() {
                   <p className="text-sm text-ink-soft">{t.noFacilities}</p>
                 )}
               </div>
-            </div>
+            </Panel>
           </section>
         )}
       </div>

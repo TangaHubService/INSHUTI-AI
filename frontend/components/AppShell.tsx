@@ -18,6 +18,8 @@ export type AppSession = { kind: "admin"; admin: AdminUser } | { kind: "user"; u
 const ADMIN_NAV_ITEMS: { href: string; label: string; icon: string; minRole?: AdminRole }[] = [
   { href: "/admin/dashboard", label: "Dashboard", icon: "i-grid" },
   { href: "/admin/knowledge-base", label: "Knowledge Base", icon: "i-book", minRole: "CONTENT_REVIEWER" },
+  { href: "/admin/health-education", label: "Health Education", icon: "i-file", minRole: "CONTENT_REVIEWER" },
+  { href: "/admin/consultations", label: "Consultation Oversight", icon: "i-stethoscope", minRole: "MODERATOR" },
   { href: "/admin/flagged", label: "Flagged Content", icon: "i-flag", minRole: "MODERATOR" },
   { href: "/admin/facilities", label: "Facilities", icon: "i-building", minRole: "CONTENT_REVIEWER" },
   { href: "/admin/users", label: "Users & Admins", icon: "i-users", minRole: "SUPER_ADMIN" },
@@ -274,7 +276,7 @@ export function AppShell({
               <svg width="16" height="16">
                 <use href="#i-search" />
               </svg>
-              Search conversations, topics, articles\u2026
+              Search conversations, topics, articles…
             </Link>
           ) : (
             <div className="hidden lg:block" />

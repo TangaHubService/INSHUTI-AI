@@ -4,27 +4,9 @@ import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { PageLoading } from "@/components/Spinner";
+import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
+import { getAuditLogs, type AuditLogEntry, type AuditLogPagination } from "@/lib/adminApiClient";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-
-interface AuditLogEntry {
-  id: string;
-  action: string;
-  entityType: string;
-  entityId: string | null;
-  adminId: string | null;
-  adminEmail: string | null;
-  details: Record<string, unknown>;
-  createdAt: string;
-}
-
-interface Pagination {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-}
 
 function actionLabel(action: string): string {
   return action.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -46,32 +28,41 @@ function entityColor(entityType: string): string {
 export default function AdminAuditLogsPage() {
   const { admin, loading: authLoading } = useRequireAdmin();
   const [logs, setLogs] = useState<AuditLogEntry[]>([]);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [pagination, setPagination] = useState<AuditLogPagination | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    async function load() {
-      setLoading(true);
-      try {
-        const res = await fetch(`${API_URL}/api/audit-logs?page=${page}&limit=30`, { credentials: "include" });
-        if (!res.ok) throw new Error("Failed to load audit logs");
-        const data = await res.json();
-        if (!cancelled) {
-          setLogs(data.logs);
-          setPagination(data.pagination);
-        }
-      } catch {
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    void load();
+    setLoading(true);
+    getAuditLogs({ page, limit: 30 })
+      .then((data) => {
+        if (cancelled) return;
+        setLogs(data.logs);
+        setPagination(data.pagination);
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [page]);
 
   if (authLoading || !admin) return null;
+
+  const columns: DataTableColumn<AuditLogEntry>[] = [
+    { key: "action", label: "Action", render: (log) => <span className="font-semibold text-teal-900">{actionLabel(log.action)}</span> },
+    {
+      key: "entity",
+      label: "Entity",
+      render: (log) => (
+        <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ${entityColor(log.entityType)}`}>
+          {log.entityType.replace(/_/g, " ")}
+        </span>
+      ),
+    },
+    { key: "admin", label: "Admin", render: (log) => log.adminEmail ?? "—" },
+    { key: "details", label: "Details", render: (log) => (Object.keys(log.details).length > 0 ? JSON.stringify(log.details) : "—") },
+    { key: "date", label: "Date", render: (log) => new Date(log.createdAt).toLocaleString() },
+  ];
 
   return (
     <AppShell active="/admin/audit-logs" session={{ kind: "admin", admin }}>
@@ -90,40 +81,7 @@ export default function AdminAuditLogsPage() {
         </div>
       ) : (
         <>
-          <div className="card overflow-x-auto">
-            <table className="w-full text-left text-[13.5px]">
-              <thead>
-                <tr className="border-b border-line bg-paper-2">
-                  <th className="px-4 py-3 font-bold text-ink-soft">Action</th>
-                  <th className="px-4 py-3 font-bold text-ink-soft">Entity</th>
-                  <th className="px-4 py-3 font-bold text-ink-soft">Admin</th>
-                  <th className="px-4 py-3 font-bold text-ink-soft">Details</th>
-                  <th className="px-4 py-3 font-bold text-ink-soft">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.map((log) => (
-                  <tr key={log.id} className="border-b border-line last:border-b-0 transition hover:bg-paper-2">
-                    <td className="px-4 py-3">
-                      <span className="font-semibold text-teal-900">{actionLabel(log.action)}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ${entityColor(log.entityType)}`}>
-                        {log.entityType.replace(/_/g, " ")}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-ink-soft">{log.adminEmail ?? "\u2014"}</td>
-                    <td className="max-w-[200px] truncate px-4 py-3 text-ink-soft">
-                      {Object.keys(log.details).length > 0 ? JSON.stringify(log.details) : "\u2014"}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-ink-soft">
-                      {new Date(log.createdAt).toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable columns={columns} rows={logs} keyField="id" />
 
           {pagination && pagination.totalPages > 1 && (
             <div className="mt-6 flex items-center justify-center gap-2">

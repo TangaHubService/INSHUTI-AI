@@ -37,7 +37,7 @@ adminUsersRouter.get("/", async (req, res) => {
       active: u.active,
       createdAt: u.createdAt,
       healthcareProfessional: u.healthcareProfessional
-        ? { professionalType: u.healthcareProfessional.professionalType, approvalStatus: u.healthcareProfessional.approvalStatus }
+        ? { id: u.healthcareProfessional.id, professionalType: u.healthcareProfessional.professionalType, approvalStatus: u.healthcareProfessional.approvalStatus }
         : null,
       governmentUser: u.governmentUser ? { level: u.governmentUser.level, regionName: u.governmentUser.regionName } : null,
     })),

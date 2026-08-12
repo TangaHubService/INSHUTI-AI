@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
+import { requireAdmin } from "../lib/auth.js";
 
 const router = Router();
 const startTime = Date.now();
@@ -14,7 +15,9 @@ export function incrementErrorCounter() {
   errorCount += 1;
 }
 
-router.get("/health", async (_req, res) => {
+// Internal operational metrics (memory, request/error counters) — admin-only,
+// not for public/unauthenticated consumption.
+router.get("/health", requireAdmin(), async (_req, res) => {
   let dbStatus = "ok";
   try {
     await prisma.$queryRaw`SELECT 1`;

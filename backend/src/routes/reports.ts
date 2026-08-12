@@ -55,7 +55,7 @@ async function sendReport(req: { query: Record<string, unknown> }, res: import("
   res.send(toCsv(rows));
 }
 
-router.get("/conversations", requireAdmin(), async (_req, res) => {
+router.get("/conversations", requireAdmin("CONTENT_REVIEWER"), async (_req, res) => {
   const conversations = await prisma.conversation.findMany({
     orderBy: { createdAt: "desc" },
     include: { messages: { orderBy: { createdAt: "asc" }, include: { flaggedItem: true } } },
@@ -76,7 +76,7 @@ router.get("/conversations", requireAdmin(), async (_req, res) => {
   await writeAuditLog({ action: "REPORT_EXPORTED", entityType: "report", entityId: "conversations", adminId: _req.admin?.sub, adminEmail: _req.admin?.email, details: { format: _req.query.format ?? "csv", rowCount: rows.length - 1 } });
 });
 
-router.get("/flagged", requireAdmin(), async (_req, res) => {
+router.get("/flagged", requireAdmin("CONTENT_REVIEWER"), async (_req, res) => {
   const items = await prisma.flaggedItem.findMany({
     orderBy: { createdAt: "desc" },
     include: { message: { include: { conversation: true } } },
@@ -95,7 +95,7 @@ router.get("/flagged", requireAdmin(), async (_req, res) => {
   await writeAuditLog({ action: "REPORT_EXPORTED", entityType: "report", entityId: "flagged-items", adminId: _req.admin?.sub, adminEmail: _req.admin?.email, details: { format: _req.query.format ?? "csv", rowCount: rows.length - 1 } });
 });
 
-router.get("/appointments", requireAdmin(), async (_req, res) => {
+router.get("/appointments", requireAdmin("CONTENT_REVIEWER"), async (_req, res) => {
   const appointments = await prisma.appointment.findMany({
     orderBy: { createdAt: "desc" },
     include: { user: { select: { name: true } }, professional: { include: { user: { select: { name: true } } } } },

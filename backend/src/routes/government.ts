@@ -10,6 +10,15 @@ const router = Router();
 const [USER] = MESSAGE_ROLES;
 
 router.get("/stats", requireUser, async (req: AuthenticatedUserRequest, res) => {
+  // Explicit role check (defense-in-depth) alongside the association lookup
+  // below — this route must never serve anonymized-aggregate stats to a
+  // non-government account, even if the GovernmentUser link were ever
+  // orphaned by a future role change.
+  if (req.user!.role !== "GOVERNMENT_USER") {
+    res.status(403).json({ error: "Not a government user" });
+    return;
+  }
+
   const governmentUser = await prisma.governmentUser.findUnique({ where: { userId: req.user!.userId } });
   if (!governmentUser) {
     res.status(403).json({ error: "Not a government user" });

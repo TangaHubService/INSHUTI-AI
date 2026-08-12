@@ -30,7 +30,7 @@ const allModels = [
   "adminUser", "crisisResource", "user", "healthcareProfessional",
   "governmentUser", "consultation", "appointment", "notification",
   "healthFacility", "appSettings", "contactInquiry", "auditLog", "fileAttachment",
-  "pushSubscription",
+  "pushSubscription", "healthEducationResource", "healthEducationAttachment",
 ];
 
 const mockPrisma: Record<string, unknown> = Object.fromEntries(

@@ -35,6 +35,16 @@ const envSchema = z.object({
   UPLOAD_DIR: z.string().default("./uploads"),
   MAX_FILE_SIZE_MB: z.coerce.number().int().positive().default(10),
 
+  // Cloudinary — sole storage backend for the Health Education Library
+  // (attachments are never written to local disk). Left optional so the app
+  // still boots without them in dev; upload calls fail with a clear error
+  // until real credentials are set.
+  CLOUDINARY_CLOUD_NAME: z.string().default(""),
+  CLOUDINARY_API_KEY: z.string().default(""),
+  CLOUDINARY_API_SECRET: z.string().default(""),
+  HEALTH_ED_MAX_ATTACHMENT_SIZE_MB: z.coerce.number().int().positive().default(100),
+  HEALTH_ED_MAX_THUMBNAIL_SIZE_MB: z.coerce.number().int().positive().default(5),
+
   // SMS provider — "stub" (default) logs instead of sending.
   SMS_PROVIDER: z.enum(["stub", "twilio"]).default("stub"),
   TWILIO_ACCOUNT_SID: z.string().optional(),

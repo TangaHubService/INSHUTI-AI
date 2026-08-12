@@ -313,3 +313,56 @@ model FileAttachment {
   @@index([consultationId])
   @@index([userId])
 }
+
+// Health Education Library — admin-authored resources with multiple
+// attachments of mixed file types, all stored on Cloudinary (see
+// src/lib/cloudinary.ts). category/topic/targetAudience are free-text
+// (not FK'd to Topic, which belongs to the separate chat-facing Knowledge
+// Base) since there is no fixed taxonomy for these fields.
+model HealthEducationResource {
+  id                 String    @id @default(cuid())
+  title              String
+  shortDescription   String
+  fullDescription    String
+  category           String
+  topic              String
+  targetAudience     String
+  language           String    @default("EN")
+  tags               String    @default("[]")
+  author             String
+  publishedDate      DateTime
+  thumbnailUrl       String?
+  thumbnailSecureUrl String?
+  thumbnailPublicId  String?
+  createdBy          String
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  attachments        HealthEducationAttachment[]
+
+  @@index([category])
+  @@index([topic])
+  @@index([language])
+  @@index([createdAt])
+}
+
+model HealthEducationAttachment {
+  id               String                   @id @default(cuid())
+  resourceId       String
+  resource         HealthEducationResource  @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  originalFileName String
+  fileName         String
+  fileUrl          String
+  secureUrl        String
+  publicId         String
+  mimeType         String
+  fileExtension    String
+  fileSize         Int
+  resourceType     String
+  sortOrder        Int                      @default(0)
+  uploadedBy       String
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  @@index([resourceId])
+}

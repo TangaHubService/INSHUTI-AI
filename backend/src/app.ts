@@ -28,6 +28,8 @@ import auditLogsRouter from "./routes/auditLogs.js";
 import contactRouter from "./routes/contact.js";
 import publicKbRouter from "./routes/publicKb.js";
 import searchRouter from "./routes/search.js";
+import healthEducationRouter from "./routes/healthEducation.js";
+import publicHealthEducationRouter from "./routes/publicHealthEducation.js";
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   incrementErrorCounter();
@@ -103,6 +105,8 @@ export function createApp() {
   app.use("/api/contact", contactRouter);
   app.use("/api/library", publicKbRouter);
   app.use("/api/search", searchRouter);
+  app.use("/api/health-education", healthEducationRouter);
+  app.use("/api/resources", publicHealthEducationRouter);
 
   // Versioned /api/v1/* routes
   app.use("/api/v1/health", healthRouter);
@@ -129,6 +133,8 @@ export function createApp() {
   app.use("/api/v1/contact", contactRouter);
   app.use("/api/v1/library", publicKbRouter);
   app.use("/api/v1/search", searchRouter);
+  app.use("/api/v1/health-education", healthEducationRouter);
+  app.use("/api/v1/resources", publicHealthEducationRouter);
 
   app.use(errorHandler);
 

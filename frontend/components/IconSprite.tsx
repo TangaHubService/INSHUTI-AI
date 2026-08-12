@@ -353,6 +353,16 @@ export function IconSprite() {
           <path d="M14 3v5h5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M6 3h8l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
         </symbol>
+        <symbol id="i-image" viewBox="0 0 24 24">
+          <rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <circle cx="8.5" cy="9.5" r="1.6" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <path d="M3.5 17 9 11.5l3.5 3.5 2.5-2.5 5.5 5.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </symbol>
+        <symbol id="i-archive" viewBox="0 0 24 24">
+          <rect x="3" y="7.5" width="18" height="13" rx="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <path d="M3 7.5V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+          <path d="M10 12h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </symbol>
         <symbol id="i-spinner" viewBox="0 0 24 24">
           <path d="M12 4a8 8 0 0 0-8 8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
             <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite" />

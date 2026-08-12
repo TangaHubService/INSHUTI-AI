@@ -245,3 +245,101 @@ export async function getPublicLibraryArticles(language: string, topicId?: strin
   const data: { articles: PublicLibraryArticle[] } = await res.json();
   return data.articles;
 }
+
+// --- Health Education Library (public) ---
+
+export interface HealthEducationAttachmentSummary {
+  id: string;
+  resourceId: string;
+  originalFileName: string;
+  fileName: string;
+  fileUrl: string;
+  secureUrl: string;
+  publicId: string;
+  mimeType: string;
+  fileExtension: string;
+  fileSize: number;
+  resourceType: "image" | "video" | "raw";
+  sortOrder: number;
+  uploadedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HealthEducationResourceSummary {
+  id: string;
+  title: string;
+  shortDescription: string;
+  category: string;
+  topic: string;
+  targetAudience: string;
+  language: Language;
+  tags: string[];
+  author: string;
+  publishedDate: string;
+  thumbnailUrl: string | null;
+  thumbnailSecureUrl: string | null;
+  attachmentCount: number;
+  availableFileTypes: string[];
+  createdAt: string;
+}
+
+export interface HealthEducationResourceDetail extends HealthEducationResourceSummary {
+  fullDescription: string;
+  attachments: HealthEducationAttachmentSummary[];
+}
+
+export type HealthEducationSort = "newest" | "oldest" | "alpha";
+
+export async function getPublicHealthEducationResources(filters?: {
+  search?: string;
+  category?: string;
+  topic?: string;
+  language?: string;
+  fileType?: string;
+  tags?: string[];
+  sort?: HealthEducationSort;
+  page?: number;
+  limit?: number;
+}): Promise<{ resources: HealthEducationResourceSummary[]; total: number; page: number; pageCount: number }> {
+  const params = new URLSearchParams();
+  if (filters?.search) params.set("search", filters.search);
+  if (filters?.category) params.set("category", filters.category);
+  if (filters?.topic) params.set("topic", filters.topic);
+  if (filters?.language) params.set("language", filters.language);
+  if (filters?.fileType) params.set("fileType", filters.fileType);
+  if (filters?.tags?.length) params.set("tags", filters.tags.join(","));
+  if (filters?.sort) params.set("sort", filters.sort);
+  if (filters?.page) params.set("page", String(filters.page));
+  if (filters?.limit) params.set("limit", String(filters.limit));
+  const query = params.toString() ? `?${params.toString()}` : "";
+  const res = await apiFetch(`/api/resources${query}`);
+  if (!res.ok) throw new Error(`Failed to load resources (${res.status})`);
+  return res.json();
+}
+
+export async function getPublicHealthEducationResource(id: string): Promise<HealthEducationResourceDetail> {
+  const res = await apiFetch(`/api/resources/${id}`);
+  if (!res.ok) throw new Error(`Failed to load resource (${res.status})`);
+  const data: { resource: HealthEducationResourceDetail } = await res.json();
+  return data.resource;
+}
+
+export interface HealthEducationFilters {
+  categories: string[];
+  topics: string[];
+  languages: string[];
+  tags: string[];
+  fileTypes: string[];
+}
+
+export async function getHealthEducationFilters(): Promise<HealthEducationFilters> {
+  const res = await apiFetch("/api/resources/filters");
+  if (!res.ok) throw new Error(`Failed to load filters (${res.status})`);
+  return res.json();
+}
+
+export function getHealthEducationAttachmentDownloadUrl(attachmentId: string): string {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+  return `${apiUrl}/api/resources/attachments/${attachmentId}/download`;
+}

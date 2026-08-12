@@ -1,4 +1,5 @@
 import { apiFetch, type Language } from "./apiClient";
+import { uploadFileWithProgress } from "./uploadClient";
 
 export type AdminRole = "SUPER_ADMIN" | "CONTENT_REVIEWER" | "MODERATOR";
 
@@ -338,7 +339,7 @@ export interface ManagedUser {
   role: ManagedUserRole;
   active: boolean;
   createdAt: string;
-  healthcareProfessional: { professionalType: string; approvalStatus: ApprovalStatus } | null;
+  healthcareProfessional: { id: string; professionalType: string; approvalStatus: ApprovalStatus } | null;
   governmentUser: { level: string; regionName: string } | null;
 }
 
@@ -397,4 +398,241 @@ export async function updateManagedAdmin(id: string, input: Partial<{ name: stri
     throw new Error(body.error ?? "Failed to update admin");
   }
   return res.json();
+}
+
+export interface AuditLogEntry {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string | null;
+  adminId: string | null;
+  adminEmail: string | null;
+  details: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface AuditLogPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export async function getAuditLogs(params?: { page?: number; limit?: number }): Promise<{ logs: AuditLogEntry[]; pagination: AuditLogPagination }> {
+  const query = new URLSearchParams();
+  if (params?.page) query.set("page", String(params.page));
+  if (params?.limit) query.set("limit", String(params.limit));
+  const res = await adminFetch(`/api/audit-logs${query.toString() ? `?${query.toString()}` : ""}`);
+  if (!res.ok) throw new Error("Failed to load audit logs");
+  return res.json();
+}
+
+// --- Consultation Oversight (supervisory list only — never message content) ---
+
+export interface AdminConsultationSummary {
+  id: string;
+  status: string;
+  priority: number;
+  userName: string;
+  professionalName: string | null;
+  professionalId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getAdminConsultations(params?: {
+  status?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{ consultations: AdminConsultationSummary[]; total: number; page: number; pageCount: number }> {
+  const query = new URLSearchParams();
+  if (params?.status) query.set("status", params.status);
+  if (params?.page) query.set("page", String(params.page));
+  if (params?.limit) query.set("limit", String(params.limit));
+  const res = await adminFetch(`/api/consultations/admin${query.toString() ? `?${query.toString()}` : ""}`);
+  if (!res.ok) throw new Error("Failed to load consultations");
+  return res.json();
+}
+
+export async function reassignConsultation(consultationId: string, professionalId: string): Promise<void> {
+  const res = await adminFetch(`/api/consultations/${consultationId}/reassign`, { method: "PATCH", body: JSON.stringify({ professionalId }) });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to reassign consultation");
+  }
+}
+
+export async function escalateConsultation(consultationId: string): Promise<void> {
+  const res = await adminFetch(`/api/consultations/${consultationId}/escalate`, { method: "POST" });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to escalate consultation");
+  }
+}
+
+export interface ReassignableProfessional {
+  id: string;
+  name: string;
+  professionalType: string;
+}
+
+export async function getConsultationProfessionals(): Promise<ReassignableProfessional[]> {
+  const res = await adminFetch("/api/consultations/admin/professionals");
+  if (!res.ok) throw new Error("Failed to load professionals");
+  const data: { professionals: ReassignableProfessional[] } = await res.json();
+  return data.professionals;
+}
+
+// --- Health Education Library ---
+
+export interface HealthEducationAttachment {
+  id: string;
+  resourceId: string;
+  originalFileName: string;
+  fileName: string;
+  fileUrl: string;
+  secureUrl: string;
+  publicId: string;
+  mimeType: string;
+  fileExtension: string;
+  fileSize: number;
+  resourceType: "image" | "video" | "raw";
+  sortOrder: number;
+  uploadedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HealthEducationResource {
+  id: string;
+  title: string;
+  shortDescription: string;
+  fullDescription: string;
+  category: string;
+  topic: string;
+  targetAudience: string;
+  language: Language;
+  tags: string[];
+  author: string;
+  publishedDate: string;
+  thumbnailUrl: string | null;
+  thumbnailSecureUrl: string | null;
+  thumbnailPublicId: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  attachments?: HealthEducationAttachment[];
+  attachmentCount?: number;
+  availableFileTypes?: string[];
+}
+
+export type HealthEducationResourceInput = {
+  title: string;
+  shortDescription: string;
+  fullDescription: string;
+  category: string;
+  topic: string;
+  targetAudience: string;
+  language: Language;
+  tags: string[];
+  author: string;
+  publishedDate: string;
+};
+
+export async function getHealthEducationResources(filters?: {
+  search?: string;
+  category?: string;
+  topic?: string;
+  language?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{ resources: HealthEducationResource[]; total: number; page: number; pageCount: number }> {
+  const params = new URLSearchParams();
+  if (filters?.search) params.set("search", filters.search);
+  if (filters?.category) params.set("category", filters.category);
+  if (filters?.topic) params.set("topic", filters.topic);
+  if (filters?.language) params.set("language", filters.language);
+  if (filters?.page) params.set("page", String(filters.page));
+  if (filters?.limit) params.set("limit", String(filters.limit));
+  const query = params.toString() ? `?${params.toString()}` : "";
+  const res = await adminFetch(`/api/health-education/resources${query}`);
+  if (!res.ok) throw new Error("Failed to load resources");
+  return res.json();
+}
+
+export async function getHealthEducationResource(id: string): Promise<HealthEducationResource> {
+  const res = await adminFetch(`/api/health-education/resources/${id}`);
+  if (!res.ok) throw new Error("Failed to load resource");
+  const data: { resource: HealthEducationResource } = await res.json();
+  return data.resource;
+}
+
+export async function createHealthEducationResource(input: HealthEducationResourceInput): Promise<HealthEducationResource> {
+  const res = await adminFetch("/api/health-education/resources", { method: "POST", body: JSON.stringify(input) });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to create resource");
+  }
+  const data: { resource: HealthEducationResource } = await res.json();
+  return data.resource;
+}
+
+export async function updateHealthEducationResource(
+  id: string,
+  input: Partial<HealthEducationResourceInput>,
+): Promise<HealthEducationResource> {
+  const res = await adminFetch(`/api/health-education/resources/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Failed to update resource");
+  }
+  const data: { resource: HealthEducationResource } = await res.json();
+  return data.resource;
+}
+
+export async function deleteHealthEducationResource(id: string): Promise<void> {
+  const res = await adminFetch(`/api/health-education/resources/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete resource");
+}
+
+export async function deleteHealthEducationThumbnail(resourceId: string): Promise<HealthEducationResource> {
+  const res = await adminFetch(`/api/health-education/resources/${resourceId}/thumbnail`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to remove thumbnail");
+  const data: { resource: HealthEducationResource } = await res.json();
+  return data.resource;
+}
+
+export async function deleteHealthEducationAttachment(attachmentId: string): Promise<void> {
+  const res = await adminFetch(`/api/health-education/attachments/${attachmentId}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete attachment");
+}
+
+export async function reorderHealthEducationAttachments(resourceId: string, attachmentIds: string[]): Promise<void> {
+  const res = await adminFetch(`/api/health-education/resources/${resourceId}/attachments/order`, {
+    method: "PATCH",
+    body: JSON.stringify({ attachmentIds }),
+  });
+  if (!res.ok) throw new Error("Failed to reorder attachments");
+}
+
+// Multipart uploads use XHR (via uploadFileWithProgress) for real progress
+// events and a working Cancel button — adminFetch's JSON fetch() wrapper
+// can't report upload progress. Cookies still ride along (withCredentials).
+
+export function uploadHealthEducationThumbnail(resourceId: string, file: File, onProgress?: (pct: number) => void) {
+  const formData = new FormData();
+  formData.append("thumbnail", file);
+  return uploadFileWithProgress(`/api/health-education/resources/${resourceId}/thumbnail`, "POST", formData, onProgress);
+}
+
+export function uploadHealthEducationAttachment(resourceId: string, file: File, onProgress?: (pct: number) => void) {
+  const formData = new FormData();
+  formData.append("file", file);
+  return uploadFileWithProgress(`/api/health-education/resources/${resourceId}/attachments`, "POST", formData, onProgress);
+}
+
+export function replaceHealthEducationAttachment(attachmentId: string, file: File, onProgress?: (pct: number) => void) {
+  const formData = new FormData();
+  formData.append("file", file);
+  return uploadFileWithProgress(`/api/health-education/attachments/${attachmentId}/replace`, "PUT", formData, onProgress);
 }

@@ -5,9 +5,10 @@ Record tester, environment, build commit, date, result, evidence link, defect ID
 - Registration, verification, login, logout, password reset, lockout, session timeout, profile, preferences, deactivation/deletion request
 - Anonymous and identified AI chat in EN/RW/FR/SW, safety disclaimer, follow-up questions, knowledge sources, crisis response, history deletion
 - Topic and risk routing to CHW/nurse/midwife/psychologist/doctor; no incorrect assignment when the correct type is unavailable
-- User/professional consultation authorization, real-time messages, files/images, read receipts, escalation, reassignment, history
+- User/professional consultation authorization, real-time messages, voice notes, files/images, read receipts, escalation, reassignment, history, and 1:1/group audio-video calls
 - Appointment request, available professional, confirmation/rejection, reschedule, cancel, reminder, outcome
-- Library search/categories and complete multilingual article publication workflow
+- Library search/categories (knowledge base and Health Education Library tabs) and complete multilingual article/attachment publication workflow
+- Admin/moderator consultation oversight list exposes status and participant names only, never message content
 - Facility district/sector/type search, map, services, contact, and directions
 - In-app/email/SMS/push behavior according to configured providers and preferences
 - Parent, youth, professional, government, admin, and super-admin permission boundaries

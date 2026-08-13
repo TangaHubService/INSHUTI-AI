@@ -3,7 +3,7 @@
 ## Policy
 
 - Managed PostgreSQL point-in-time recovery plus daily encrypted logical backups
-- Encrypted object-storage backups for authorized attachments
+- Consultation and Health Education Library attachments live on Cloudinary, not local/API disk; rely on the Cloudinary account's own redundancy and additionally schedule a periodic export of referenced assets so recovery does not depend solely on a third party's retention policy
 - Copies stored in a separate account or failure domain
 - Daily automated verification and quarterly full restore exercises
 - Suggested initial targets: RPO 24 hours, RTO 8 hours, subject to owner approval

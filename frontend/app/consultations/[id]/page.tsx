@@ -10,10 +10,10 @@ import { useRequireUser } from "@/lib/useUserAuth";
 import { FullPageLoading } from "@/components/Spinner";
 import { GroupCall } from "@/components/GroupCall";
 import { toWavBlob } from "@/lib/audio";
+import { uploadFileWithProgress, type UploadHandle } from "@/lib/uploadClient";
 import {
   getConsultationMessages,
   sendConsultationMessage,
-  uploadConsultationFile,
   getConsultationFiles,
   getConsultationFileUrl,
   markConsultationRead,
@@ -97,13 +97,16 @@ export default function ConsultationThreadPage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [files, setFiles] = useState<FileAttachment[]>([]);
-  const [uploading, setUploading] = useState(false);
   const [otherOnline, setOtherOnline] = useState(false);
   const [otherName, setOtherName] = useState("");
   const [typing, setTyping] = useState(false);
   const [attachmentPreview, setAttachmentPreview] = useState<AttachmentPreview | null>(null);
   const [groupCallOpen, setGroupCallOpen] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [uploadingName, setUploadingName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -111,6 +114,7 @@ export default function ConsultationThreadPage() {
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const uploadHandleRef = useRef<UploadHandle | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -211,8 +215,21 @@ export default function ConsultationThreadPage() {
   async function uploadFile(file: File) {
     if (!file) return;
     setUploading(true);
+    setUploadProgress(0);
+    setUploadingName(file.name);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("consultationId", consultationId);
+    const handle = uploadFileWithProgress("/api/uploads", "POST", formData, setUploadProgress);
+    uploadHandleRef.current = handle;
     try {
-      await uploadConsultationFile(consultationId, file);
+      const { status, body } = await handle.promise;
+      if (status >= 400) {
+        const message = typeof body === "object" && body && "error" in body
+          ? String((body as { error: string }).error)
+          : `Failed to upload file (${status})`;
+        throw new Error(message);
+      }
       const attachmentData = await getConsultationFiles(consultationId);
       setFiles(attachmentData);
       const notice = file.type.startsWith("audio/") ? "🎙 Voice message" : `📎 Shared file: ${file.name}`;
@@ -224,10 +241,22 @@ export default function ConsultationThreadPage() {
       }
       toast("File uploaded", "success");
     } catch (err) {
+      if (err instanceof Error && err.message === "Upload cancelled") return;
       toast(err instanceof Error ? err.message : "Failed to upload file", "error");
     } finally {
       setUploading(false);
+      setUploadProgress(null);
+      setUploadingName("");
+      uploadHandleRef.current = null;
     }
+  }
+
+  function cancelUpload() {
+    uploadHandleRef.current?.abort();
+    setUploading(false);
+    setUploadProgress(null);
+    setUploadingName("");
+    uploadHandleRef.current = null;
   }
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -283,6 +312,19 @@ export default function ConsultationThreadPage() {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
+
+  function formatDuration(totalSeconds: number): string {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  }
+
+  useEffect(() => {
+    if (!recording) { setRecordingSeconds(0); return; }
+    const start = Date.now();
+    const id = setInterval(() => setRecordingSeconds(Math.floor((Date.now() - start) / 1000)), 250);
+    return () => clearInterval(id);
+  }, [recording]);
 
   useEffect(() => {
     if (!attachmentPreview) return;
@@ -473,37 +515,86 @@ export default function ConsultationThreadPage() {
         </div>
       </main>
 
+      {uploading && (
+        <div className="animate-slide-up flex items-center gap-3 border-t border-[#D9DDDA] bg-white px-4 py-2.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E2EEEB] text-[#0A7A70]">
+            <svg width="16" height="16"><use href="#i-spinner" /></svg>
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <b className="truncate text-[11px] text-[#28474E]">Uploading {uploadingName}…</b>
+              <span className="text-[10px] font-semibold tabular-nums text-[#667781]">{uploadProgress ?? 0}%</span>
+            </div>
+            <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[#E2E5E7]">
+              <div className="h-full rounded-full bg-[#00A884] transition-[width] duration-150" style={{ width: `${uploadProgress ?? 0}%` }} />
+            </div>
+          </div>
+          <button type="button" onClick={cancelUpload} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#54656F] hover:bg-[#E2E5E7]" aria-label="Cancel upload" title="Cancel upload">
+            <svg width="14" height="14"><use href="#i-back" /></svg>
+          </button>
+        </div>
+      )}
+
       <form className="flex items-end gap-2 border-t border-[#D9DDDA] bg-[#F0F2F5] px-3 py-2.5" onSubmit={handleSend}>
         <input ref={fileInputRef} type="file" accept="image/*,audio/*,application/pdf" className="hidden" onChange={(e) => void handleFileUpload(e)} />
         <button
           type="button"
-          disabled={uploading}
+          disabled={uploading || recording}
           onClick={() => fileInputRef.current?.click()}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#54656F] hover:bg-[#E2E5E7] disabled:opacity-50"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#54656F] hover:bg-[#E2E5E7] disabled:opacity-50 disabled:pointer-events-none"
+          aria-label="Attach a file"
         >
           <svg width="18" height="18" className="text-ink-soft"><use href={uploading ? "#i-spinner" : "#i-attach"} /></svg>
         </button>
-        <button type="button" onClick={() => void toggleRecording()} className={`flex h-10 w-10 items-center justify-center rounded-full text-[11px] font-bold ${recording ? "bg-red-100 text-red-700" : "text-[#54656F] hover:bg-[#E2E5E7]"}`} aria-label={recording ? "Stop voice message" : "Record voice message"}>
-          {recording ? "■" : "🎙"}
-        </button>
-        <button type="button" onClick={startDictation} className="hidden h-10 rounded-full px-3 text-[10px] font-bold text-[#54656F] hover:bg-[#E2E5E7] sm:block" aria-label="Dictate message">Dictate</button>
-        <textarea
-          ref={textareaRef}
-          rows={1}
-          className="max-h-[120px] min-h-[42px] flex-1 resize-none overflow-y-auto rounded-[22px] border-0 bg-white px-4 py-2.5 text-[13px] leading-[1.4] shadow-sm outline-none"
-          placeholder="Type a private message"
-          value={input}
-          onChange={handleInputChange}
-          onKeyDown={handleInputKeyDown}
-          disabled={sending}
-        />
-        <button
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#00A884] disabled:opacity-40"
-          type="submit"
-          disabled={sending || !input.trim()}
-        >
-          <svg width="16" height="16" className="text-white"><use href="#i-send" /></svg>
-        </button>
+
+        {recording ? (
+          <>
+            <div className="flex h-[42px] min-w-0 flex-1 items-center gap-2.5 rounded-[22px] bg-white px-4 shadow-sm">
+              <span className="rec-dot" />
+              <span className="text-[11.5px] font-semibold text-[#172925]">Recording…</span>
+              <span className="text-[12px] font-semibold tabular-nums text-[#DF514D]">{formatDuration(recordingSeconds)}</span>
+              <span className="ml-auto flex h-[18px] items-end gap-[3px] text-[#DF514D]" aria-hidden="true">
+                <span className="eq-bar" style={{ animationDelay: "0ms" }} />
+                <span className="eq-bar" style={{ animationDelay: "140ms" }} />
+                <span className="eq-bar" style={{ animationDelay: "260ms" }} />
+                <span className="eq-bar" style={{ animationDelay: "70ms" }} />
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => void toggleRecording()}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#DF514D] text-white shadow-md transition-colors hover:bg-[#C74B48]"
+              aria-label="Stop and send voice message"
+              title="Stop recording"
+            >
+              <span className="block h-3.5 w-3.5 rounded-[3px] bg-white" />
+            </button>
+          </>
+        ) : (
+          <>
+            <button type="button" onClick={() => void toggleRecording()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#54656F] hover:bg-[#E2E5E7]" aria-label="Record voice message" title="Record voice message">
+              <svg width="17" height="17"><use href="#i-mic" /></svg>
+            </button>
+            <button type="button" onClick={startDictation} className="hidden h-10 rounded-full px-3 text-[10px] font-bold text-[#54656F] hover:bg-[#E2E5E7] sm:block" aria-label="Dictate message">Dictate</button>
+            <textarea
+              ref={textareaRef}
+              rows={1}
+              className="max-h-[120px] min-h-[42px] flex-1 resize-none overflow-y-auto rounded-[22px] border-0 bg-white px-4 py-2.5 text-[13px] leading-[1.4] shadow-sm outline-none"
+              placeholder="Type a private message"
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={handleInputKeyDown}
+              disabled={sending}
+            />
+            <button
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#00A884] disabled:opacity-40"
+              type="submit"
+              disabled={sending || !input.trim()}
+            >
+              <svg width="16" height="16" className="text-white"><use href="#i-send" /></svg>
+            </button>
+          </>
+        )}
       </form>
 
       {attachmentPreview && (

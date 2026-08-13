@@ -2,28 +2,26 @@ import { Router } from "express";
 import { z } from "zod";
 import multer from "multer";
 import path from "node:path";
-import fs from "node:fs";
 
 import { prisma } from "../lib/prisma.js";
 import { requireUser, type AuthenticatedUserRequest } from "../lib/userAuth.js";
 import { env } from "../lib/env.js";
-import { decryptFileAtRest, encryptFileAtRest } from "../lib/fileCrypto.js";
+import {
+  buildConsultationFolder,
+  buildSignedDeliveryUrl,
+  deleteFromCloudinary,
+  uploadBufferToCloudinary,
+} from "../lib/cloudinary.js";
+import type { CloudinaryResourceType, FolderCategory } from "../lib/healthEducationFiles.js";
+import { decryptFileAtRest } from "../lib/fileCrypto.js";
 
 const router = Router();
 
-const UPLOAD_DIR = path.resolve(env.UPLOAD_DIR);
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
-  filename: (_req, file, cb) => {
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const ext = path.extname(file.originalname);
-    cb(null, `${uniqueSuffix}${ext}`);
-  },
-});
+// Consultation media is stored on Cloudinary (private type) rather than the
+// local disk — matches the Health Education Library and works on serverless
+// deploys where the filesystem doesn't persist. Legacy rows keep their
+// local-disk path and are served via fileCrypto as before.
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
@@ -35,27 +33,33 @@ const upload = multer({
   },
 });
 
+// Maps a request file to the Cloudinary resource type + folder. Audio has no
+// dedicated Cloudinary resource type, so it uploads as "video" (same as the
+// Health Education Library) but keeps its own folder for a readable asset tree.
+function resolveCloudinaryTarget(mimetype: string): { resourceType: CloudinaryResourceType; folderCategory: FolderCategory } {
+  if (mimetype.startsWith("image/")) return { resourceType: "image", folderCategory: "images" };
+  if (mimetype.startsWith("audio/")) return { resourceType: "video", folderCategory: "audio" };
+  return { resourceType: "raw", folderCategory: "attachments" };
+}
+
 router.post("/", requireUser, upload.single("file"), async (req: AuthenticatedUserRequest, res) => {
   if (!req.file) {
     res.status(400).json({ error: "No file provided" });
     return;
   }
 
-  // Multer writes first; encrypt immediately so validation/authorization
-  // failures cannot leave sensitive media readable on disk.
-  await encryptFileAtRest(req.file.path);
-
   const parsed = z.object({ consultationId: z.string().optional() }).safeParse(req.body);
   if (!parsed.success) {
-    await fs.promises.unlink(req.file.path).catch(() => undefined);
     res.status(400).json({ error: "Invalid request" });
     return;
   }
 
+  // Authorize against the consultation BEFORE touching Cloudinary so invalid
+  // or unauthorized requests never create orphaned assets.
+  let consultationId: string | null = null;
   if (parsed.data.consultationId) {
     const consultation = await prisma.consultation.findUnique({ where: { id: parsed.data.consultationId } });
     if (!consultation) {
-      await fs.promises.unlink(req.file!.path).catch(() => undefined);
       res.status(404).json({ error: "Consultation not found" });
       return;
     }
@@ -63,24 +67,54 @@ router.post("/", requireUser, upload.single("file"), async (req: AuthenticatedUs
     const professional = await prisma.healthcareProfessional.findUnique({ where: { userId: req.user!.userId } });
     const isAssigned = professional && consultation.professionalId === professional.id;
     if (!isOwner && !isAssigned) {
-      await fs.promises.unlink(req.file!.path).catch(() => undefined);
       res.status(403).json({ error: "Not authorized to attach files to this consultation" });
       return;
     }
+    consultationId = consultation.id;
   }
 
-  const attachment = await prisma.fileAttachment.create({
-    data: {
-      consultationId: parsed.data.consultationId ?? null,
-      userId: req.user!.userId,
-      originalName: req.file.originalname,
-      storedName: req.file.filename,
-      mimeType: req.file.mimetype,
-      size: req.file.size,
-      path: req.file.path,
-      uploadedBy: req.user!.userId,
-    },
-  });
+  const { resourceType, folderCategory } = resolveCloudinaryTarget(req.file.mimetype);
+  const extension = path.extname(req.file.originalname).replace(/^\./, "") || undefined;
+
+  let uploaded;
+  try {
+    uploaded = await uploadBufferToCloudinary(req.file.buffer, {
+      folder: buildConsultationFolder(consultationId ?? "unsaved", folderCategory),
+      filenameForId: req.file.originalname,
+      extension,
+      resourceType,
+      type: "private",
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Upload failed";
+    res.status(message.startsWith("Cloudinary is not configured") ? 503 : 500).json({
+      error: message,
+    });
+    return;
+  }
+
+  let attachment;
+  try {
+    attachment = await prisma.fileAttachment.create({
+      data: {
+        consultationId,
+        userId: req.user!.userId,
+        originalName: req.file.originalname,
+        storedName: req.file.originalname,
+        mimeType: req.file.mimetype,
+        size: req.file.size,
+        path: `cloudinary://${uploaded.publicId}`,
+        uploadedBy: req.user!.userId,
+        publicId: uploaded.publicId,
+        secureUrl: uploaded.secureUrl,
+        resourceType: uploaded.resourceType,
+      },
+    });
+  } catch (err) {
+    // DB failure must not leave an orphaned asset behind.
+    await deleteFromCloudinary(uploaded.publicId, uploaded.resourceType).catch(() => undefined);
+    throw err;
+  }
 
   res.status(201).json({
     attachment: {
@@ -140,6 +174,27 @@ router.get("/:id", requireUser, async (req: AuthenticatedUserRequest, res) => {
   }
   res.type(attachment.mimeType);
   res.setHeader("Content-Disposition", `inline; filename="${attachment.originalName.replace(/["\r\n]/g, "_")}"`);
+
+  if (attachment.publicId && attachment.resourceType) {
+    // Cloudinary-backed upload: proxy the private asset through the API so
+    // the signed URL never reaches the client and every request is auth'd.
+    try {
+      const signedUrl = buildSignedDeliveryUrl(attachment.publicId, attachment.resourceType as CloudinaryResourceType);
+      const cloudinaryRes = await fetch(signedUrl);
+      if (!cloudinaryRes.ok) {
+        res.status(502).json({ error: "Attachment storage unavailable" });
+        return;
+      }
+      res.send(Buffer.from(await cloudinaryRes.arrayBuffer()));
+      return;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Attachment unavailable";
+      res.status(502).json({ error: message });
+      return;
+    }
+  }
+
+  // Legacy local-disk rows.
   const decrypted = await decryptFileAtRest(path.resolve(attachment.path));
   res.send(decrypted);
 });

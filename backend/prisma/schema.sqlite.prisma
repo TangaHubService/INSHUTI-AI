@@ -306,8 +306,11 @@ model FileAttachment {
   storedName      String
   mimeType        String
   size            Int
-  path            String
+  path            String       @default("") // cloudinary://<publicId> for Cloudinary-backed uploads, legacy disk path otherwise
   uploadedBy      String
+  publicId        String?
+  secureUrl       String?
+  resourceType    String?      // "image" | "video" | "raw" — Cloudinary resource type
   createdAt       DateTime       @default(now())
 
   @@index([consultationId])

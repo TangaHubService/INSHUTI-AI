@@ -235,6 +235,49 @@
   animation: shimmer 1.5s infinite;
 }
 
+/* Voice-message recording indicator (WhatsApp-style pulsing dot + equalizer) */
+@keyframes rec-ring {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.rec-dot {
+  position: relative;
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+.rec-dot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: #df514d;
+  animation: rec-ring 1.4s ease-out infinite;
+}
+.rec-dot::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 9999px;
+  background: #c74b48;
+}
+
+@keyframes eq-bar {
+  0%, 100% { height: 30%; }
+  50% { height: 100%; }
+}
+
+.eq-bar {
+  display: inline-block;
+  width: 3px;
+  height: 14px;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: eq-bar 0.9s ease-in-out infinite;
+}
+
 .code-block {
   counter-reset: line;
 }

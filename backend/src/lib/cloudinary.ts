@@ -29,6 +29,12 @@ export function buildCloudinaryFolder(resourceId: string, folderCategory: Folder
   return `health-education/resources/${resourceId}/${folderCategory}`;
 }
 
+// consultations/{consultationId}/{images|audio|attachments}
+// consultationId always comes from an already-created DB row — never hardcoded.
+export function buildConsultationFolder(consultationId: string, folderCategory: FolderCategory): string {
+  return `consultations/${consultationId}/${folderCategory}`;
+}
+
 function slugifyBase(name: string): string {
   const withoutExt = name.replace(/\.[^./]+$/, "");
   const slug = withoutExt
@@ -49,7 +55,15 @@ export interface CloudinaryUploadResult {
 
 export function uploadBufferToCloudinary(
   buffer: Buffer,
-  options: { folder: string; filenameForId: string; extension: string; resourceType: CloudinaryResourceType },
+  options: {
+    folder: string;
+    filenameForId: string;
+    extension?: string;
+    resourceType: CloudinaryResourceType;
+    // "upload" (public, default — used by the Health Education Library) or
+    // "private" (used by consultations: only deliverable via signed URLs).
+    type?: "upload" | "private" | "authenticated";
+  },
 ): Promise<CloudinaryUploadResult> {
   ensureConfigured();
 
@@ -57,7 +71,7 @@ export function uploadBufferToCloudinary(
   // stored public_id (unlike image/video, where it appends the format for
   // you) — otherwise delivery URLs 404. Embed it explicitly for raw uploads.
   const uniqueId = `${slugifyBase(options.filenameForId)}-${crypto.randomUUID()}`;
-  const publicId = options.resourceType === "raw" ? `${uniqueId}.${options.extension}` : uniqueId;
+  const publicId = options.resourceType === "raw" ? `${uniqueId}.${options.extension ?? "bin"}` : uniqueId;
 
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
@@ -65,6 +79,7 @@ export function uploadBufferToCloudinary(
         folder: options.folder,
         public_id: publicId,
         resource_type: options.resourceType,
+        type: options.type ?? "upload",
         use_filename: false,
         unique_filename: false,
         overwrite: false,
@@ -104,5 +119,20 @@ export function buildDownloadUrl(publicId: string, resourceType: CloudinaryResou
     resource_type: resourceType,
     secure: true,
     flags: `attachment:${downloadFilename.replace(/\.[^./]+$/, "")}`,
+  });
+}
+
+// Signed, inline delivery URL for private (consultation) assets. Private
+// assets 404 over plain URLs, so this must stay server-side — used by the
+// uploads router to proxy the file to an authenticated requester. Private
+// video (audio) URLs reject delivery transforms (e.g. fl_inline) with a 400,
+// so no transforms are applied; they are served inline by default.
+export function buildSignedDeliveryUrl(publicId: string, resourceType: CloudinaryResourceType): string {
+  ensureConfigured();
+  return cloudinary.url(publicId, {
+    resource_type: resourceType,
+    secure: true,
+    type: "private",
+    sign_url: true,
   });
 }

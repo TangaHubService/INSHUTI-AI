@@ -14,7 +14,7 @@ import type { Language } from "@/lib/apiClient";
 const MSG: Record<Language, {
   heroTitle: string; heroSubtitle: string;
   title: string; email: string; send: string; sending: string;
-  sent: string; backToLogin: string;
+  sent: string; backToLogin: string; backHome: string;
 }> = {
   EN: {
     heroTitle: "Let's get you back in.",
@@ -23,6 +23,7 @@ const MSG: Record<Language, {
     send: "Send reset link", sending: "Sending…",
     sent: "If an account exists for that email, we've sent a link to reset your password. It expires in 1 hour.",
     backToLogin: "Back to log in",
+    backHome: "Back to home",
   },
   RW: {
     heroTitle: "Reka tugufashe kwinjira.",
@@ -31,6 +32,7 @@ const MSG: Record<Language, {
     send: "Ohereza ihuza ryo guhindura", sending: "Turimo kohereza…",
     sent: "Niba hari konti ifite iyo imeri, twohereje ihuza ryo guhindura ijambobanga. Rirangira mu isaha 1.",
     backToLogin: "Garuka ku kwinjira",
+    backHome: "Garuka ahabanza",
   },
   FR: {
     heroTitle: "Reconnectons-vous.",
@@ -39,6 +41,7 @@ const MSG: Record<Language, {
     send: "Envoyer le lien de réinitialisation", sending: "Envoi…",
     sent: "Si un compte existe pour cet email, nous avons envoyé un lien pour réinitialiser votre mot de passe. Il expire dans 1 heure.",
     backToLogin: "Retour à la connexion",
+    backHome: "Retour à l'accueil",
   },
   SW: {
     heroTitle: "Hebu turudishe uingie.",
@@ -47,6 +50,7 @@ const MSG: Record<Language, {
     send: "Tuma kiungo cha kuweka upya", sending: "Inatuma…",
     sent: "Ikiwa akaunti ipo kwa barua pepe hiyo, tumetuma kiungo cha kuweka upya nywila yako. Kinaisha muda baada ya saa 1.",
     backToLogin: "Rudi kuingia",
+    backHome: "Rudi nyumbani",
   },
 };
 
@@ -104,6 +108,13 @@ export default function ForgotPasswordPage() {
       </div>
       <div className="flex items-center justify-center bg-paper p-10">
         <div className="w-full max-w-[380px]">
+          <Link
+            href="/"
+            className="mb-5 inline-flex items-center gap-1.5 text-[13px] font-semibold text-teal-700 transition hover:text-teal-900"
+          >
+            <svg width="14" height="14"><use href="#i-back" /></svg>
+            {m.backHome}
+          </Link>
           <div className="mb-5 flex items-center justify-between">
             <h2 className="font-display text-[26px] text-teal-900">{m.title}</h2>
             <LanguageSwitcher value={language} onChange={setLanguage} />

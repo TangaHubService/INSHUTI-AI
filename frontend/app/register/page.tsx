@@ -35,7 +35,7 @@ const MSG: Record<Language, {
   langPref: string; password: string; passwordPlaceholder: string; profType: string;
   specialization: string; specPlaceholder: string; govLevel: string; region: string;
   regionPlaceholder: string; create: string; creating: string; haveAccount: string;
-  login: string; fill: string;
+  login: string; fill: string; backHome: string;
 }> = {
   EN: {
     heroTitle: "Join Inshuti.",
@@ -45,6 +45,7 @@ const MSG: Record<Language, {
     profType: "Professional type", specialization: "Specialization", specPlaceholder: "e.g. Pediatrics",
     govLevel: "Government level", region: "Region / District", regionPlaceholder: "District name",
     create: "Create account", creating: "Creating account…", haveAccount: "Already have an account?", login: "Log in", fill: "Please fill in all required fields.",
+    backHome: "Back to home",
   },
   RW: {
     heroTitle: "Injira muri Inshuti.",
@@ -54,6 +55,7 @@ const MSG: Record<Language, {
     profType: "Ubwoko bw'umwuga", specialization: "Ubuhanga budasanzwe", specPlaceholder: "Urugero: Pediatrics",
     govLevel: "Urwego rwa Leta", region: "Akarere / Uturere", regionPlaceholder: "Izina ry'akarere",
     create: "Fungura konti", creating: "Ifungura…", haveAccount: "Ufite konti?", login: "Injira", fill: "Nyabona uzuzisha imirima yose.",
+    backHome: "Garuka ahabanza",
   },
   FR: {
     heroTitle: "Rejoignez Inshuti.",
@@ -63,6 +65,7 @@ const MSG: Record<Language, {
     profType: "Type professionnel", specialization: "Sp\u00e9cialisation", specPlaceholder: "Ex : P\u00e9diatrie",
     govLevel: "Niveau gouvernemental", region: "R\u00e9gion / District", regionPlaceholder: "Nom du district",
     create: "Cr\u00e9er un compte", creating: "Cr\u00e9ation…", haveAccount: "D\u00e9j\u00e0 un compte ?", login: "Se connecter", fill: "Veuillez remplir tous les champs obligatoires.",
+    backHome: "Retour à l'accueil",
   },
   SW: {
     heroTitle: "Jiunge na Inshuti.",
@@ -72,6 +75,7 @@ const MSG: Record<Language, {
     profType: "Aina ya taaluma", specialization: "Utaalamu", specPlaceholder: "Mfano: Pediatrics",
     govLevel: "Kiwango cha serikali", region: "Mkoa / Wilaya", regionPlaceholder: "Jina la wilaya",
     create: "Fungua akaunti", creating: "Inafungua…", haveAccount: "Tayari una akaunti?", login: "Ingia", fill: "Tafadhali jaza sehemu zote zinazohitajika.",
+    backHome: "Rudi nyumbani",
   },
 };
 
@@ -150,6 +154,13 @@ export default function RegisterPage() {
       </div>
       <div className="flex items-center justify-center bg-paper p-10 py-16">
         <div className="w-full max-w-[480px]">
+          <Link
+            href="/"
+            className="mb-5 inline-flex items-center gap-1.5 text-[13px] font-semibold text-teal-700 transition hover:text-teal-900"
+          >
+            <svg width="14" height="14"><use href="#i-back" /></svg>
+            {m.backHome}
+          </Link>
           <div className="mb-5 flex items-center justify-between">
             <h2 className="font-display text-[26px] text-teal-900">{m.heading}</h2>
             <LanguageSwitcher value={language} onChange={setLanguage} />

@@ -30,6 +30,7 @@ const MSG: Record<Language, {
   fill: string;
   forgot: string;
   invalid: string;
+  backHome: string;
 }> = {
   EN: {
     heroTitle: "Care, answered.",
@@ -46,6 +47,7 @@ const MSG: Record<Language, {
     fill: "Please fill in all fields.",
     forgot: "Forgot password?",
     invalid: "Invalid email or password",
+    backHome: "Back to home",
   },
   RW: {
     heroTitle: "Ubufasha buhari.",
@@ -62,6 +64,7 @@ const MSG: Record<Language, {
     fill: "Nyabona uzuzisha imirima yose.",
     forgot: "Wibagiwe ijambobanga?",
     invalid: "Imeri cyangwa ijambobanga sibyo",
+    backHome: "Garuka ahabanza",
   },
   FR: {
     heroTitle: "Le soin, à portée de main.",
@@ -78,6 +81,7 @@ const MSG: Record<Language, {
     fill: "Veuillez remplir tous les champs.",
     forgot: "Mot de passe oublié ?",
     invalid: "Email ou mot de passe invalide",
+    backHome: "Retour à l'accueil",
   },
   SW: {
     heroTitle: "Huduma, ipo.",
@@ -94,6 +98,7 @@ const MSG: Record<Language, {
     fill: "Tafadhali jaza sehemu zote.",
     forgot: "Umesahau neno la siri?",
     invalid: "Barua pepe au neno la siri sio sahihi",
+    backHome: "Rudi nyumbani",
   },
 };
 
@@ -161,6 +166,13 @@ export default function LoginPage() {
       </div>
       <div className="flex items-center justify-center bg-paper p-10">
         <div className="w-full max-w-[380px]">
+          <Link
+            href="/"
+            className="mb-5 inline-flex items-center gap-1.5 text-[13px] font-semibold text-teal-700 transition hover:text-teal-900"
+          >
+            <svg width="14" height="14"><use href="#i-back" /></svg>
+            {m.backHome}
+          </Link>
           <div className="mb-5 flex items-center justify-between">
             <h2 className="font-display text-[26px] text-teal-900">{m.title}</h2>
             <LanguageSwitcher value={language} onChange={setLanguage} />

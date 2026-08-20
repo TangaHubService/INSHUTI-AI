@@ -8,6 +8,7 @@ export function Logo({ size = 34, className }: { size?: number; className?: stri
       width={size}
       height={size}
       className={`inline-flex object-contain ${className ?? ""}`}
+      style={{ width: size, height: size }}
       priority
     />
   );

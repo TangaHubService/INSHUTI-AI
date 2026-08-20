@@ -149,12 +149,14 @@ export function AppShell({
   const roleLabel = session.kind === "admin"
     ? ADMIN_ROLE_LABEL[session.admin.role]
     : session.user.role.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-  const navItems: UserNavItem[] =
-    session.kind === "admin"
+  const navItems: UserNavItem[] = [
+    { href: "/", label: nav.home, icon: "i-home" },
+    ...(session.kind === "admin"
       ? ADMIN_NAV_ITEMS.filter(
           (item) => !item.minRole || ADMIN_ROLE_RANK[session.admin.role] >= ADMIN_ROLE_RANK[item.minRole],
         )
-      : userNavItems(session.user.role, nav);
+      : userNavItems(session.user.role, nav)),
+  ];
   const isProfessional = session.kind === "user" && session.user.role === "HEALTHCARE_PROFESSIONAL";
 
   return (
@@ -174,10 +176,10 @@ export function AppShell({
         <div
           className={`flex items-center px-2 ${isProfessional ? "pb-[30px]" : "pb-[26px]"} ${collapsed ? "flex-col gap-2" : "justify-between gap-2.5"}`}
         >
-          <div className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-85" title={nav.home}>
             <Logo size={isProfessional ? 34 : 26} />
             {!collapsed && <span className={`font-display font-bold text-white ${isProfessional ? "text-[24px]" : "text-[19px]"}`}>Inshuti</span>}
-          </div>
+          </Link>
           <button
             type="button"
             onClick={toggleCollapsed}

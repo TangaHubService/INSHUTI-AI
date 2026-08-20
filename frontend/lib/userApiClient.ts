@@ -85,10 +85,14 @@ export function dashboardPathForRole(role: UserRole): string {
 }
 
 export async function getCurrentUser(): Promise<UserProfile | null> {
-  const res = await apiFetch("/api/users/me");
-  if (!res.ok) return null;
-  const data: { user: UserProfile } = await res.json();
-  return data.user;
+  try {
+    const res = await apiFetch("/api/users/me");
+    if (!res.ok) return null;
+    const data: { user: UserProfile } = await res.json();
+    return data.user;
+  } catch {
+    return null;
+  }
 }
 
 export async function updateProfile(input: { name?: string; phone?: string; preferredLanguage?: string; province?: string | null; district?: string | null; sector?: string | null; cell?: string | null }): Promise<UserProfile> {

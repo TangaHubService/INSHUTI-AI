@@ -53,7 +53,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${poppinsDisplay.variable} ${poppinsBody.variable} ${plexMono.variable}`} suppressHydrationWarning>
+    <html lang="en" data-scroll-behavior="smooth" className={`${poppinsDisplay.variable} ${poppinsBody.variable} ${plexMono.variable}`} suppressHydrationWarning>
       <body>
         <PwaRegistration />
         <IconSprite />

@@ -345,7 +345,7 @@ export default function Home() {
       navItems={[
         { href: "/chat", label: language === "EN" ? "Chat" : language === "RW" ? "Ganira" : language === "FR" ? "Discuter" : "Ongea" },
         { href: "/about", label: language === "EN" ? "About" : language === "RW" ? "Ibyerekeye" : language === "FR" ? "À propos" : "Kuhusu" },
-        { href: "/services", label: "Services" },
+        { href: "/services", label: language === "EN" ? "Services" : language === "RW" ? "Serivisi" : language === "FR" ? "Services" : "Huduma" },
         { href: "/library", label: language === "EN" ? "Library" : language === "RW" ? "Ububiko" : language === "FR" ? "Bibliothèque" : "Maktaba" },
       ]}
       footerDisclaimer={t.footer.disclaimer}

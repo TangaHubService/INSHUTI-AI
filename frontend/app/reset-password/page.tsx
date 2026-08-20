@@ -119,6 +119,13 @@ export default function ResetPasswordPage() {
       </div>
       <div className="flex items-center justify-center bg-paper p-10">
         <div className="w-full max-w-[380px]">
+          <Link
+            href="/"
+            className="mb-5 inline-flex items-center gap-1.5 text-[13px] font-semibold text-teal-700 transition hover:text-teal-900"
+          >
+            <svg width="14" height="14"><use href="#i-back" /></svg>
+            Back to home
+          </Link>
           <h2 className="mb-7 font-display text-[26px] text-teal-900">Reset password</h2>
           <Suspense fallback={<div className="flex justify-center py-8"><div className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] bg-teal-100 shadow-sm"><svg className="animate-spin h-5 w-5 text-teal-700" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" opacity="0.2" /><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg></div></div>}>
             <ResetPasswordForm />

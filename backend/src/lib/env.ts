@@ -8,7 +8,7 @@ const envSchema = z.object({
     .string()
     .min(16, "SESSION_COOKIE_SECRET must be at least 16 characters"),
   OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY is required"),
-  NEXT_PUBLIC_APP_URL: z.string().url(),
+   NEXT_PUBLIC_APP_URL: z.array(z.string()),
 
   // Optional comma-separated list of additional CORS origins beyond NEXT_PUBLIC_APP_URL.
   // Example: "https://inshuti-ai.netlify.app,https://inshuti.org"

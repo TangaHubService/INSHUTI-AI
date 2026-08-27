@@ -13,7 +13,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: [env.NEXT_PUBLIC_APP_URL, ...env.CORS_ALLOWED_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean)],
+    origin: [...env.NEXT_PUBLIC_APP_URL, ...env.CORS_ALLOWED_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean)],
     credentials: true,
   },
 });

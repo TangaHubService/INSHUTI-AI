@@ -13,8 +13,8 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY is required"),
 NEXT_PUBLIC_APP_URL: z
         .string()
-        .transform((val) => csvToArray(val ?? ""))
-        .default(""),
+        .default("")
+        .transform((val) => csvToArray(val)),
 
   // Optional comma-separated list of additional CORS origins beyond NEXT_PUBLIC_APP_URL.
   // Example: "https://inshuti-ai.netlify.app,https://inshuti.org"

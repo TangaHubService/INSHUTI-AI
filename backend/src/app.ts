@@ -52,13 +52,7 @@ export function createApp() {
   ];
   app.use(
     cors({
-      origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          callback(null, false);
-        }
-      },
+      origin: true,
       credentials: true,
     }),
   );

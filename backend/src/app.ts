@@ -47,7 +47,7 @@ export function createApp() {
   }));
 
   const allowedOrigins = [
-    env.NEXT_PUBLIC_APP_URL,
+    ...env.NEXT_PUBLIC_APP_URL,
     ...env.CORS_ALLOWED_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean),
   ];
   app.use(

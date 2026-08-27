@@ -1,6 +1,9 @@
 import "dotenv/config";
 import { z } from "zod";
 
+const csvToArray = (val: string) =>
+  val.split(",").map((s) => s.trim()).filter(Boolean);
+
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   JWT_SECRET: z.string().min(16, "JWT_SECRET must be at least 16 characters"),
@@ -8,7 +11,10 @@ const envSchema = z.object({
     .string()
     .min(16, "SESSION_COOKIE_SECRET must be at least 16 characters"),
   OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY is required"),
-   NEXT_PUBLIC_APP_URL: z.array(z.string()),
+   NEXT_PUBLIC_APP_URL: z
+    .string()
+    .transform((val) => csvToArray(val ?? ""))
+    .default("[]"),
 
   // Optional comma-separated list of additional CORS origins beyond NEXT_PUBLIC_APP_URL.
   // Example: "https://inshuti-ai.netlify.app,https://inshuti.org"

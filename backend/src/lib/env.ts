@@ -23,6 +23,22 @@ NEXT_PUBLIC_APP_URL: z
   PORT: z.coerce.number().int().positive().default(4000),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 
+  // Passed straight to Express `app.set("trust proxy", …)`. Needed so req.ip
+  // reflects the real client behind a hosting proxy instead of the proxy's
+  // own address. "true"/"false" → boolean, a number → hop count, anything
+  // else (e.g. "loopback, linklocal") → passed through. Defaults to one hop
+  // in production (Render/Netlify/most PaaS), disabled otherwise.
+  TRUST_PROXY: z
+    .string()
+    .optional()
+    .transform((val): boolean | number | string => {
+      if (val === undefined || val === "") return process.env.NODE_ENV === "production" ? 1 : false;
+      if (val === "true") return true;
+      if (val === "false") return false;
+      const n = Number(val);
+      return Number.isInteger(n) && n >= 0 ? n : val;
+    }),
+
   // Phase 9 — swappable email provider. "console" (default) logs instead of
   // sending, so local dev never needs real SMTP credentials.
   EMAIL_PROVIDER: z.enum(["console", "smtp"]).default("console"),

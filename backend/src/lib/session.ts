@@ -35,6 +35,14 @@ function verifiedSessionId(value: string): string | null {
   return sessionId;
 }
 
+// Read the signed session id from the request cookie without minting a new
+// one. Returns null when there's no cookie or the signature doesn't verify.
+export function readSessionId(req: Request): string | null {
+  const existing = req.cookies?.[SESSION_COOKIE_NAME];
+  if (typeof existing !== "string") return null;
+  return verifiedSessionId(existing);
+}
+
 // Never store any PII against this id — it's an opaque anonymous handle.
 export function getOrCreateSessionId(req: Request, res: Response): string {
   const existing = req.cookies?.[SESSION_COOKIE_NAME];

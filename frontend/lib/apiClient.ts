@@ -37,13 +37,32 @@ export interface ChatResponse {
   canRequestHumanFollowUp?: boolean;
 }
 
+export class ApiError extends Error {
+  status: number;
+  code?: string;
+  retryAfter?: number;
+  constructor(status: number, message: string, code?: string, retryAfter?: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+    this.retryAfter = retryAfter;
+  }
+}
+
 export async function sendChatMessage(message: string, language: Language, anonymousMode = true): Promise<ChatResponse> {
   const res = await apiFetch("/api/chat", {
     method: "POST",
     body: JSON.stringify({ message, language, anonymousMode }),
   });
   if (!res.ok) {
-    throw new Error(`Chat request failed (${res.status})`);
+    const body = await res.json().catch(() => null) as { error?: string; code?: string; retryAfter?: number } | null;
+    throw new ApiError(
+      res.status,
+      body?.error ?? `Chat request failed (${res.status})`,
+      body?.code,
+      body?.retryAfter,
+    );
   }
   return res.json();
 }

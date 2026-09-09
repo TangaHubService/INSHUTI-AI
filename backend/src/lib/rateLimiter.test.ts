@@ -7,51 +7,81 @@ vi.hoisted(() => { process.env.NODE_ENV = "development"; });
 
 import { rateLimiter } from "./rateLimiter.js";
 
-function mockReqRes(ip?: string): { req: Request; res: Response; statusCode: () => number; jsonBody: () => unknown; headers: Record<string, string> } {
-  let statusCode = 200;
-  let jsonBody: unknown = null;
-  const headers: Record<string, string> = {};
-  const res = {
-    status: (code: number) => { statusCode = code; return res; },
-    json: (body: unknown) => { jsonBody = body; },
-    setHeader: (key: string, value: string) => { headers[key] = value; },
-  } as unknown as Response;
-  const req = {
-    ip: ip ?? "127.0.0.1",
-    socket: { remoteAddress: "127.0.0.1" },
-  } as Request;
-  return { req, res, statusCode: () => statusCode, jsonBody: () => jsonBody, headers };
+// A stand-in browser: keeps its own cookie jar, so requests it makes share a
+// rate-limit bucket while a different client's don't — regardless of IP.
+function makeClient(opts: { ip?: string; acceptsCookies?: boolean } = {}) {
+  const { ip = "203.0.113.10", acceptsCookies = true } = opts;
+  const jar: Record<string, string> = {};
+
+  function call(middleware: ReturnType<typeof rateLimiter>) {
+    let statusCode = 200;
+    let jsonBody: Record<string, unknown> | null = null;
+    const headers: Record<string, string | number> = {};
+    const res = {
+      status: (code: number) => { statusCode = code; return res; },
+      json: (body: Record<string, unknown>) => { jsonBody = body; return res; },
+      setHeader: (key: string, value: string | number) => { headers[key] = value; },
+      cookie: (name: string, value: string) => {
+        if (!acceptsCookies) throw new Error("cookies disabled");
+        jar[name] = value;
+      },
+    } as unknown as Response;
+    const req = {
+      ip,
+      socket: { remoteAddress: ip },
+      cookies: { ...jar },
+    } as unknown as Request;
+
+    let nextCalled = false;
+    middleware(req, res, () => { nextCalled = true; });
+    return { nextCalled, statusCode, jsonBody, headers };
+  }
+
+  // The first request from any browser is IP-keyed (no session cookie yet);
+  // warm one through now so the assertions below hit the steady-state
+  // per-session bucket with intuitive counts.
+  call(rateLimiter({ name: "__warmup__", windowMs: 60_000, max: 1e9 }));
+
+  return { call };
 }
 
 describe("rateLimiter", () => {
   it("allows requests under the limit", () => {
-    const middleware = rateLimiter({ windowMs: 60_000, max: 5 });
-    const { req, res } = mockReqRes("192.168.1.1");
-    let called = false;
-    middleware(req, res, () => { called = true; });
-    expect(called).toBe(true);
+    const middleware = rateLimiter({ name: "t1", windowMs: 60_000, max: 5 });
+    const client = makeClient();
+    for (let i = 0; i < 5; i++) {
+      expect(client.call(middleware).nextCalled).toBe(true);
+    }
   });
 
-  it("blocks requests over the limit", () => {
-    const middleware = rateLimiter({ windowMs: 60_000, max: 2 });
-    const { req, res } = mockReqRes("10.0.0.100");
-    middleware(req, res, () => {});
-    middleware(req, res, () => {});
-    const jsonBody = vi.fn();
-    const status = vi.fn(() => ({ json: jsonBody }));
-    middleware(req, { ...res, status } as unknown as Response, () => {});
-    expect(status).toHaveBeenCalledWith(429);
+  it("blocks requests over the limit with a meaningful 429 payload", () => {
+    const middleware = rateLimiter({ name: "t2", windowMs: 60_000, max: 2 });
+    const client = makeClient();
+    client.call(middleware);
+    client.call(middleware);
+    const third = client.call(middleware);
+    const body = third.jsonBody as { code?: string; retryAfter?: number } | null;
+    expect(third.nextCalled).toBe(false);
+    expect(third.statusCode).toBe(429);
+    expect(body?.code).toBe("RATE_LIMITED");
+    expect(typeof body?.retryAfter).toBe("number");
+    expect(third.headers["Retry-After"]).toBeDefined();
   });
 
-  it("tracks different IPs independently", () => {
-    const middleware = rateLimiter({ windowMs: 60_000, max: 1 });
-    const { req: req1, res: res1 } = mockReqRes("10.0.0.200");
-    const { req: req2, res: res2 } = mockReqRes("10.0.0.201");
-    let called1 = false;
-    let called2 = false;
-    middleware(req1, res1, () => { called1 = true; });
-    middleware(req2, res2, () => { called2 = true; });
-    expect(called1).toBe(true);
-    expect(called2).toBe(true);
+  it("scopes the limit per session, not per IP", () => {
+    const middleware = rateLimiter({ name: "t3", windowMs: 60_000, max: 1 });
+    // Same IP (e.g. behind carrier NAT), two different browsers.
+    const a = makeClient({ ip: "198.51.100.1" });
+    const b = makeClient({ ip: "198.51.100.1" });
+    expect(a.call(middleware).nextCalled).toBe(true);
+    expect(a.call(middleware).nextCalled).toBe(false); // a is now limited
+    expect(b.call(middleware).nextCalled).toBe(true);  // b is unaffected
+  });
+
+  it("falls back to IP for cookieless clients", () => {
+    const middleware = rateLimiter({ name: "t4", windowMs: 60_000, max: 1 });
+    const client = makeClient({ ip: "192.0.2.55", acceptsCookies: false });
+    expect(client.call(middleware).nextCalled).toBe(true);
+    expect(client.call(middleware).nextCalled).toBe(false);
   });
 });

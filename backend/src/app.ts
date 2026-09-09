@@ -40,6 +40,10 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 export function createApp() {
   const app = express();
   app.disable("x-powered-by");
+  // Behind Render/Netlify/nginx the client IP arrives in X-Forwarded-For.
+  // Without this, req.ip is the proxy's address — identical for every user —
+  // which would collapse the whole app into a single rate-limit bucket.
+  app.set("trust proxy", env.TRUST_PROXY);
   app.use(helmet({
     contentSecurityPolicy: false,
     strictTransportSecurity: env.NODE_ENV === "production" ? undefined : false,
@@ -62,17 +66,20 @@ export function createApp() {
   // Request counting for monitoring
   app.use((_req, _res, next) => { incrementRequestCounter(); next(); });
 
-  // Global rate limit: 100 req/min per IP
-  app.use(rateLimiter({ windowMs: 60_000, max: 100 }));
+  // Rate limits are scoped per authenticated user / anonymous session (see
+  // rateLimiter.ts), so one busy client can't lock out everyone else.
 
-  // Stricter rate limit on login and chat
-  app.use("/api/auth/login", rateLimiter({ windowMs: 60_000, max: 10 }));
-  app.use("/api/users/login", rateLimiter({ windowMs: 60_000, max: 10 }));
-  app.use("/api/chat", rateLimiter({ windowMs: 60_000, max: 20 }));
-  app.use("/api/v1/auth/login", rateLimiter({ windowMs: 60_000, max: 10 }));
-  app.use("/api/v1/users/login", rateLimiter({ windowMs: 60_000, max: 10 }));
-  app.use("/api/users/register", rateLimiter({ windowMs: 60_000, max: 5 }));
-  app.use("/api/users/forgot-password", rateLimiter({ windowMs: 60_000, max: 3 }));
+  // Global limit: 100 req/min per session
+  app.use(rateLimiter({ name: "global", windowMs: 60_000, max: 100 }));
+
+  // Stricter limits on login, registration and chat
+  app.use("/api/auth/login", rateLimiter({ name: "auth-login", windowMs: 60_000, max: 10 }));
+  app.use("/api/users/login", rateLimiter({ name: "users-login", windowMs: 60_000, max: 10 }));
+  app.use("/api/chat", rateLimiter({ name: "chat", windowMs: 60_000, max: 20 }));
+  app.use("/api/v1/auth/login", rateLimiter({ name: "auth-login", windowMs: 60_000, max: 10 }));
+  app.use("/api/v1/users/login", rateLimiter({ name: "users-login", windowMs: 60_000, max: 10 }));
+  app.use("/api/users/register", rateLimiter({ name: "users-register", windowMs: 60_000, max: 5 }));
+  app.use("/api/users/forgot-password", rateLimiter({ name: "forgot-password", windowMs: 60_000, max: 3 }));
 
   // Legacy /api/* routes (backward compatible)
   app.use("/api/health", healthRouter);

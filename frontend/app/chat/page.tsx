@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import {
   sendChatMessage,
+  ApiError,
   getCrisisResources,
   getHistory,
   getConversationMessages,
@@ -281,18 +282,35 @@ function ChatPageInner() {
       setCanRequestFollowUp(!!response.canRequestHumanFollowUp);
       setAiStatus("finished");
       if (response.sources.length > 0) setShowSources(true);
-    } catch {
+    } catch (err) {
       setAiStatus("idle");
-      toast(
-        language === "RW"
-          ? "Habaye ikibazo. Ongera ugerageze."
-          : language === "FR"
-            ? "Un problème est survenu. Veuillez réessayer."
-            : language === "SW"
-              ? "Kuna tatizo. Tafadhali jaribu tena."
-              : "Something went wrong. Please try again.",
-        "error",
-      );
+      // Drop the optimistic user bubble so they can resend the same message.
+      setMessages((prev) => (prev[prev.length - 1]?.role === "user" ? prev.slice(0, -1) : prev));
+      setInput(trimmed);
+      if (err instanceof ApiError && err.status === 429) {
+        const secs = err.retryAfter ?? 60;
+        toast(
+          language === "RW"
+            ? `Wohereje ubutumwa bwinshi mu gihe gito. Tegereza amasegonda ${secs} hanyuma wongere ugerageze.`
+            : language === "FR"
+              ? `Vous avez envoyé trop de messages en peu de temps. Attendez ${secs} secondes puis réessayez.`
+              : language === "SW"
+                ? `Umetuma ujumbe mwingi kwa muda mfupi. Subiri sekunde ${secs} kisha ujaribu tena.`
+                : `You've sent too many messages in a short time. Please wait ${secs} seconds and try again.`,
+          "error",
+        );
+      } else {
+        toast(
+          language === "RW"
+            ? "Habaye ikibazo. Ongera ugerageze."
+            : language === "FR"
+              ? "Un problème est survenu. Veuillez réessayer."
+              : language === "SW"
+                ? "Kuna tatizo. Tafadhali jaribu tena."
+                : "Something went wrong. Please try again.",
+          "error",
+        );
+      }
     } finally {
       setSending(false);
       await refreshHistory();

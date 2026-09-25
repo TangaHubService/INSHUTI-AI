@@ -1,4 +1,5 @@
 import { apiFetch } from "./apiClient";
+import { setCachedUser } from "./sessionCache";
 
 export type UserRole = "TEENAGER" | "PARENT_GUARDIAN" | "HEALTHCARE_PROFESSIONAL" | "GOVERNMENT_USER";
 export type ProfessionalType = "CHW" | "NURSE" | "MIDWIFE" | "PSYCHOLOGIST" | "DOCTOR";
@@ -64,10 +65,12 @@ export async function loginUser(email: string, password: string): Promise<UserPr
     throw new Error(body.error ?? "Login failed");
   }
   const data: { user: UserProfile } = await res.json();
+  setCachedUser(data.user);
   return data.user;
 }
 
 export async function logoutUser(): Promise<void> {
+  setCachedUser(null);
   await apiFetch("/api/users/logout", { method: "POST" });
 }
 
@@ -86,9 +89,13 @@ export function dashboardPathForRole(role: UserRole): string {
 
 export async function getCurrentUser(): Promise<UserProfile | null> {
   try {
-    const res = await apiFetch("/api/users/me");
-    if (!res.ok) return null;
+    const res = await apiFetch("/api/users/me", { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) {
+      if (res.status === 401) setCachedUser(null);
+      return null;
+    }
     const data: { user: UserProfile } = await res.json();
+    setCachedUser(data.user);
     return data.user;
   } catch {
     return null;

@@ -237,7 +237,11 @@ function ChatPageInner() {
 
   async function handleRequestFollowUp() {
     if (!conversationId || requestingHelp) return;
-    if (!user || anonymousMode) {
+    // A signed-in teen can request even while chatting in anonymous mode — the
+    // backend links this browser session's conversation to their account. Only
+    // a genuinely signed-out visitor needs to authenticate first (a private
+    // 1:1 reply needs a stable identity to route back to).
+    if (!user) {
       toast(
         language === "RW" ? "Injira kugira ngo umukozi w'ubuzima abashe kugusubiza mu ibanga." :
           language === "FR" ? "Connectez-vous pour qu'un professionnel puisse vous répondre en privé." :

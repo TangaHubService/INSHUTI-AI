@@ -46,7 +46,8 @@ export function ChatHeader({
               Inshuti Assistant
             </div>
             <div className="text-[11px] text-[#4B615D] dark:text-[#B0B0A8]">
-              {user && !anonymousMode ? `Signed in as ${user.name}` : "Anonymous \u00B7 Private"}
+              {user && !anonymousMode ? `Signed in as ${user.name}` : "Anonymous session"}
+              {" · reviewed information, not a diagnosis"}
             </div>
           </div>
         </div>

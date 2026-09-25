@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useLanguage } from "@/lib/LanguageContext";
-import { NAV } from "@/lib/i18nCommon";
+import { publicNav } from "@/lib/i18nCommon";
 import { sendContactInquiry } from "@/lib/apiClient";
 import type { Language } from "@/lib/apiClient";
 
@@ -60,7 +60,6 @@ const COPY: Record<Language, Copy> = {
 
 export default function ContactPage() {
   const { language } = useLanguage();
-  const nav = NAV[language];
   const t = COPY[language];
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -87,13 +86,7 @@ export default function ContactPage() {
   return (
     <PageLayout
       activeHref="/contact"
-      navItems={[
-        { href: "/chat", label: nav.chat },
-        { href: "/about", label: "About" },
-        { href: "/services", label: "Services" },
-        { href: "/library", label: "Library" },
-        { href: "/faq", label: "FAQ" },
-      ]}
+      navItems={publicNav(language)}
     >
       <section className="animate-slide-up py-[76px]">
         <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">{t.eyebrow}</span>

@@ -417,7 +417,8 @@ export default function ConsultationThreadPage() {
               {otherName || "Private consultation"}
             </div>
             <div className="text-[10.5px] text-[#667781]">
-              {typing ? <span className="font-medium text-[#00A884]">typing…</span> : otherOnline ? "online" : "private human conversation"}
+              {typing ? <span className="font-medium text-[#00A884]">typing…</span> : user.role === "HEALTHCARE_PROFESSIONAL" ? "Person you are supporting" : "Your health professional"}
+              {otherOnline ? " · online" : ""}
             </div>
           </div>
         </div>

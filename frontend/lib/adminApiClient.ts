@@ -1,4 +1,5 @@
 import { apiFetch, type Language } from "./apiClient";
+import { setCachedAdmin } from "./sessionCache";
 import { uploadFileWithProgress } from "./uploadClient";
 
 export type AdminRole = "SUPER_ADMIN" | "CONTENT_REVIEWER" | "MODERATOR";
@@ -35,17 +36,20 @@ export async function login(email: string, password: string): Promise<AdminUser>
     throw new Error(body.error ?? "Login failed");
   }
   const data: { admin: AdminUser } = await res.json();
+  setCachedAdmin(data.admin);
   return data.admin;
 }
 
 export async function logout(): Promise<void> {
+  setCachedAdmin(null);
   await apiFetch("/api/auth/logout", { method: "POST" });
 }
 
 export async function getCurrentAdmin(): Promise<AdminUser> {
-  const res = await adminFetch("/api/auth/me");
+  const res = await adminFetch("/api/auth/me", { signal: AbortSignal.timeout(8000) });
   if (!res.ok) throw new UnauthorizedError();
   const data: { admin: AdminUser } = await res.json();
+  setCachedAdmin(data.admin);
   return data.admin;
 }
 

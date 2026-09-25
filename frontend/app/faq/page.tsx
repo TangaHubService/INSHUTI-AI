@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useLanguage } from "@/lib/LanguageContext";
-import { NAV } from "@/lib/i18nCommon";
+import { publicNav } from "@/lib/i18nCommon";
 import type { Language } from "@/lib/apiClient";
 
 type Copy = { eyebrow: string; title: string; lead: string; free: { heading: string; body: string; cta: string }; items: { q: string; a: string }[] };
@@ -16,8 +16,8 @@ const COPY: Record<Language, Copy> = {
     lead: "Quick answers to common questions about Inshuti, privacy, and how to make the most of the service.",
     free: { heading: "Inshuti is completely free", body: "Chat, consultations, appointments — every feature is available at no cost. No hidden charges, no subscriptions, no surprises.", cta: "Start chatting free" },
     items: [
-      { q: "What is Inshuti?", a: "Inshuti is a free, anonymous AI health assistant for young people in Rwanda. It provides honest, judgment-free health information in English, Kinyarwanda, French, and Kiswahili." },
-      { q: "Is Inshuti really anonymous?", a: "Yes. When using the chat without signing in, no personally identifying information is collected. Conversations are tied only to a device-level session ID. If you create an account, you can enable anonymous mode in your profile settings to keep chats unlinked from your identity." },
+      { q: "What is Inshuti?", a: "Inshuti is a health support service for young people in Rwanda. You can ask questions, read reviewed information, and, when you want a person, connect with an approved health professional. It is available in English, Kinyarwanda, French, and Kiswahili." },
+      { q: "Is Inshuti really anonymous?", a: "You can chat without an account. That conversation is stored against a random session on this browser, not against your name. If you sign in and turn anonymous mode off, later chats can be linked to your account so a professional can reply. You can clear browser history and deactivate an account." },
       { q: "Do I need to sign up to use the chat?", a: "No. You can start chatting immediately without creating an account. Registration is optional and unlocks additional features like appointment booking, consultations with health workers, and conversation history." },
       { q: "Is the health information reliable?", a: "Yes. Every answer from Inshuti is grounded in content from our knowledge base, which is reviewed by healthcare professionals. Articles must be marked as 'Reviewed' before they are used in chat responses." },
       { q: "What languages are supported?", a: "Inshuti supports English, Kinyarwanda, French, and Kiswahili. Select a language or write naturally in the AI chat." },
@@ -107,20 +107,13 @@ function ToggleSection({ q, a, open, onToggle }: { q: string; a: string; open: b
 
 export default function FaqPage() {
   const { language } = useLanguage();
-  const nav = NAV[language];
   const t = COPY[language];
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
     <PageLayout
       activeHref="/faq"
-      navItems={[
-        { href: "/chat", label: nav.chat },
-        { href: "/about", label: "About" },
-        { href: "/services", label: "Services" },
-        { href: "/library", label: "Library" },
-        { href: "/faq", label: "FAQ" },
-      ]}
+      navItems={publicNav(language)}
     >
       <section className="animate-slide-up mx-auto max-w-[760px] py-[76px]">
         <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">{t.eyebrow}</span>

@@ -1,6 +1,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { getCachedUser, setCachedUser } from "./sessionCache";
 import { getCurrentUser, type UserProfile } from "./userApiClient";
 
 // Client-side convenience only (redirect + hide UI you can't use) — every
@@ -8,8 +9,9 @@ import { getCurrentUser, type UserProfile } from "./userApiClient";
 // of what this hook decides to render.
 export function useRequireUser() {
   const router = useRouter();
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cached = getCachedUser();
+  const [user, setUser] = useState<UserProfile | null>(cached);
+  const [loading, setLoading] = useState(!cached);
 
   useEffect(() => {
     let cancelled = false;
@@ -17,8 +19,10 @@ export function useRequireUser() {
       .then((result) => {
         if (cancelled) return;
         if (result) {
+          setCachedUser(result);
           setUser(result);
         } else {
+          setCachedUser(null);
           router.replace("/admin/login");
         }
       })

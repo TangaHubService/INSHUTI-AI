@@ -27,15 +27,15 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Inshuti \u2014 Your Health Companion",
+    default: "Inshuti \u2014 A safe place to ask and get support",
     template: "%s \u2014 Inshuti",
   },
-  description: "A warm, non-judgmental AI health assistant for young people in Rwanda. Free, private, and available in four languages.",
+  description: "A safe place for young people in Rwanda to ask health questions, learn from reviewed information, and connect with an approved health professional.",
   manifest: "/manifest.webmanifest",
   keywords: ["health", "Rwanda", "sexual health", "reproductive health", "AI assistant", "teen health", "anonymous"],
   openGraph: {
-    title: "Inshuti \u2014 Your Health Companion",
-    description: "A warm, non-judgmental AI health assistant for young people in Rwanda. Free, private, and available in four languages.",
+    title: "Inshuti \u2014 A safe place to ask and get support",
+    description: "A safe place for young people in Rwanda to ask health questions, learn from reviewed information, and connect with an approved health professional.",
     type: "website",
     locale: "en_RW",
   },

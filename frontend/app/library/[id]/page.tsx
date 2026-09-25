@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useLanguage } from "@/lib/LanguageContext";
-import { NAV } from "@/lib/i18nCommon";
+import { publicNav } from "@/lib/i18nCommon";
 import { getPublicLibraryArticle, type PublicLibraryArticle } from "@/lib/apiClient";
 
 const TOPIC_ICONS: Record<string, string> = {
@@ -38,7 +38,6 @@ const TOPIC_FG: Record<string, string> = {
 
 export default function ArticleDetailPage() {
   const { language } = useLanguage();
-  const nav = NAV[language];
   const params = useParams();
   const id = params.id as string;
 
@@ -67,13 +66,7 @@ export default function ArticleDetailPage() {
   return (
     <PageLayout
       activeHref="/library"
-      navItems={[
-        { href: "/chat", label: nav.chat },
-        { href: "/about", label: "About" },
-        { href: "/services", label: "Services" },
-        { href: "/library", label: "Library" },
-        { href: "/faq", label: "FAQ" },
-      ]}
+      navItems={publicNav(language)}
     >
       {loading ? (
         <div className="flex items-center justify-center py-40">

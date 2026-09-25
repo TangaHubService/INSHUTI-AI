@@ -6,7 +6,7 @@ import { requireUser, type AuthenticatedUserRequest } from "../lib/userAuth.js";
 import { routeConsultation, reassignConsultation, escalateConsultation } from "../lib/consultationRouter.js";
 import { requireAdmin } from "../lib/auth.js";
 import { decryptMessageForDisplay, encryptMessage, messagePreview } from "../lib/messageCrypto.js";
-import { SESSION_COOKIE_NAME } from "../lib/session.js";
+import { readSessionId } from "../lib/session.js";
 
 const router = Router();
 
@@ -33,9 +33,13 @@ router.post("/request", requireUser, async (req: AuthenticatedUserRequest, res) 
     return;
   }
   if (!conversation.userId) {
-    const anonymousSession = req.cookies?.[SESSION_COOKIE_NAME];
-    if (!anonymousSession || conversation.sessionId !== anonymousSession) {
-      res.status(403).json({ error: "Not authorized to request support for this conversation" });
+    // The conversation was started anonymously — let the signed-in caller claim
+    // it only if they're on the same browser session that created it. Compare
+    // against the *verified, unsigned* session id: conversation.sessionId is
+    // stored unsigned (see chat.ts), while the cookie carries "<id>.<signature>".
+    const sessionId = readSessionId(req);
+    if (!sessionId || conversation.sessionId !== sessionId) {
+      res.status(403).json({ error: "This conversation was started on a different device or browser, so it can't be linked to your account." });
       return;
     }
     await prisma.conversation.update({ where: { id: conversation.id }, data: { userId: req.user!.userId } });

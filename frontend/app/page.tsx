@@ -2,334 +2,384 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useLanguage } from "@/lib/LanguageContext";
+import { publicNav } from "@/lib/i18nCommon";
 import type { Language } from "@/lib/apiClient";
-import { FadeUp, StaggerGrid, StaggerItem } from "@/components/AnimatedSection";
-
-type Topic = { icon: string; bg: string; fg: string; name: string; body: string };
-type Feature = { icon: string; title: string; body: string };
-type Agent = { initial: string; gradient: string; name: string; role: string; description: string };
-type FaqItem = { question: string; answer: string };
 
 type Copy = {
-  hero: { titleLead: string; titleEm: string; body: string; ctaChat: string; ctaBrowse: string };
-  agents: { eyebrow: string; title: string; items: Agent[] };
-  features: { eyebrow: string; title: string; items: Feature[] };
-  topics: { eyebrow: string; title: string; body: string; cta: string; items: Topic[] };
-  faq: { eyebrow: string; title: string; items: FaqItem[] };
-  footer: { disclaimer: string };
+  heroTitle: string;
+  heroBody: string;
+  talk: string;
+  find: string;
+  heroNote: string;
+  howEyebrow: string;
+  howTitle: string;
+  steps: { n: string; title: string; body: string }[];
+  networkEyebrow: string;
+  networkTitle: string;
+  networkBody: string;
+  roles: { title: string; body: string; human: boolean }[];
+  whoTitle: string;
+  audiences: { title: string; body: string }[];
+  canTitle: string;
+  actions: { title: string; body: string; href: string }[];
+  journeyEyebrow: string;
+  journeyTitle: string;
+  journey: string[];
+  safetyEyebrow: string;
+  safetyTitle: string;
+  safetyBody: string;
+  trusts: { title: string; body: string }[];
+  emergencyTitle: string;
+  emergencyBody: string;
+  emergencyCta: string;
+  topicsEyebrow: string;
+  topicsTitle: string;
+  topics: { name: string; body: string; icon: string }[];
+  ask: string;
+  faqTitle: string;
+  faq: { q: string; a: string }[];
+  disclaimer: string;
 };
-
-const AGENT_INITIALS: Record<Language, string[]> = {
-  EN: ["AX", "CR", "LB", "KC", "FG", "CC", "PS", "MR"],
-  RW: ["AX", "CR", "LB", "KC", "FG", "CC", "PS", "MR"],
-  FR: ["AX", "CR", "LB", "KC", "FG", "CC", "PS", "MR"],
-  SW: ["AX", "CR", "LB", "KC", "FG", "CC", "PS", "MR"],
-};
-
-const AGENT_GRADIENTS = [
-  "from-teal-700 to-teal-600",
-  "from-coral to-coral-dark",
-  "from-gold to-amber-600",
-  "from-teal-600 to-teal-900",
-  "from-coral-dark to-red-600",
-  "from-teal-700 to-emerald-600",
-  "from-amber-600 to-gold",
-  "from-teal-900 to-teal-700",
-];
 
 const COPY: Record<Language, Copy> = {
   EN: {
-    hero: {
-      titleLead: "Your AI-powered health system. ",
-      titleEm: "Built for young people in Rwanda.",
-      body: "Inshuti is an AI system that gives young people honest, judgment-free answers on sexual and reproductive health — reviewed by professionals, available anytime, in 4 languages.",
-      ctaChat: "Chat with Inshuti",
-      ctaBrowse: "Browse topics",
-    },
-    agents: {
-      eyebrow: "The Inshuti System",
-      title: "Your AI team for adolescent health",
-      items: [
-        { initial: "AX", gradient: AGENT_GRADIENTS[0], name: "Alex", role: "AI Counselor", description: "Answers health questions with empathy and accuracy through anonymous chat." },
-        { initial: "CR", gradient: AGENT_GRADIENTS[1], name: "Crystal", role: "Crisis Responder", description: "Detects crisis language instantly and provides immediate safety resources." },
-        { initial: "LB", gradient: AGENT_GRADIENTS[2], name: "Lingala", role: "Language Bridge", description: "Speaks English, Kinyarwanda, French, and Kiswahili to reach every young person." },
-        { initial: "KC", gradient: AGENT_GRADIENTS[3], name: "Kai", role: "Knowledge Curator", description: "Manages a professional-reviewed knowledge base that grounds every answer in evidence." },
-        { initial: "FG", gradient: AGENT_GRADIENTS[4], name: "Fiona", role: "Facility Guide", description: "Helps find nearby health facilities with interactive maps and location data." },
-        { initial: "CC", gradient: AGENT_GRADIENTS[5], name: "Claire", role: "Care Coordinator", description: "Manages appointments, consultations, and follow-ups with health professionals." },
-        { initial: "PS", gradient: AGENT_GRADIENTS[6], name: "Pascal", role: "Privacy Shield", description: "Ensures anonymous-by-design conversations — no names, no accounts required." },
-        { initial: "MR", gradient: AGENT_GRADIENTS[7], name: "Marie", role: "Medical Reviewer", description: "Reviews all content for clinical accuracy and cultural appropriateness." },
-      ],
-    },
-    features: {
-      eyebrow: "Everything you need",
-      title: "Research, chat, find care — all in one system",
-      items: [
-        { icon: "i-bot", title: "AI Chat", body: "Ask anything about your health in your own words, any time, in 4 languages." },
-        { icon: "i-shield", title: "Crisis Safety", body: "Built-in crisis detection immediately connects you to support when it matters most." },
-        { icon: "i-lock", title: "Anonymous by Design", body: "No sign-up, no names, no tracking. Your privacy is the foundation of the system." },
-        { icon: "i-book", title: "Evidence-Based KB", body: "Every answer is grounded in content reviewed by healthcare professionals." },
-        { icon: "i-map-pin", title: "Facility Locator", body: "Find nearby clinics, hospitals, and health centers with an interactive map." },
-        { icon: "i-calendar", title: "Appointments", body: "Book and manage consultations with healthcare professionals seamlessly." },
-        { icon: "i-globe", title: "4 Languages", body: "Full support in English, Kinyarwanda, French, and Kiswahili." },
-        { icon: "i-users", title: "Role Portals", body: "Tailored dashboards for teens, parents, healthcare pros, and government users." },
-      ],
-    },
-    topics: {
-      eyebrow: "Popular topics",
-      title: "Wherever you're starting from",
-      body: "Six areas young people ask about most — tap one to jump straight into a conversation.",
-      cta: "Ask about this",
-      items: [
-        { icon: "i-droplet", bg: "bg-coral-100", fg: "text-coral-dark", name: "Menstrual Health", body: "Cycles, symptoms, products, and what's normal for your body." },
-        { icon: "i-baby", bg: "bg-gold-100", fg: "text-[#8A5E1E]", name: "Pregnancy", body: 'Signs, timelines, prenatal care, and answering "what if."' },
-        { icon: "i-heart", bg: "bg-teal-100", fg: "text-teal-700", name: "Relationships", body: "Consent, communication, boundaries, and healthy partnerships." },
-        { icon: "i-pill", bg: "bg-coral-100", fg: "text-coral-dark", name: "Family Planning", body: "Contraception options explained clearly, without pressure." },
-        { icon: "i-shield", bg: "bg-teal-100", fg: "text-teal-700", name: "HIV & STIs", body: "Prevention, testing, and treatment — with zero judgment." },
-        { icon: "i-mind", bg: "bg-gold-100", fg: "text-[#8A5E1E]", name: "Mental Health", body: "Stress, anxiety, and support for the feelings behind the questions." },
-      ],
-    },
-    faq: {
-      eyebrow: "FAQ",
-      title: "Common questions about the system",
-      items: [
-        { question: "What is Inshuti?", answer: "Inshuti is an AI-powered sexual and reproductive health system for young people in Rwanda. It combines anonymous AI chat, crisis detection, a professional-reviewed knowledge base, health facility locator, and appointment management into one integrated platform." },
-        { question: "Do I need to sign up?", answer: "No. Inshuti is anonymous by design. You can start chatting immediately without providing any personal information. No names, no email, no phone number required." },
-        { question: "Is my conversation private?", answer: "Absolutely. Inshuti does not store any identifying information. Conversations are anonymous and sessions are not linked to your identity. Your privacy is protected by design." },
-        { question: "What languages are supported?", answer: "Inshuti supports four languages: English, Kinyarwanda, French, and Kiswahili. You can switch between languages at any time." },
-        { question: "Is the health information reliable?", answer: "Yes. All answers are grounded in a knowledge base that is reviewed by healthcare professionals. Every response is evidence-based and clinically accurate." },
-        { question: "Can I talk to a real health professional?", answer: "Yes. Through the consultation and appointment features, you can request follow-up with a healthcare professional for personalized support." },
-      ],
-    },
-    footer: { disclaimer: "Inshuti provides general health information and is not a substitute for professional medical diagnosis or treatment. If you are in crisis or need urgent care, please contact a local health facility or the resources listed in the app." },
+    heroTitle: "A safe place to ask, learn, and get support.",
+    heroBody: "Inshuti helps young people in Rwanda find trusted health information, understand their options, and connect with an approved nurse, midwife, psychologist, doctor, or community health worker.",
+    talk: "Talk to Inshuti",
+    find: "Find support",
+    heroNote: "Private to start. A person steps in when you ask for one.",
+    howEyebrow: "How Inshuti helps",
+    howTitle: "From a question to the right kind of support.",
+    steps: [
+      { n: "01", title: "Ask", body: "Have a question or a worry? Talk privately and get information drawn from reviewed health resources." },
+      { n: "02", title: "Understand", body: "Read clear explanations on menstrual health, pregnancy, relationships, family planning, HIV and STIs, and mental health." },
+      { n: "03", title: "Connect", body: "When you want a person, Inshuti can match you with an approved professional based on the topic and how urgent it is." },
+      { n: "04", title: "Continue", body: "Message that professional in private, share a file or voice note, or book a time to follow up." },
+    ],
+    networkEyebrow: "Your support network",
+    networkTitle: "Technology helps you start. People provide care.",
+    networkBody: "Inshuti does not replace a health worker. The assistant helps you understand a question and find the right next step. Approved professionals handle the human conversation.",
+    roles: [
+      { title: "Inshuti assistant", body: "Helps you understand a question and find reviewed information. This is a tool, not a person and not a diagnosis.", human: false },
+      { title: "Nurse", body: "Health guidance, including menstrual health and family planning.", human: true },
+      { title: "Midwife", body: "Support for pregnancy and reproductive health.", human: true },
+      { title: "Psychologist", body: "Support for stress, relationships, and mental health.", human: true },
+      { title: "Doctor", body: "Cases that need medical assessment, including higher-risk concerns.", human: true },
+      { title: "Community health worker", body: "A local starting point when the question does not need a specialist first.", human: true },
+    ],
+    whoTitle: "Who Inshuti is for",
+    audiences: [
+      { title: "Young people", body: "Ask in your own words, without an account if you want to stay anonymous." },
+      { title: "Parents and guardians", body: "Learn, book your own appointments, and find care. A young person's private consultation stays private." },
+      { title: "Health professionals", body: "Receive approved cases, reply in private, and record appointment outcomes." },
+      { title: "Community health workers", body: "Support people whose questions can start close to home." },
+    ],
+    canTitle: "What you can do",
+    actions: [
+      { title: "Ask a question", body: "Start a private conversation.", href: "/chat" },
+      { title: "Learn", body: "Read reviewed articles and health education resources.", href: "/library" },
+      { title: "Find a facility", body: "Search hospitals, health centres, clinics, and pharmacies.", href: "/facility-locator" },
+      { title: "Ask for a person", body: "Request follow-up from the conversation when you are signed in.", href: "/chat" },
+      { title: "Book a time", body: "Request an appointment with an approved professional.", href: "/appointments" },
+      { title: "Continue in private", body: "Message the professional assigned to you.", href: "/consultations" },
+    ],
+    journeyEyebrow: "A real journey",
+    journeyTitle: "From a question to the right support.",
+    journey: ["You have a concern", "You talk with Inshuti", "You get information from reviewed resources", "The topic and urgency are assessed", "If you ask, an approved professional is matched", "You continue in a private conversation", "You can book a follow-up"],
+    safetyEyebrow: "Safety and privacy",
+    safetyTitle: "Your privacy is explained honestly.",
+    safetyBody: "You can start without an account. That conversation is stored against a random session on this browser, not against your name. If you sign in and turn anonymous mode off, later conversations can be linked to your account so a professional can reply to you.",
+    trusts: [
+      { title: "Secure messages", body: "Professional conversations are encrypted on the server and protected while they travel." },
+      { title: "Limited staff access", body: "Administrators can see case status and names. They cannot read the consultation messages." },
+      { title: "Approved professionals", body: "Only an approved health worker can be assigned a case." },
+      { title: "Crisis support", body: "Urgent language can show emergency contacts and can be flagged so someone can check that help was offered." },
+      { title: "Reviewed information", body: "Answers can cite articles a reviewer has marked as ready." },
+      { title: "Aggregate reporting", body: "Government users see totals for their area. Very small counts are hidden so a person cannot be picked out." },
+    ],
+    emergencyTitle: "If you are in danger, do not wait for a reply.",
+    emergencyBody: "Use the crisis contacts in the app, call local emergency services, or go to the nearest health facility. Inshuti is general information and private follow-up. It is not an emergency service and it does not diagnose or prescribe.",
+    emergencyCta: "View crisis resources",
+    topicsEyebrow: "Start with a topic",
+    topicsTitle: "Wherever you are starting from.",
+    topics: [
+      { name: "Menstrual health", body: "Cycles, symptoms, and what is usual.", icon: "i-droplet" },
+      { name: "Pregnancy", body: "Signs, care, and what to do next.", icon: "i-baby" },
+      { name: "Relationships", body: "Consent, boundaries, and communication.", icon: "i-heart" },
+      { name: "Family planning", body: "Options explained without pressure.", icon: "i-pill" },
+      { name: "HIV and STIs", body: "Prevention, testing, and treatment.", icon: "i-shield" },
+      { name: "Mental health", body: "Stress, worry, and where to get support.", icon: "i-mind" },
+    ],
+    ask: "Ask about this",
+    faqTitle: "Questions people ask first",
+    faq: [
+      { q: "Do I need an account?", a: "No. You can talk without registering. An account is needed to request a named professional, book an appointment, and keep notifications." },
+      { q: "Are conversations stored?", a: "Yes. Anonymous chats are stored with a random browser session. Signed-in chats are linked to your account only when anonymous mode is off. You can clear the browser history, and you can deactivate an account." },
+      { q: "Is this a diagnosis?", a: "No. Inshuti explains health information. A professional conversation is follow-up, not a hospital record and not a prescription." },
+      { q: "Who can read a private consultation?", a: "You and the assigned professional. Parents are not given that thread. Government users see totals, not messages." },
+    ],
+    disclaimer: "Inshuti provides general health information and private follow-up with approved professionals. It is not a substitute for emergency care, diagnosis, or treatment.",
   },
   RW: {
-    hero: {
-      titleLead: "Sisitemu ya ubuzima ikoreshwa na AI. ",
-      titleEm: "Yubatswe ku rubyiruko rw'u Rwanda.",
-      body: "Inshuti ni sisitemu ya AI iha urubyiruko ibisubizo by'ukuri, bitagira urubanza, ku ngingo z'ubuzima bw'imyororokere — birebwa n'abaganga, biboneka igihe cyose, mu ndimi 4.",
-      ctaChat: "Ganira na Inshuti",
-      ctaBrowse: "Reba insanganyamatsiko",
-    },
-    agents: {
-      eyebrow: "Sisitemu ya Inshuti",
-      title: "Itsinda rya AI ryawe ry'ubuzima bw'urubyiruko",
-      items: [
-        { initial: "AX", gradient: AGENT_GRADIENTS[0], name: "Alex", role: "Umujyanama wa AI", description: "Asubiza ibibazo by'ubuzima mu mpuhwe kandi neza binyuze mu kiganiro cyihishe." },
-        { initial: "CR", gradient: AGENT_GRADIENTS[1], name: "Crystal", role: "Uwitabara mu Bihe Bigoye", description: "Amenya imvugo y'ibibazo ako kanya akanatanga ubufasha bwihutirwa." },
-        { initial: "LB", gradient: AGENT_GRADIENTS[2], name: "Lingala", role: "Umuhuza w'Indimi", description: "Avuga Icyongereza, Ikinyarwanda, Igifaransa, n'Igiswahili kugira ngo ageze kuri buri mwana." },
-        { initial: "KC", gradient: AGENT_GRADIENTS[3], name: "Kai", role: "Umubitsi w'Ubumenyi", description: "Acunga ububiko bw'ubumenyi burebwe n'abaganga, butanga igisubizo cyose gishingiye ku bimenyetso." },
-        { initial: "FG", gradient: AGENT_GRADIENTS[4], name: "Fiona", role: "Uyobora ku Ivuriro", description: "Afasha gushaka ivuriro riri hafi akoresheje amakarita n'ibice by'ibigo." },
-        { initial: "CC", gradient: AGENT_GRADIENTS[5], name: "Claire", role: "Uhuza Ubuvuzi", description: "Acunga gahunda, kuganira, no gukurikirana abaganga." },
-        { initial: "PS", gradient: AGENT_GRADIENTS[6], name: "Pascal", role: "Umyibutso w'Ibanga", description: "Atecangira ko ibiganiro bibaye ibyihishe — nta mazina, nta konti." },
-        { initial: "MR", gradient: AGENT_GRADIENTS[7], name: "Marie", role: "Ureba Ibikubiye mu Buvuzi", description: "Areba ibikubiye byose kugira ngo bibe byiza kandi bihuje n'umuco." },
-      ],
-    },
-    features: {
-      eyebrow: "Ibyo ukeneye byose",
-      title: "Shakisha, ganira, shaka ubuvuzi — byose muri sisitemu imwe",
-      items: [
-        { icon: "i-bot", title: "Ikiganiro cya AI", body: "Baza ikibazo icyo aricyo cyose ku buzima bwawe mu magambo yawe, igihe cytose, mu ndimi 4." },
-        { icon: "i-shield", title: "Umutekano mu Bihe Bigoye", body: "Gucunga ibibazo byihutirwa biragufasha guhita ubona ubufasha." },
-        { icon: "i-lock", title: "Byihishe ku Bushake", body: "Nta kwiyandikisha, nta mazina, nta gukurikirana. Ibanga ryawe nishingiro." },
-        { icon: "i-book", title: "Ubumenyi Bushingiye ku Bimenyetso", body: "Igisubizo cyose gishingiye ku bintu byarebwe n'abaganga." },
-        { icon: "i-map-pin", title: "Gushaka Ivuriro", body: "Shaka ibitaro, ivuriro, n'ibigo by'ubuzima ufite hafi." },
-        { icon: "i-calendar", title: "Gahunda", body: "Fata kandi ugahora gahunda zo kuganira n'abaganga." },
-        { icon: "i-globe", title: "Indimi 4", body: "Gufashwa byuzuye mu Cyongereza, Ikinyarwanda, Igifaransa, n'Igiswahili." },
-        { icon: "i-users", title: "Inzira z'abakoresha", body: "Ikibaho gikwiye ku rubyiruko, ababyeyi, abaganga, n'abakozi ba leta." },
-      ],
-    },
-    topics: {
-      eyebrow: "Insanganyamatsiko zikunzwe",
-      title: "Uvuye aho uri hose",
-      body: "Ibice bitandatu urubyiruko rukunze kubaza — kandaho kimwe ubone ikiganiro ako kanya.",
-      cta: "Baza kuri iki",
-      items: [
-        { icon: "i-droplet", bg: "bg-coral-100", fg: "text-coral-dark", name: "Ubuzima bw'Imihango", body: "Imihango, ibimenyetso, ibikoresho, n'ibisanzwe ku mubiri wawe." },
-        { icon: "i-baby", bg: "bg-gold-100", fg: "text-[#8A5E1E]", name: "Gutwita", body: 'Ibimenyetso, ibihe, kwitabwaho mbere yo kubyara, no gusubiza "ese niba..."' },
-        { icon: "i-heart", bg: "bg-teal-100", fg: "text-teal-700", name: "Imibanire", body: "Kwemera, itumanaho, imbibi, n'ubufatanye bwiza." },
-        { icon: "i-pill", bg: "bg-coral-100", fg: "text-coral-dark", name: "Kuboneza Urubyaro", body: "Uburyo bwo kuboneza urubyaro busobanuwe neza, nta gushyigikirizwa." },
-        { icon: "i-shield", bg: "bg-teal-100", fg: "text-teal-700", name: "Virusi ya SIDA n'Indwara Zandurira mu Mibonano", body: "Kwirinda, gupimwa, no kuvurwa — nta rubanza." },
-        { icon: "i-mind", bg: "bg-gold-100", fg: "text-[#8A5E1E]", name: "Ubuzima bwo mu Mutwe", body: "Stress, kwiheba, n'ubufasha ku byiyumvo biri inyuma y'ibibazo." },
-      ],
-    },
-    faq: {
-      eyebrow: "Ibibazo",
-      title: "Ibibazo bakunze kubaza kuri sisitemu",
-      items: [
-        { question: "Inshuti ni iki?", answer: "Inshuti ni sisitemu ya AI y'ubuzima bw'imyororokere ku rubyiruko rw'u Rwanda. Ihuza ikiganiro cya AI cyihishe, gucunga ibibazo byihutirwa, ububiko bw'ubumenyi burebwe n'abaganga, gushaka ivuriro, no gucunga gahunda." },
-        { question: "Ese nshobora kwiyandikisha?", answer: "Oya. Inshuti yihishe ku bushake. Urashobora gutangira ikiganiro ako kanya utatanze amakuru y'ibanga. Nta mazina, nta email, nta numero ya telefone." },
-        { question: "Ese ikiganiro cyanjye kirahishwa?", answer: "Rwose. Inshuti ntabika amakuru y'ibanga. Ibiganiro birahishwa kandi nta shuri rihujwe n'indangamuntu yawe." },
-        { question: "Indimi ziterwa inkunga ni izihe?", answer: "Inshuti iterankunga indimi enye: Icyongereza, Ikinyarwanda, Igifaransa, n'Igiswahili. Urashobora guhindura ururimi igihe cyose." },
-        { question: "Ese amakuru y'ubuzima yiringiwa?", answer: "Yego. Ibisubizo byose bishingiye ku bubiko bw'ubumenyi burebwe n'abaganga. Buri gisubizo gishingiye ku bimenyetso kandi gikora neza." },
-        { question: "Ese nshobora kuvugana n'umukozi w'ubuzima?", answer: "Yego. Binyuze mu gahunda yo kuganira no gufata appointments, urashobora gusaba gukurikirwa n'umukozi w'ubuzima." },
-      ],
-    },
-    footer: { disclaimer: "Inshuti itanga amakuru rusange ku buzima kandi ntisimbura isuzuma cyangwa ubuvuzi bw'abaganga bemewe. Niba uri mu kaga cyangwa ukeneye ubufasha bwihutirwa, hamagara ivuriro riri hafi cyangwa ukoreshe amakuru yatanzwe muri iyi porogaramu." },
+    heroTitle: "Ahantu hizewe ho kubaza, kwiga, no kubona ubufasha.",
+    heroBody: "Inshuti ifasha urubyiruko mu Rwanda kubona amakuru y'ubuzima yizewe, kumva amahitamo yabo, no guhura n'umuforomo, umubyaza, umuganga w'indwara zo mu mutwe, muganga, cyangwa umujyanama w'ubuzima wemewe.",
+    talk: "Ganira na Inshuti",
+    find: "Shaka ubufasha",
+    heroNote: "Utangira mu ibanga. Umuntu ajya ahagaragara iyo umusabye.",
+    howEyebrow: "Uko Inshuti ifasha",
+    howTitle: "Kuva ku kibazo ukagera ku bufasha bukwiye.",
+    steps: [
+      { n: "01", title: "Baza", body: "Ufite ikibazo? Ganira mu ibanga ubone amakuru avuye mu nyandiko zarebwe." },
+      { n: "02", title: "Sobanukirwa", body: "Soma ibisobanuro ku mihango, gutwita, imibanire, kuboneza urubyaro, virusi ya SIDA n'indwara zandurira mu mibonano, n'ubuzima bwo mu mutwe." },
+      { n: "03", title: "Hura n'umuntu", body: "Iyo ushaka umuntu, Inshuti ishobora kukugeza ku mukozi wemewe hashingiwe ku ngingo n'ubukana." },
+      { n: "04", title: "Komeza", body: "Vugana na we mu ibanga, ohereze dosiye cyangwa ijwi, cyangwa ufate gahunda." },
+    ],
+    networkEyebrow: "Urusobe rw'ubufasha",
+    networkTitle: "Ikoranabuhanga ritangiza. Abantu ni bo bita ku buzima.",
+    networkBody: "Inshuti ntisimbura umukozi w'ubuzima. Umufasha agufasha gusobanukirwa ikibazo no kubona intambwe ikurikira. Abakozi bemewe ni bo baganira nawe.",
+    roles: [
+      { title: "Umufasha wa Inshuti", body: "Agufasha gusobanukirwa ikibazo no kubona amakuru yarebwe. Ni igikoresho, si umuntu kandi si isuzuma.", human: false },
+      { title: "Umuforomo", body: "Inama z'ubuzima, harimo imihango no kuboneza urubyaro.", human: true },
+      { title: "Umubyaza", body: "Ubufasha ku nda n'ubuzima bw'imyororokere.", human: true },
+      { title: "Umuganga w'indwara zo mu mutwe", body: "Ubufasha ku muhangayiko, imibanire, n'ubuzima bwo mu mutwe.", human: true },
+      { title: "Muganga", body: "Ibibazo bikeneye isuzuma ry'ubuvuzi, harimo ibyihutirwa.", human: true },
+      { title: "Umujyanama w'ubuzima", body: "Intangiriro iri hafi iyo ikibazo kitakeneye inzobere mbere.", human: true },
+    ],
+    whoTitle: "Inshuti igenwa nde",
+    audiences: [
+      { title: "Urubyiruko", body: "Baza mu magambo yawe, nta konti niba ushaka kuguma utazwi." },
+      { title: "Ababyeyi n'abarezi", body: "Iga, fata gahunda zawe, ushake ubuvuzi. Ikiganiro cy'ibanga cy'umwana ntikiboneka." },
+      { title: "Abakozi b'ubuzima", body: "Akira dosiye zemewe, usubize mu ibanga, wandike umusaruro wa gahunda." },
+      { title: "Abajyanama b'ubuzima", body: "Fasha abantu ibibazo byabo bishobora gutangirira hafi." },
+    ],
+    canTitle: "Ibyo ushobora gukora",
+    actions: [
+      { title: "Baza ikibazo", body: "Tangira ikiganiro cy'ibanga.", href: "/chat" },
+      { title: "Iga", body: "Soma inyandiko zarebwe.", href: "/library" },
+      { title: "Shaka ivuriro", body: "Shakisha ibitaro, ibigo nderabuzima, amavuriro, n'amafarmasi.", href: "/facility-locator" },
+      { title: "Saba umuntu", body: "Saba gukurikirana uvuye mu kiganiro iyo winjiye.", href: "/chat" },
+      { title: "Fata umwanya", body: "Saba gahunda n'umukozi wemewe.", href: "/appointments" },
+      { title: "Komeza mu ibanga", body: "Andikira umukozi wahawe.", href: "/consultations" },
+    ],
+    journeyEyebrow: "Urugendo rw'ukuri",
+    journeyTitle: "Kuva ku kibazo ukagera ku bufasha bukwiye.",
+    journey: ["Ufite impungenge", "Uganira na Inshuti", "Ubona amakuru yarebwe", "Ingingo n'ubukana bisuzumwa", "Niba usabye, uhuzwa n'umukozi wemewe", "Ukomeza mu kiganiro cy'ibanga", "Ushobora gufata gahunda"],
+    safetyEyebrow: "Umutekano n'ibanga",
+    safetyTitle: "Ibanga ryawe risobanurwa ukuri.",
+    safetyBody: "Ushobora gutangira utagira konti. Icyo kiganiro kibikwa ku sesiyo idasanzwe ya iyi mushakisha, si ku izina ryawe. Niba winjiye ukaba ufunze uburyo butazwi, ibiganiro bikurikira bishobora guhuzwa na konti yawe kugira ngo umukozi akusubize.",
+    trusts: [
+      { title: "Ubutumwa burinzwe", body: "Ibiganiro by'abakozi birakingwa kuri seriveri no mu nzira." },
+      { title: "Abakozi babona bike", body: "Abayobozi babona imiterere n'amazina. Ntibabona ubutumwa bw'ikiganiro." },
+      { title: "Abakozi bemewe", body: "Umukozi wemewe gusa ni we washobora guhabwa dosiye." },
+      { title: "Ubufasha mu bihe bikomeye", body: "Amagambo y'ibyago ashobora kwerekana nimero z'ubutabazi no gushyirwa ku rutonde kugira ngo hagenzurwe niba ubufasha bwatanzwe." },
+      { title: "Amakuru yarebwe", body: "Ibisubizo bishobora kwerekana inyandiko umusuzuma yashyizeho ko ziteguye." },
+      { title: "Imibare rusange", body: "Abakozi ba leta babona imibare y'akarere kabo. Imibare mito ihishwa kugira ngo umuntu atamenyekane." },
+    ],
+    emergencyTitle: "Niba uri mu kaga, ntutegereze igisubizo.",
+    emergencyBody: "Koresha nimero z'ubutabazi, hamagara serivisi z'ibiza, cyangwa ujye ku kigo cy'ubuzima kiri hafi. Inshuti itanga amakuru rusange n'ubufasha bw'ibanga. Si serivisi y'ibiza kandi ntisuzuma cyangwa itanga imiti.",
+    emergencyCta: "Reba ubufasha bwihutirwa",
+    topicsEyebrow: "Tangira ku ngingo",
+    topicsTitle: "Uvuye aho uri hose.",
+    topics: [
+      { name: "Ubuzima bw'imihango", body: "Imihango n'ibisanzwe.", icon: "i-droplet" },
+      { name: "Gutwita", body: "Ibimenyetso n'ubuvuzi.", icon: "i-baby" },
+      { name: "Imibanire", body: "Kwemera n'imbibi.", icon: "i-heart" },
+      { name: "Kuboneza urubyaro", body: "Amahitamo asobanuwe nta gushyigikirizwa.", icon: "i-pill" },
+      { name: "SIDA n'indwara zandurira", body: "Kwirinda, gupima, no kuvura.", icon: "i-shield" },
+      { name: "Ubuzima bwo mu mutwe", body: "Umuhangayiko n'aho ushobora kubona ubufasha.", icon: "i-mind" },
+    ],
+    ask: "Baza kuri iki",
+    faqTitle: "Ibibazo bakunze kubaza",
+    faq: [
+      { q: "Ese nkeneye konti?", a: "Oya. Ushobora kuganira utiyandikishije. Konti ikenewe kugira ngo usabe umukozi, ufate gahunda, kandi ubone amamenyesha." },
+      { q: "Ese ibiganiro bibikwa?", a: "Yego. Ibiganiro bitazwi bibikwa ku sesiyo ya mushakisha. Ibiganiro by'uwinjira bihuzwa na konti iyo uburyo butazwi bufunze. Ushobora gusiba amateka no gufunga konti." },
+      { q: "Ese iri isuzuma?", a: "Oya. Inshuti isobanura amakuru y'ubuzima. Ikiganiro n'umukozi si dosiye y'ibitaro kandi si itegeko ry'imiti." },
+      { q: "Ninde ushobora gusoma ikiganiro cy'ibanga?", a: "Wowe n'umukozi wahawe. Ababyeyi ntibabona ubwo butumwa. Abakozi ba leta babona imibare, si ubutumwa." },
+    ],
+    disclaimer: "Inshuti itanga amakuru rusange y'ubuzima n'ubufasha bw'ibanga bw'abakozi bemewe. Ntisimbura ubuvuzi bwihutirwa, isuzuma, cyangwa imiti.",
   },
   FR: {
-    hero: {
-      titleLead: "Votre système de santé alimenté par l'IA. ",
-      titleEm: "Conçu pour les jeunes au Rwanda.",
-      body: "Inshuti est un système IA qui donne aux jeunes des réponses honnêtes et sans jugement sur la santé sexuelle et reproductive — validées par des professionnels, disponibles à tout moment, en 4 langues.",
-      ctaChat: "Discuter avec Inshuti",
-      ctaBrowse: "Parcourir les sujets",
-    },
-    agents: {
-      eyebrow: "Le Système Inshuti",
-      title: "Votre équipe IA pour la santé des adolescents",
-      items: [
-        { initial: "AX", gradient: AGENT_GRADIENTS[0], name: "Alex", role: "Conseiller IA", description: "Répond aux questions de santé avec empathie et précision via un chat anonyme." },
-        { initial: "CR", gradient: AGENT_GRADIENTS[1], name: "Crystal", role: "Intervenant d'Urgence", description: "Détecte instantanément les situations de crise et fournit des ressources de sécurité immédiates." },
-        { initial: "LB", gradient: AGENT_GRADIENTS[2], name: "Lingala", role: "Pont Linguistique", description: "Parle anglais, kinyarwanda, français et kiswahili pour atteindre chaque jeune." },
-        { initial: "KC", gradient: AGENT_GRADIENTS[3], name: "Kai", role: "Conservateur des Connaissances", description: "Gère une base de connaissances validée par des professionnels pour chaque réponse." },
-        { initial: "FG", gradient: AGENT_GRADIENTS[4], name: "Fiona", role: "Guide des Établissements", description: "Aide à trouver des établissements de santé avec des cartes interactives." },
-        { initial: "CC", gradient: AGENT_GRADIENTS[5], name: "Claire", role: "Coordinateur de Soins", description: "Gère les rendez-vous, consultations et suivis avec les professionnels de santé." },
-        { initial: "PS", gradient: AGENT_GRADIENTS[6], name: "Pascal", role: "Protecteur de la Vie Privée", description: "Garantit des conversations anonymes — aucun nom, aucun compte requis." },
-        { initial: "MR", gradient: AGENT_GRADIENTS[7], name: "Marie", role: "Réviseur Médical", description: "Vérifie tout le contenu pour sa précision clinique et sa pertinence culturelle." },
-      ],
-    },
-    features: {
-      eyebrow: "Tout ce dont vous avez besoin",
-      title: "Recherche, chat, soins — tout dans un seul système",
-      items: [
-        { icon: "i-bot", title: "Chat IA", body: "Posez toutes vos questions de santé avec vos mots, à tout moment, en 4 langues." },
-        { icon: "i-shield", title: "Sécurité de Crise", body: "La détection intégrée des crises vous connecte immédiatement au soutien." },
-        { icon: "i-lock", title: "Anonyme par Conception", body: "Pas d'inscription, pas de noms, pas de suivi. Votre vie privée est la base." },
-        { icon: "i-book", title: "Base de Preuves", body: "Chaque réponse s'appuie sur un contenu validé par des professionnels de santé." },
-        { icon: "i-map-pin", title: "Localisateur", body: "Trouvez des cliniques et hôpitaux à proximité avec une carte interactive." },
-        { icon: "i-calendar", title: "Rendez-vous", body: "Réservez et gérez des consultations avec des professionnels de santé." },
-        { icon: "i-globe", title: "4 Langues", body: "Support complet en anglais, kinyarwanda, français et kiswahili." },
-        { icon: "i-users", title: "Portails de Rôle", body: "Tableaux de bord adaptés aux adolescents, parents, professionnels et gouvernement." },
-      ],
-    },
-    topics: {
-      eyebrow: "Sujets populaires",
-      title: "Où que vous en soyez",
-      body: "Six thèmes les plus demandés par les jeunes — cliquez pour démarrer une conversation.",
-      cta: "Poser une question",
-      items: [
-        { icon: "i-droplet", bg: "bg-coral-100", fg: "text-coral-dark", name: "Santé Menstruelle", body: "Cycles, symptômes, produits, et ce qui est normal pour votre corps." },
-        { icon: "i-baby", bg: "bg-gold-100", fg: "text-[#8A5E1E]", name: "Grossesse", body: 'Signes, échéances, soins prénatals, et réponses à vos "et si".' },
-        { icon: "i-heart", bg: "bg-teal-100", fg: "text-teal-700", name: "Relations", body: "Consentement, communication, limites, et partenariats sains." },
-        { icon: "i-pill", bg: "bg-coral-100", fg: "text-coral-dark", name: "Planning Familial", body: "Options de contraception expliquées clairement, sans pression." },
-        { icon: "i-shield", bg: "bg-teal-100", fg: "text-teal-700", name: "VIH & IST", body: "Prévention, dépistage et traitement — sans jugement." },
-        { icon: "i-mind", bg: "bg-gold-100", fg: "text-[#8A5E1E]", name: "Santé Mentale", body: "Stress, anxiété, et soutien pour les émotions derrière vos questions." },
-      ],
-    },
-    faq: {
-      eyebrow: "FAQ",
-      title: "Questions courantes sur le système",
-      items: [
-        { question: "Qu'est-ce qu'Inshuti?", answer: "Inshuti est un système de santé sexuelle et reproductive alimenté par l'IA pour les jeunes au Rwanda. Il combine un chat IA anonyme, la détection de crise, une base de connaissances validée, un localisateur d'établissements et la gestion de rendez-vous." },
-        { question: "Dois-je m'inscrire?", answer: "Non. Inshuti est anonyme par conception. Vous pouvez commencer à discuter immédiatement sans fournir d'informations personnelles." },
-        { question: "Ma conversation est-elle privée?", answer: "Absolument. Inshuti ne stocke aucune information d'identification. Les conversations sont anonymes et les sessions ne sont pas liées à votre identité." },
-        { question: "Quelles langues sont supportées?", answer: "Inshuti supporte quatre langues : anglais, kinyarwanda, français et kiswahili. Vous pouvez changer de langue à tout moment." },
-        { question: "Les informations sont-elles fiables?", answer: "Oui. Toutes les réponses sont basées sur une base de connaissances validée par des professionnels de santé. Chaque réponse est fondée sur des preuves." },
-        { question: "Puis-je parler à un vrai professionnel?", answer: "Oui. Grâce aux fonctionnalités de consultation et de rendez-vous, vous pouvez demander un suivi avec un professionnel de santé." },
-      ],
-    },
-    footer: { disclaimer: "Inshuti fournit des informations générales sur la santé et ne remplace pas un diagnostic ou un traitement médical professionnel. En cas de crise ou de besoin de soins urgents, contactez un établissement de santé local ou les ressources listées dans l'application." },
+    heroTitle: "Un endroit sûr pour demander, apprendre et être accompagné.",
+    heroBody: "Inshuti aide les jeunes au Rwanda à trouver une information de santé fiable, à comprendre leurs options, et à rencontrer un infirmier, une sage-femme, un psychologue, un médecin ou un agent de santé communautaire approuvé.",
+    talk: "Parler à Inshuti",
+    find: "Trouver du soutien",
+    heroNote: "Vous commencez en privé. Une personne intervient quand vous le demandez.",
+    howEyebrow: "Comment Inshuti aide",
+    howTitle: "D'une question au bon soutien.",
+    steps: [
+      { n: "01", title: "Demander", body: "Une question ou une inquiétude ? Échangez en privé et recevez une information issue de ressources relues." },
+      { n: "02", title: "Comprendre", body: "Lisez des explications sur les règles, la grossesse, les relations, la contraception, le VIH et les IST, et la santé mentale." },
+      { n: "03", title: "Rencontrer", body: "Quand vous voulez une personne, Inshuti peut vous orienter vers un professionnel approuvé selon le sujet et l'urgence." },
+      { n: "04", title: "Continuer", body: "Écrivez à ce professionnel en privé, envoyez un fichier ou une note vocale, ou prenez un rendez-vous." },
+    ],
+    networkEyebrow: "Votre réseau de soutien",
+    networkTitle: "La technologie vous aide à commencer. Les personnes soignent.",
+    networkBody: "Inshuti ne remplace pas un professionnel de santé. L'assistant aide à comprendre une question et à trouver la prochaine étape. Les professionnels approuvés mènent l'échange humain.",
+    roles: [
+      { title: "Assistant Inshuti", body: "Aide à comprendre une question et à trouver une information relue. C'est un outil, pas une personne et pas un diagnostic.", human: false },
+      { title: "Infirmier ou infirmière", body: "Conseils de santé, y compris règles et planification familiale.", human: true },
+      { title: "Sage-femme", body: "Soutien pour la grossesse et la santé reproductive.", human: true },
+      { title: "Psychologue", body: "Soutien pour le stress, les relations et la santé mentale.", human: true },
+      { title: "Médecin", body: "Situations qui demandent une évaluation médicale, y compris les risques plus élevés.", human: true },
+      { title: "Agent de santé communautaire", body: "Un premier contact local quand la question n'exige pas d'abord un spécialiste.", human: true },
+    ],
+    whoTitle: "À qui s'adresse Inshuti",
+    audiences: [
+      { title: "Jeunes", body: "Posez la question avec vos mots, sans compte si vous voulez rester anonyme." },
+      { title: "Parents et tuteurs", body: "Apprenez, prenez vos propres rendez-vous, trouvez des soins. La consultation privée d'un jeune reste privée." },
+      { title: "Professionnels de santé", body: "Recevez des dossiers approuvés, répondez en privé, notez le résultat d'un rendez-vous." },
+      { title: "Agents de santé communautaire", body: "Accompagnez les questions qui peuvent commencer près de chez soi." },
+    ],
+    canTitle: "Ce que vous pouvez faire",
+    actions: [
+      { title: "Poser une question", body: "Commencer une conversation privée.", href: "/chat" },
+      { title: "Apprendre", body: "Lire des articles relus.", href: "/library" },
+      { title: "Trouver un établissement", body: "Chercher hôpitaux, centres, cliniques et pharmacies.", href: "/facility-locator" },
+      { title: "Demander une personne", body: "Demander un suivi depuis la conversation une fois connecté.", href: "/chat" },
+      { title: "Prendre un rendez-vous", body: "Demander un créneau avec un professionnel approuvé.", href: "/appointments" },
+      { title: "Continuer en privé", body: "Écrire au professionnel qui vous est attribué.", href: "/consultations" },
+    ],
+    journeyEyebrow: "Un parcours réel",
+    journeyTitle: "D'une question au bon soutien.",
+    journey: ["Vous avez une inquiétude", "Vous parlez avec Inshuti", "Vous recevez une information relue", "Le sujet et l'urgence sont évalués", "Si vous le demandez, un professionnel approuvé est proposé", "Vous continuez en privé", "Vous pouvez prendre un suivi"],
+    safetyEyebrow: "Sécurité et vie privée",
+    safetyTitle: "Votre vie privée est expliquée honnêtement.",
+    safetyBody: "Vous pouvez commencer sans compte. Cette conversation est conservée avec une session aléatoire de ce navigateur, pas avec votre nom. Si vous vous connectez et désactivez le mode anonyme, les conversations suivantes peuvent être liées à votre compte pour qu'un professionnel puisse vous répondre.",
+    trusts: [
+      { title: "Messages protégés", body: "Les échanges avec un professionnel sont chiffrés sur le serveur et pendant le transport." },
+      { title: "Accès limité du personnel", body: "Les administrateurs voient le statut et les noms. Ils ne lisent pas les messages." },
+      { title: "Professionnels approuvés", body: "Seul un professionnel approuvé peut recevoir un dossier." },
+      { title: "Soutien en crise", body: "Un langage urgent peut afficher des contacts d'urgence et être signalé pour vérifier que l'aide a été proposée." },
+      { title: "Information relue", body: "Les réponses peuvent citer des articles qu'un relecteur a validés." },
+      { title: "Rapports agrégés", body: "Les utilisateurs gouvernementaux voient des totaux. Les tout petits nombres sont masqués." },
+    ],
+    emergencyTitle: "En cas de danger, n'attendez pas une réponse.",
+    emergencyBody: "Utilisez les contacts de crise, appelez les urgences locales, ou allez à l'établissement le plus proche. Inshuti donne une information générale et un suivi privé. Ce n'est pas un service d'urgence et ce n'est pas un diagnostic.",
+    emergencyCta: "Voir les ressources d'urgence",
+    topicsEyebrow: "Commencer par un sujet",
+    topicsTitle: "D'où que vous partiez.",
+    topics: [
+      { name: "Santé menstruelle", body: "Cycles et ce qui est habituel.", icon: "i-droplet" },
+      { name: "Grossesse", body: "Signes et soins.", icon: "i-baby" },
+      { name: "Relations", body: "Consentement et limites.", icon: "i-heart" },
+      { name: "Planification familiale", body: "Des options expliquées sans pression.", icon: "i-pill" },
+      { name: "VIH et IST", body: "Prévention, dépistage et traitement.", icon: "i-shield" },
+      { name: "Santé mentale", body: "Stress et où trouver du soutien.", icon: "i-mind" },
+    ],
+    ask: "Demander à ce sujet",
+    faqTitle: "Les premières questions",
+    faq: [
+      { q: "Faut-il un compte ?", a: "Non. Vous pouvez parler sans vous inscrire. Un compte sert à demander un professionnel, prendre rendez-vous et recevoir des notifications." },
+      { q: "Les conversations sont-elles conservées ?", a: "Oui. Les échanges anonymes sont liés à une session aléatoire du navigateur. Les échanges connectés sont liés au compte seulement si le mode anonyme est désactivé." },
+      { q: "Est-ce un diagnostic ?", a: "Non. Inshuti explique une information de santé. L'échange avec un professionnel n'est pas un dossier hospitalier ni une ordonnance." },
+      { q: "Qui peut lire une consultation privée ?", a: "Vous et le professionnel attribué. Les parents ne reçoivent pas ce fil. Les utilisateurs gouvernementaux voient des totaux, pas les messages." },
+    ],
+    disclaimer: "Inshuti fournit une information générale et un suivi privé avec des professionnels approuvés. Ce n'est pas un substitut aux urgences, au diagnostic ou au traitement.",
   },
   SW: {
-    hero: {
-      titleLead: "Mfumo wako wa afya unaoendeshwa na AI. ",
-      titleEm: "Imejengwa kwa ajili ya vijana nchini Rwanda.",
-      body: "Inshuti ni mfumo wa AI unaowapa vijana majibu ya kweli, yasiyo na hukumu kuhusu afya ya uzazi na ngono — yaliyopitiwa na wataalamu, yanapatikana wakati wowote, kwa lugha 4.",
-      ctaChat: "Ongea na Inshuti",
-      ctaBrowse: "Vinjari mada",
-    },
-    agents: {
-      eyebrow: "Mfumo wa Inshuti",
-      title: "Timu yako ya AI kwa afya ya vijana",
-      items: [
-        { initial: "AX", gradient: AGENT_GRADIENTS[0], name: "Alex", role: "Mshauri wa AI", description: "Anajibu maswali ya afya kwa huruma na usahihi kupitia mazungumzo ya siri." },
-        { initial: "CR", gradient: AGENT_GRADIENTS[1], name: "Crystal", role: "Mwitikiaji wa Dharura", description: "Anatambua lugha ya mgogoro mara moja na kutoa rasilimali za usalama." },
-        { initial: "LB", gradient: AGENT_GRADIENTS[2], name: "Lingala", role: "Daraja la Lugha", description: "Anazungumza Kiingereza, Kinyarwanda, Kifaransa, na Kiswahili kufikia kila kijana." },
-        { initial: "KC", gradient: AGENT_GRADIENTS[3], name: "Kai", role: "Mhifadhi wa Maarifa", description: "Anasimamia hazina ya maarifa iliyopitiwa na wataalamu kwa kila jibu." },
-        { initial: "FG", gradient: AGENT_GRADIENTS[4], name: "Fiona", role: "Mwongozo wa Kituo", description: "Husaidia kutafuta vituo vya afya vilivyo karibu kwa ramani." },
-        { initial: "CC", gradient: AGENT_GRADIENTS[5], name: "Claire", role: "Mratibu wa Huduma", description: "Anasimamia miadi, mashauriano, na ufuatiliaji na wataalamu wa afya." },
-        { initial: "PS", gradient: AGENT_GRADIENTS[6], name: "Pascal", role: "Ngao ya Faragha", description: "Anahakikisha mazungumzo yako ni siri — hakuna majina, hakuna akaunti." },
-        { initial: "MR", gradient: AGENT_GRADIENTS[7], name: "Marie", role: "Mkaguzi wa Matibabu", description: "Anakagua maudhui yote kwa usahihi wa kimatibabu na utamaduni." },
-      ],
-    },
-    features: {
-      eyebrow: "Kila kitu unachohitaji",
-      title: "Tafiti, ongea, tafuta huduma — yote katika mfumo mmoja",
-      items: [
-        { icon: "i-bot", title: "Mazungumzo ya AI", body: "Uliza chochote kuhusu afya yako kwa maneno yako mwenyewe, wakati wowote, kwa lugha 4." },
-        { icon: "i-shield", title: "Usalama wa Dharura", body: "Utambuzi wa mgogoro uliojengwa ndani hukuunganisha na msaada wakati muhimu." },
-        { icon: "i-lock", title: "Siri kwa Muundo", body: "Hakuna usajili, hakuna majina, hakuna ufuatiliaji. Faragha yako ndio msingi." },
-        { icon: "i-book", title: "Hazina ya Maarifa", body: "Kila jibu linategemea maudhui yaliyopitiwa na wataalamu wa afya." },
-        { icon: "i-map-pin", title: "Kipata Kituo", body: "Tafuta kliniki, hospitali, na vituo vya afya vilivyo karibu kwa ramani." },
-        { icon: "i-calendar", title: "Miadi", body: "Panga na usimamie mashauriano na wataalamu wa afya kwa urahisi." },
-        { icon: "i-globe", title: "Lugha 4", body: "Msaada kamili kwa Kiingereza, Kinyarwanda, Kifaransa, na Kiswahili." },
-        { icon: "i-users", title: "Milango ya Wajibu", body: "Dashibodi maalum kwa vijana, wazazi, wataalamu, na serikali." },
-      ],
-    },
-    topics: {
-      eyebrow: "Mada Maarufu",
-      title: "Popote unapoanzia",
-      body: "Maeneo sita ambayo vijana huuliza zaidi — gusa moja kuanza mazungumzo moja kwa moja.",
-      cta: "Uliza kuhusu hili",
-      items: [
-        { icon: "i-droplet", bg: "bg-coral-100", fg: "text-coral-dark", name: "Afya ya Hedhi", body: "Mzunguko, dalili, bidhaa, na kilicho cha kawaida kwa mwili wako." },
-        { icon: "i-baby", bg: "bg-gold-100", fg: "text-[#8A5E1E]", name: "Ujauzito", body: 'Dalili, ratiba, huduma kabla ya kujifungua, na majibu ya "vipi kama".' },
-        { icon: "i-heart", bg: "bg-teal-100", fg: "text-teal-700", name: "Mahusiano", body: "Idhini, mawasiliano, mipaka, na ushirikiano wenye afya." },
-        { icon: "i-pill", bg: "bg-coral-100", fg: "text-coral-dark", name: "Uzazi wa Mpango", body: "Njia za uzazi wa mpango zilizoelezwa kwa uwazi, bila shinikizo." },
-        { icon: "i-shield", bg: "bg-teal-100", fg: "text-teal-700", name: "VVU na Magonjwa ya Zinaa", body: "Kinga, kupima, na matibabu — bila hukumu." },
-        { icon: "i-mind", bg: "bg-gold-100", fg: "text-[#8A5E1E]", name: "Afya ya Akili", body: "Msongo, wasiwasi, na msaada kwa hisia nyuma ya maswali yako." },
-      ],
-    },
-    faq: {
-      eyebrow: "Maswali",
-      title: "Maswali ya kawaida kuhusu mfumo",
-      items: [
-        { question: "Inshuti ni nini?", answer: "Inshuti ni mfumo wa afya ya uzazi na ngono unaoendeshwa na AI kwa vijana nchini Rwanda. Unachanganya mazungumzo ya AI ya siri, utambuzi wa mgogoro, hazina ya maarifa iliyopitiwa, kipata kituo cha afya, na usimamizi wa miadi." },
-        { question: "Je, ninahitaji kujiandikisha?", answer: "Hapana. Inshuti ni siri kwa muundo. Unaweza kuanza mazungumzo mara moja bila kutoa taarifa zozote za kibinafsi." },
-        { question: "Je, mazungumzo yangu ni ya faragha?", answer: "Kabisa. Inshuti haihifadhi taarifa zinazotambulika. Mazungumzo ni siri na hayajaunganishwa na utambulisho wako." },
-        { question: "Lugha gani zinatumika?", answer: "Inshuti inasaidia lugha nne: Kiingereza, Kinyarwanda, Kifaransa, na Kiswahili. Unaweza kubadilisha lugha wakati wowote." },
-        { question: "Je, taarifa za afya ni za kuaminika?", answer: "Ndiyo. Majibu yote yanategemea hazina ya maarifa iliyopitiwa na wataalamu wa afya. Kila jibu linategemea ushahidi." },
-        { question: "Je, ninaweza kuzungumza na mtaalamu halisi?", answer: "Ndiyo. Kupitia vipengele vya mashauriano na miadi, unaweza kuomba ufuatiliaji na mtaalamu wa afya." },
-      ],
-    },
-    footer: { disclaimer: "Inshuti inatoa taarifa za jumla za afya na si mbadala wa uchunguzi au matibabu ya kitaalamu. Ikiwa uko katika hali ya dharura au unahitaji huduma ya haraka, wasiliana na kituo cha afya cha karibu au rasilimali zilizoorodheshwa kwenye programu." },
+    heroTitle: "Mahali salama pa kuuliza, kujifunza, na kupata msaada.",
+    heroBody: "Inshuti huwasaidia vijana nchini Rwanda kupata taarifa za afya zinazoaminika, kuelewa chaguo zao, na kuunganishwa na muuguzi, mkunga, mwanasaikolojia, daktari, au mhudumu wa afya ya jamii aliyethibitishwa.",
+    talk: "Ongea na Inshuti",
+    find: "Tafuta msaada",
+    heroNote: "Unaanza kwa faragha. Mtu anaingia unapoomba.",
+    howEyebrow: "Jinsi Inshuti inavyosaidia",
+    howTitle: "Kutoka swali hadi msaada unaofaa.",
+    steps: [
+      { n: "01", title: "Uliza", body: "Una swali? Ongea kwa faragha upate taarifa kutoka kwenye nyenzo zilizopitiwa." },
+      { n: "02", title: "Elewa", body: "Soma maelezo kuhusu hedhi, ujauzito, mahusiano, uzazi wa mpango, VVU na magonjwa ya zinaa, na afya ya akili." },
+      { n: "03", title: "Ungana", body: "Unapotaka mtu, Inshuti inaweza kukuunganisha na mtaalamu aliyethibitishwa kulingana na mada na udharura." },
+      { n: "04", title: "Endelea", body: "Mwandikie mtaalamu huyo kwa faragha, tuma faili au sauti, au weka miadi." },
+    ],
+    networkEyebrow: "Mtandao wako wa msaada",
+    networkTitle: "Teknolojia inakusaidia kuanza. Watu ndio wanatoa huduma.",
+    networkBody: "Inshuti haibadilishi mhudumu wa afya. Msaidizi husaidia kuelewa swali na kupata hatua inayofuata. Wataalamu waliothibitishwa ndio wanaongoza mazungumzo ya kibinadamu.",
+    roles: [
+      { title: "Msaidizi wa Inshuti", body: "Husaidia kuelewa swali na kupata taarifa zilizopitiwa. Ni zana, si mtu na si utambuzi.", human: false },
+      { title: "Muuguzi", body: "Mwongozo wa afya, pamoja na hedhi na uzazi wa mpango.", human: true },
+      { title: "Mkunga", body: "Msaada wa ujauzito na afya ya uzazi.", human: true },
+      { title: "Mwanasaikolojia", body: "Msaada wa mfadhaiko, mahusiano, na afya ya akili.", human: true },
+      { title: "Daktari", body: "Kesi zinazohitaji tathmini ya kitabibu, pamoja na hatari kubwa.", human: true },
+      { title: "Mhudumu wa afya ya jamii", body: "Mahali pa kuanzia karibu wakati swali halihitaji mtaalamu kwanza.", human: true },
+    ],
+    whoTitle: "Inshuti ni kwa nani",
+    audiences: [
+      { title: "Vijana", body: "Uliza kwa maneno yako, bila akaunti ukitaka kubaki bila kujulikana." },
+      { title: "Wazazi na walezi", body: "Jifunze, weka miadi yako, tafuta huduma. Mazungumzo ya faragha ya kijana hubaki ya faragha." },
+      { title: "Wataalamu wa afya", body: "Pokea kesi zilizoidhinishwa, jibu kwa faragha, andika matokeo ya miadi." },
+      { title: "Wahudumu wa jamii", body: "Saidia maswali yanayoweza kuanza karibu na nyumbani." },
+    ],
+    canTitle: "Unachoweza kufanya",
+    actions: [
+      { title: "Uliza swali", body: "Anza mazungumzo ya faragha.", href: "/chat" },
+      { title: "Jifunze", body: "Soma makala yaliyopitiwa.", href: "/library" },
+      { title: "Tafuta kituo", body: "Tafuta hospitali, vituo, kliniki, na maduka ya dawa.", href: "/facility-locator" },
+      { title: "Omba mtu", body: "Omba ufuatiliaji kutoka kwenye mazungumzo ukiwa umeingia.", href: "/chat" },
+      { title: "Weka muda", body: "Omba miadi na mtaalamu aliyethibitishwa.", href: "/appointments" },
+      { title: "Endelea kwa faragha", body: "Mwandikie mtaalamu uliyepangiwa.", href: "/consultations" },
+    ],
+    journeyEyebrow: "Safari halisi",
+    journeyTitle: "Kutoka swali hadi msaada unaofaa.",
+    journey: ["Una wasiwasi", "Unaongea na Inshuti", "Unapata taarifa zilizopitiwa", "Mada na udharura vinapimwa", "Ukiomba, unaunganishwa na mtaalamu aliyethibitishwa", "Unaendelea kwa faragha", "Unaweza kuweka ufuatiliaji"],
+    safetyEyebrow: "Usalama na faragha",
+    safetyTitle: "Faragha yako inaelezwa kwa uaminifu.",
+    safetyBody: "Unaweza kuanza bila akaunti. Mazungumzo hayo huhifadhiwa kwenye kipindi cha kivinjari kisicho na jina, si kwenye jina lako. Ukiingia na kuzima hali ya kutokujulikana, mazungumzo yanayofuata yanaweza kuunganishwa na akaunti yako ili mtaalamu akujibu.",
+    trusts: [
+      { title: "Ujumbe salama", body: "Mazungumzo na mtaalamu husimbwa kwenye seva na wakati wa kusafiri." },
+      { title: "Wafanyakazi wanaona kidogo", body: "Wasimamizi wanaona hali na majina. Hawasomi ujumbe." },
+      { title: "Wataalamu waliothibitishwa", body: "Mtaalamu aliyethibitishwa pekee ndiye anayeweza kupangiwa kesi." },
+      { title: "Msaada wa dharura", body: "Lugha ya hatari inaweza kuonyesha anwani za dharura na kuripotiwa ili kuhakikisha msaada ulitolewa." },
+      { title: "Taarifa zilizopitiwa", body: "Majibu yanaweza kunukuu makala ambayo mkaguzi ameidhinisha." },
+      { title: "Ripoti za jumla", body: "Watumiaji wa serikali wanaona jumla. Hesabu ndogo sana hufichwa." },
+    ],
+    emergencyTitle: "Ukiwa hatarini, usisubiri jibu.",
+    emergencyBody: "Tumia anwani za dharura, piga simu za dharura za eneo, au nenda kituo cha karibu. Inshuti inatoa taarifa za jumla na ufuatiliaji wa faragha. Si huduma ya dharura na haitambui wala haiandiki dawa.",
+    emergencyCta: "Ona msaada wa dharura",
+    topicsEyebrow: "Anza na mada",
+    topicsTitle: "Popote unapoanzia.",
+    topics: [
+      { name: "Afya ya hedhi", body: "Mzunguko na kilicho cha kawaida.", icon: "i-droplet" },
+      { name: "Ujauzito", body: "Dalili na huduma.", icon: "i-baby" },
+      { name: "Mahusiano", body: "Ridhaa na mipaka.", icon: "i-heart" },
+      { name: "Uzazi wa mpango", body: "Chaguo zilizoelezwa bila shinikizo.", icon: "i-pill" },
+      { name: "VVU na magonjwa ya zinaa", body: "Kinga, kupima, na matibabu.", icon: "i-shield" },
+      { name: "Afya ya akili", body: "Mfadhaiko na wapi pa kupata msaada.", icon: "i-mind" },
+    ],
+    ask: "Uliza kuhusu hili",
+    faqTitle: "Maswali ya kwanza",
+    faq: [
+      { q: "Je, nahitaji akaunti?", a: "Hapana. Unaweza kuongea bila kujisajili. Akaunti inahitajika kuomba mtaalamu, kuweka miadi, na kupokea arifa." },
+      { q: "Je, mazungumzo yanahifadhiwa?", a: "Ndiyo. Mazungumzo yasiyojulikana huhifadhiwa kwenye kipindi cha kivinjari. Mazungumzo ya akaunti huunganishwa tu hali ya kutokujulikana ikiwa imezimwa." },
+      { q: "Je, huu ni utambuzi?", a: "Hapana. Inshuti inaeleza taarifa za afya. Mazungumzo na mtaalamu si rekodi ya hospitali wala dawa." },
+      { q: "Nani anaweza kusoma mashauriano ya faragha?", a: "Wewe na mtaalamu uliyepangiwa. Wazazi hawapati ujumbe huo. Watumiaji wa serikali wanaona jumla, si ujumbe." },
+    ],
+    disclaimer: "Inshuti inatoa taarifa za jumla za afya na ufuatiliaji wa faragha na wataalamu waliothibitishwa. Si mbadala wa huduma ya dharura, utambuzi, au matibabu.",
   },
 };
 
-function FaqSection({ items }: { items: FaqItem[] }) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-
+function FaqList({ items }: { items: { q: string; a: string }[] }) {
+  const [open, setOpen] = useState<number | null>(0);
   return (
-    <div className="mx-auto max-w-[720px]">
-      {items.map((item, i) => (
-        <div key={i} className="border-b border-line last:border-b-0">
-          <button
-            type="button"
-            onClick={() => setOpenIndex(openIndex === i ? null : i)}
-            className="flex w-full items-center justify-between gap-4 py-5 text-left text-[15.5px] font-bold text-teal-900 transition hover:text-teal-700"
-          >
-            <span>{item.question}</span>
-            <svg
-              width="18"
-              height="18"
-              className={`shrink-0 text-ink-soft transition-transform duration-200 ${openIndex === i ? "rotate-180" : ""}`}
+    <div className="divide-y divide-line border-y border-line">
+      {items.map((item, index) => {
+        const expanded = open === index;
+        return (
+          <div key={item.q}>
+            <button
+              type="button"
+              aria-expanded={expanded}
+              onClick={() => setOpen(expanded ? null : index)}
+              className="flex w-full items-center justify-between gap-4 py-5 text-left text-[16px] font-semibold text-teal-900"
             >
-              <use href="#i-chevron-down" />
-            </svg>
-          </button>
-          <div
-            className={`overflow-hidden transition-all duration-200 ${
-              openIndex === i ? "max-h-96 pb-5" : "max-h-0"
-            }`}
-          >
-            <p className="text-[14px] leading-[1.7] text-ink-soft">{item.answer}</p>
+              {item.q}
+              <span aria-hidden className="text-ink-soft">{expanded ? "–" : "+"}</span>
+            </button>
+            {expanded && <p className="max-w-[68ch] pb-5 text-[15px] leading-7 text-ink-soft">{item.a}</p>}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -337,192 +387,160 @@ function FaqSection({ items }: { items: FaqItem[] }) {
 export default function Home() {
   const { language } = useLanguage();
   const t = COPY[language];
-  const initials = AGENT_INITIALS[language];
 
   return (
-    <PageLayout
-      activeHref="/"
-      navItems={[
-        { href: "/chat", label: language === "EN" ? "Chat" : language === "RW" ? "Ganira" : language === "FR" ? "Discuter" : "Ongea" },
-        { href: "/about", label: language === "EN" ? "About" : language === "RW" ? "Ibyerekeye" : language === "FR" ? "À propos" : "Kuhusu" },
-        { href: "/services", label: language === "EN" ? "Services" : language === "RW" ? "Serivisi" : language === "FR" ? "Services" : "Huduma" },
-        { href: "/library", label: language === "EN" ? "Library" : language === "RW" ? "Ububiko" : language === "FR" ? "Bibliothèque" : "Maktaba" },
-      ]}
-      footerDisclaimer={t.footer.disclaimer}
-    >
-      {/* Hero */}
-      <FadeUp>
-        <section className="py-20 md:py-28">
-          <div className="mx-auto max-w-[880px] text-center">
-            <motion.h1
-              className="font-display text-[44px] font-bold leading-[1.08] text-teal-900 md:text-[60px]"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-            >
-              {t.hero.titleLead}
-              <em className="not-italic text-coral">{t.hero.titleEm}</em>
-            </motion.h1>
-            <motion.p
-              className="mx-auto mt-5 max-w-[580px] text-[17px] leading-[1.65] text-ink-soft md:text-[18.5px]"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
-            >
-              {t.hero.body}
-            </motion.p>
-            <motion.div
-              className="mt-10 flex flex-wrap justify-center gap-[14px]"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
-            >
-              <Link
-                href="/chat"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-[28px] py-[14px] text-[15.5px] font-semibold text-white shadow-btn transition-all duration-150 hover:-translate-y-px hover:bg-coral-dark hover:shadow-lg"
-              >
-                {t.hero.ctaChat}
-                <svg width="16" height="16">
-                  <use href="#i-arrow" />
-                </svg>
-              </Link>
-              <a
-                href="#topics"
-                className="inline-flex items-center justify-center gap-2 rounded-full border-[1.5px] border-teal-700 px-[28px] py-[14px] text-[15.5px] font-semibold text-teal-700 transition-all duration-150 hover:-translate-y-px hover:bg-teal-100"
-              >
-                {t.hero.ctaBrowse}
-              </a>
-            </motion.div>
+    <PageLayout activeHref="/" navItems={publicNav(language)} footerDisclaimer={t.disclaimer} contained={false}>
+      <section className="border-b border-line bg-[#F7F3EA]">
+        <div className="mx-auto grid max-w-[1160px] items-center gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:py-20">
+          <figure className="order-first overflow-hidden rounded-[28px] bg-teal-100 shadow-soft lg:order-last">
+            <img src="/brand/hero-support.png" alt="A young woman sitting outdoors and reading a message on her phone" className="aspect-[4/3] h-full w-full object-cover" />
+          </figure>
+          <div className="order-last lg:order-first">
+            <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-coral-dark">Inshuti</p>
+            <h1 className="mt-4 max-w-[14ch] font-display text-[40px] leading-[1.08] text-teal-900 sm:text-[56px]">{t.heroTitle}</h1>
+            <p className="mt-5 max-w-[46ch] text-[17px] leading-8 text-ink-soft">{t.heroBody}</p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link href="/chat" className="inline-flex min-h-12 items-center justify-center rounded-full bg-coral px-6 text-[15px] font-semibold text-white hover:bg-coral-dark">{t.talk}</Link>
+              <Link href="/facility-locator" className="inline-flex min-h-12 items-center justify-center rounded-full border border-teal-700 px-6 text-[15px] font-semibold text-teal-700 hover:bg-teal-100">{t.find}</Link>
+            </div>
+            <p className="mt-5 text-[14px] text-ink-soft">{t.heroNote}</p>
+          </div>
+        </div>
+      </section>
 
-            {/* Agent avatars row */}
-            <motion.div
-              className="mt-16 flex flex-wrap justify-center gap-x-6 gap-y-5"
-              initial="hidden"
-              animate="visible"
-              variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } }}
-            >
-              {t.agents.items.map((agent, i) => (
-                <motion.div
-                  key={agent.role}
-                  className="flex flex-col items-center gap-2"
-                  variants={{ hidden: { opacity: 0, y: 20, scale: 0.9 }, visible: { opacity: 1, y: 0, scale: 1 } }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                >
-                  <div
-                    className={`flex h-[56px] w-[56px] items-center justify-center rounded-full bg-gradient-to-br ${agent.gradient} text-[18px] font-bold text-white shadow-md transition-transform duration-200 hover:scale-110`}
-                  >
-                    {initials[i]}
-                  </div>
-                  <span className="text-[12px] font-semibold text-teal-900">{agent.name}</span>
-                  <span className="text-[10.5px] text-ink-soft">{agent.role}</span>
-                </motion.div>
+      <section id="how" className="mx-auto max-w-[1160px] px-5 py-16 sm:px-8">
+        <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-coral-dark">{t.howEyebrow}</p>
+        <h2 className="mt-3 max-w-[16ch] font-display text-[34px] leading-tight text-teal-900 sm:text-[42px]">{t.howTitle}</h2>
+        <ol className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {t.steps.map((step) => (
+            <li key={step.n} className="border-t-2 border-teal-700 pt-4">
+              <span className="font-mono text-[12px] text-coral-dark">{step.n}</span>
+              <h3 className="mt-2 text-[20px] font-semibold text-teal-900">{step.title}</h3>
+              <p className="mt-2 text-[15px] leading-7 text-ink-soft">{step.body}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="bg-white">
+        <div className="mx-auto grid max-w-[1160px] items-center gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[0.9fr_1.1fr]">
+          <figure className="overflow-hidden rounded-[28px]">
+            <img src="/brand/care-conversation.png" alt="A nurse talking with a young adult in a health centre" className="aspect-[4/3] w-full object-cover" />
+          </figure>
+          <div>
+            <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-coral-dark">{t.networkEyebrow}</p>
+            <h2 className="mt-3 font-display text-[34px] leading-tight text-teal-900 sm:text-[40px]">{t.networkTitle}</h2>
+            <p className="mt-4 text-[16px] leading-7 text-ink-soft">{t.networkBody}</p>
+            <ul className="mt-8 grid gap-4 sm:grid-cols-2">
+              {t.roles.map((role) => (
+                <li key={role.title} className="rounded-2xl border border-line bg-paper p-4">
+                  <h3 className="text-[16px] font-semibold text-teal-900">{role.title}</h3>
+                  <p className="mt-1 text-[14px] leading-6 text-ink-soft">{role.body}</p>
+                </li>
               ))}
-            </motion.div>
+            </ul>
           </div>
-        </section>
-      </FadeUp>
+        </div>
+      </section>
 
-      {/* The Inshuti System */}
-      <FadeUp>
-        <section className="py-16">
-          <div className="mx-auto mb-12 max-w-[600px] text-center">
-            <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
-              {t.agents.eyebrow}
-            </span>
-            <h2 className="mt-3 font-display text-[36px] text-teal-900">{t.agents.title}</h2>
-          </div>
-          <StaggerGrid className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-4">
-            {t.agents.items.map((agent, i) => (
-              <StaggerItem key={agent.role}>
-                <div className="card p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-                  <div
-                    className={`flex h-[44px] w-[44px] items-center justify-center rounded-full bg-gradient-to-br ${agent.gradient} text-[16px] font-bold text-white shadow-sm`}
-                  >
-                    {initials[i]}
-                  </div>
-                  <h3 className="mt-3 text-[15px] font-bold text-teal-900">{agent.name}</h3>
-                  <p className="text-[12.5px] font-semibold text-coral-dark">{agent.role}</p>
-                  <p className="mt-2 text-[13px] leading-[1.55] text-ink-soft">{agent.description}</p>
-                </div>
-              </StaggerItem>
+      <section id="young-people" className="mx-auto max-w-[1160px] px-5 py-16 sm:px-8">
+        <h2 className="font-display text-[34px] text-teal-900">{t.whoTitle}</h2>
+        <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {t.audiences.map((item) => (
+              <li key={item.title} className="rounded-2xl bg-white p-5 shadow-card">
+                <h3 className="text-[18px] font-semibold text-teal-900">{item.title}</h3>
+                <p className="mt-2 text-[15px] leading-7 text-ink-soft">{item.body}</p>
+              </li>
             ))}
-          </StaggerGrid>
-        </section>
-      </FadeUp>
+          </ul>
+          <figure id="parents" className="overflow-hidden rounded-[28px]">
+            <img src="/brand/parent-support.png" alt="A parent and a young adult talking together at home" className="h-full min-h-[280px] w-full object-cover" />
+          </figure>
+        </div>
+      </section>
 
-      {/* Features */}
-      <FadeUp>
-        <section className="py-16">
-          <div className="mx-auto mb-12 max-w-[600px] text-center">
-            <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
-              {t.features.eyebrow}
-            </span>
-            <h2 className="mt-3 font-display text-[36px] text-teal-900">{t.features.title}</h2>
-          </div>
-          <StaggerGrid className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-4">
-            {t.features.items.map((feature) => (
-              <StaggerItem key={feature.title}>
-                <Link
-                  href={feature.icon === "i-map-pin" ? "/facility-locator" : feature.icon === "i-calendar" ? "/appointments" : "/chat"}
-                  className="group card block p-6 text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
-                >
-                  <div className="mb-[14px] flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-teal-100 text-teal-700">
-                    <svg width="20" height="20"><use href={`#${feature.icon}`} /></svg>
-                  </div>
-                  <h3 className="text-base font-bold text-teal-900">{feature.title}</h3>
-                  <p className="mt-2 text-[13px] leading-[1.5] text-ink-soft">{feature.body}</p>
+      <section className="bg-[#123F3B] text-white">
+        <div className="mx-auto max-w-[1160px] px-5 py-16 sm:px-8">
+          <h2 className="font-display text-[34px]">{t.canTitle}</h2>
+          <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {t.actions.map((action) => (
+              <li key={action.title}>
+                <Link href={action.href} className="block h-full rounded-2xl border border-white/15 p-5 transition hover:bg-white/5">
+                  <h3 className="text-[18px] font-semibold">{action.title}</h3>
+                  <p className="mt-2 text-[14px] leading-6 text-white/75">{action.body}</p>
                 </Link>
-              </StaggerItem>
+              </li>
             ))}
-          </StaggerGrid>
-        </section>
-      </FadeUp>
+          </ul>
+        </div>
+      </section>
 
-      {/* Popular Topics */}
-      <FadeUp>
-        <section className="py-16" id="topics">
-          <div className="mx-auto mb-10 max-w-[560px] text-center">
-            <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
-              {t.topics.eyebrow}
-            </span>
-            <h2 className="mt-3 font-display text-[36px] text-teal-900">{t.topics.title}</h2>
-            <p className="mt-3 text-[15.5px] text-ink-soft">{t.topics.body}</p>
+      <section className="mx-auto max-w-[1160px] px-5 py-16 sm:px-8">
+        <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-coral-dark">{t.journeyEyebrow}</p>
+        <h2 className="mt-3 font-display text-[34px] text-teal-900">{t.journeyTitle}</h2>
+        <ol className="mt-8 flex gap-3 overflow-x-auto pb-2 lg:grid lg:grid-cols-7 lg:overflow-visible">
+          {t.journey.map((step, index) => (
+            <li key={step} className="min-w-[180px] flex-1 rounded-2xl bg-white p-4 shadow-card lg:min-w-0">
+              <span className="font-mono text-[12px] text-coral-dark">{String(index + 1).padStart(2, "0")}</span>
+              <p className="mt-2 text-[14px] font-semibold leading-6 text-teal-900">{step}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section id="safety" className="border-y border-line bg-white">
+        <div className="mx-auto grid max-w-[1160px] gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <img src="/brand/community-support.png" alt="A community health worker standing outside a health post" className="mb-6 aspect-square w-full max-w-[360px] rounded-[28px] object-cover" />
+            <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-coral-dark">{t.safetyEyebrow}</p>
+            <h2 className="mt-3 font-display text-[34px] leading-tight text-teal-900">{t.safetyTitle}</h2>
+            <p className="mt-4 text-[16px] leading-7 text-ink-soft">{t.safetyBody}</p>
           </div>
-          <StaggerGrid className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
-            {t.topics.items.map((topic) => (
-              <StaggerItem key={topic.name}>
-                <Link
-                  href={`/chat?topic=${topic.icon}`}
-                  className="group card flex h-full cursor-pointer flex-col gap-[14px] p-[26px] transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
-                >
-                  <div className={`flex h-[46px] w-[46px] items-center justify-center rounded-[var(--radius-md)] ${topic.bg} ${topic.fg}`}>
-                    <svg width="22" height="22"><use href={`#${topic.icon}`} /></svg>
-                  </div>
-                  <h3 className="text-lg font-bold text-teal-900">{topic.name}</h3>
-                  <p className="text-[13.5px] leading-[1.5] text-ink-soft">{topic.body}</p>
-                  <span className="mt-auto flex items-center gap-1.5 text-[13px] font-bold text-coral-dark transition-all duration-150 group-hover:gap-2">
-                    {t.topics.cta}
-                    <svg width="13" height="13"><use href="#i-arrow" /></svg>
-                  </span>
-                </Link>
-              </StaggerItem>
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {t.trusts.map((item) => (
+              <li key={item.title} className="rounded-2xl border border-line p-5">
+                <h3 className="text-[16px] font-semibold text-teal-900">{item.title}</h3>
+                <p className="mt-2 text-[14px] leading-6 text-ink-soft">{item.body}</p>
+              </li>
             ))}
-          </StaggerGrid>
-        </section>
-      </FadeUp>
+          </ul>
+        </div>
+      </section>
 
-      {/* FAQ */}
-      <FadeUp>
-        <section className="py-16">
-          <div className="mx-auto mb-10 max-w-[560px] text-center">
-            <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
-              {t.faq.eyebrow}
-            </span>
-            <h2 className="mt-3 font-display text-[36px] text-teal-900">{t.faq.title}</h2>
-          </div>
-          <FaqSection items={t.faq.items} />
-        </section>
-      </FadeUp>
+      <section className="mx-auto max-w-[1160px] px-5 py-16 sm:px-8">
+        <div className="rounded-[28px] bg-coral-100 px-6 py-8 sm:px-10">
+          <h2 className="font-display text-[30px] text-teal-900">{t.emergencyTitle}</h2>
+          <p className="mt-3 max-w-[68ch] text-[16px] leading-7 text-ink-soft">{t.emergencyBody}</p>
+          <Link href="/help-resources#crisis" className="mt-6 inline-flex min-h-12 items-center rounded-full bg-coral px-6 text-[15px] font-semibold text-white">{t.emergencyCta}</Link>
+        </div>
+      </section>
+
+      <section id="topics" className="mx-auto max-w-[1160px] px-5 pb-8 sm:px-8">
+        <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-coral-dark">{t.topicsEyebrow}</p>
+        <h2 className="mt-3 font-display text-[34px] text-teal-900">{t.topicsTitle}</h2>
+        <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {t.topics.map((topic) => (
+            <li key={topic.icon}>
+              <Link href={`/chat?topic=${topic.icon}`} className="flex h-full flex-col rounded-2xl border border-line bg-white p-5 hover:border-teal-700">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100 text-teal-700">
+                  <svg width="18" height="18"><use href={`#${topic.icon}`} /></svg>
+                </span>
+                <h3 className="mt-4 text-[18px] font-semibold text-teal-900">{topic.name}</h3>
+                <p className="mt-2 flex-1 text-[14px] leading-6 text-ink-soft">{topic.body}</p>
+                <span className="mt-4 text-[14px] font-semibold text-coral-dark">{t.ask}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="mx-auto max-w-[860px] px-5 py-16 sm:px-8">
+        <h2 className="font-display text-[34px] text-teal-900">{t.faqTitle}</h2>
+        <div className="mt-6">
+          <FaqList items={t.faq} />
+        </div>
+      </section>
     </PageLayout>
   );
 }

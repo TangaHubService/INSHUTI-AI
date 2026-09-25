@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { PageLoading, FullPageLoading } from "@/components/Spinner";
 import { Panel } from "@/components/layout/Panel";
+import { StatCard } from "@/components/ui/StatCard";
 import { useRequireUser } from "@/lib/useUserAuth";
 import { useLanguage } from "@/lib/LanguageContext";
 import { HEALTH_TOPIC_NAMES, PORTAL_COPY } from "@/lib/portalCopy";
@@ -35,6 +37,7 @@ export default function ParentPortalPage() {
   const { user, loading: authLoading } = useRequireUser();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,37 +49,42 @@ export default function ParentPortalPage() {
       .then(([a, n]) => {
         setAppointments(a);
         setNotifications(n.notifications);
+        setUnreadCount(n.unreadCount);
       })
       .finally(() => setLoading(false));
   }, [user]);
 
   if (authLoading || !user) return <FullPageLoading />;
 
-  const upcoming = appointments.filter((a) => a.status === "CONFIRMED" || a.status === "REQUESTED" || a.status === "RESCHEDULED").slice(0, 4);
+  const upcomingAll = appointments.filter((a) => a.status === "CONFIRMED" || a.status === "REQUESTED" || a.status === "RESCHEDULED");
+  const upcoming = upcomingAll.slice(0, 4);
 
   return (
     <AppShell active="/parent" session={{ kind: "user", user }}>
       <div className="mx-auto max-w-[1160px]">
-        <section className="pb-3">
-          <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
-            {t.parentPortal}
-          </span>
-          <h1 className="mt-3 font-display text-[34px] text-teal-900">
-            {t.welcome}, {user.name.split(" ")[0]}
-          </h1>
-          <p className="mt-[10px] max-w-[560px] text-[14.5px] leading-[1.6] text-ink-soft">
-            {t.parentIntro}
-          </p>
-        </section>
+        <DashboardHeader
+          eyebrow={t.parentPortal}
+          title={`${t.welcome}, ${user.name.split(" ")[0]}`}
+          body={t.parentIntro}
+          actions={<Link href="/appointments" className="inline-flex min-h-11 items-center rounded-full bg-teal-700 px-5 text-[14px] font-semibold text-white">{t.manage}</Link>}
+        />
 
         {loading ? (
           <PageLoading />
         ) : (
+          <>
+          <section className="mb-4 grid gap-3 sm:grid-cols-2">
+            <StatCard icon="i-calendar" value={upcomingAll.length} label={t.upcoming} href="/appointments" actionLabel={t.manage} />
+            <StatCard icon="i-bell" value={unreadCount} label={t.recent} href="/notifications" actionLabel={t.viewAll} />
+          </section>
           <section className="grid grid-cols-1 gap-4 pb-16 lg:grid-cols-[1.2fr_1fr]">
             <div className="space-y-4">
               <Panel title={t.upcoming} action={<Link href="/appointments" className="text-[11px] font-semibold text-teal-700">{t.manage} →</Link>}>
                 {upcoming.length === 0 ? (
-                  <p className="px-5 pb-5 pt-2 text-[13.5px] text-ink-soft">{t.none}</p>
+                  <div className="px-5 pb-5 pt-2">
+                    <p className="text-[14px] text-ink-soft">{t.none}</p>
+                    <Link href="/appointments" className="mt-3 inline-flex text-[13px] font-semibold text-teal-700">{t.manage}</Link>
+                  </div>
                 ) : (
                   <div className="pb-1">
                     {upcoming.map((appt) => (
@@ -125,6 +133,7 @@ export default function ParentPortalPage() {
               )}
             </Panel>
           </section>
+          </>
         )}
       </div>
     </AppShell>

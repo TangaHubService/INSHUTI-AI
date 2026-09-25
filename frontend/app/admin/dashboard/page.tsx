@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 
 import { getAuditLogs, getDashboard, type AuditLogEntry, type DashboardStats } from "@/lib/adminApiClient";
 import { AppShell } from "@/components/AppShell";
+import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { PageLoading } from "@/components/Spinner";
 import { StatCard } from "@/components/ui/StatCard";
 import { Panel } from "@/components/layout/Panel";
 import { BarChart } from "@/components/charts/BarChart";
+import { ShareBars } from "@/components/charts/ShareBars";
 import { useRequireAdmin } from "@/lib/useAdminAuth";
 
 function actionLabel(action: string): string {
@@ -44,20 +46,15 @@ export default function AdminDashboardPage() {
   if (authLoading || !admin) return null;
 
   const langSplit = stats?.languageSplit ?? {} as Record<string, number>;
-  const totalLanguage = (langSplit.EN ?? 0) + (langSplit.RW ?? 0) + (langSplit.FR ?? 0) + (langSplit.SW ?? 0);
-  const enPct = totalLanguage > 0 ? Math.round(((langSplit.EN ?? 0) / totalLanguage) * 100) : 0;
-  const rwPct = totalLanguage > 0 ? Math.round(((langSplit.RW ?? 0) / totalLanguage) * 100) : 0;
-  const frPct = totalLanguage > 0 ? Math.round(((langSplit.FR ?? 0) / totalLanguage) * 100) : 0;
-  const swPct = totalLanguage > 0 ? 100 - enPct - rwPct - frPct : 0;
 
   return (
     <AppShell active="/admin/dashboard" session={{ kind: "admin", admin }}>
-      <div className="mb-[22px] flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-[26px] text-teal-900">Good morning, {admin.name.split(" ")[0]}</h1>
-          <p className="mt-1 text-sm text-ink-soft">Here&apos;s how Inshuti is doing today.</p>
-        </div>
-      </div>
+      <div className="mx-auto max-w-[1160px] pb-8">
+      <DashboardHeader
+        eyebrow={admin.role.replaceAll("_", " ")}
+        title={admin.name.split(" ")[0]}
+        body="Live counts from the platform: conversations, sessions, topics, and items waiting for review."
+      />
 
       {loading && <PageLoading />}
 
@@ -67,7 +64,7 @@ export default function AdminDashboardPage() {
             <StatCard icon="i-chat" value={stats.totalConversations} label="Total conversations" />
             <StatCard icon="i-users" value={stats.totalSessions} label="Anonymous sessions" />
             <StatCard icon="i-droplet" value={stats.mostAskedTopic?.nameEn ?? "—"} label="Most asked topic" />
-            <StatCard icon="i-flag" value={stats.flaggedCount} label="Flagged for review" iconColor="#C4523F" />
+            <StatCard icon="i-flag" value={stats.flaggedCount} label="Flagged for review" iconColor="#C4523F" href="/admin/flagged" actionLabel="Open queue" />
           </div>
 
           <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
@@ -78,19 +75,14 @@ export default function AdminDashboardPage() {
               <BarChart data={stats.topicEngagement.map((entry) => ({ label: entry.topic.nameEn, value: entry.count }))} />
             </Panel>
             <Panel title="Language split" bodyClassName="px-5 pb-5">
-              <div className="flex flex-col gap-3">
-                {[
-                  { label: "English", pct: enPct, color: "bg-teal-700" },
-                  { label: "Kinyarwanda", pct: rwPct, color: "bg-gold" },
-                  { label: "French", pct: frPct, color: "bg-coral" },
-                  { label: "Kiswahili", pct: swPct, color: "bg-[#EFE9DB]" },
-                ].map((lang) => (
-                  <div key={lang.label} className="flex items-center gap-2 text-[13px] font-semibold text-ink-soft">
-                    <span className={`h-2.5 w-2.5 rounded-[3px] ${lang.color}`} />
-                    {lang.label} — {lang.pct}%
-                  </div>
-                ))}
-              </div>
+              <ShareBars
+                items={[
+                  { label: "English", value: langSplit.EN ?? 0, color: "#146661" },
+                  { label: "Kinyarwanda", value: langSplit.RW ?? 0, color: "#C4A15A" },
+                  { label: "French", value: langSplit.FR ?? 0, color: "#C5573F" },
+                  { label: "Kiswahili", value: langSplit.SW ?? 0, color: "#8AA39C" },
+                ]}
+              />
             </Panel>
           </div>
 
@@ -118,6 +110,7 @@ export default function AdminDashboardPage() {
 
         </>
       )}
+      </div>
     </AppShell>
   );
 }

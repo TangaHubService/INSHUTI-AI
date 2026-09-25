@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { FullPageLoading, PageLoading } from "@/components/Spinner";
 import { StatCard } from "@/components/ui/StatCard";
 import { Panel } from "@/components/layout/Panel";
@@ -26,8 +27,9 @@ const TOPICS = [
 
 const COPY = {
   EN: {
-    welcome: "Welcome back to Inshuti. We're here for your health, your choices, your future.", chat: "Start chatting",
-    conversations: "Conversations", appointments: "Appointments", streak: "Learning streak", xp: "XP points", explored: "Topics explored",
+    space: "Your space", last7: "Last 7 days",
+    welcome: "Welcome back. This is your private space for conversations, appointments, and topics you have already asked about.", chat: "Talk to Inshuti",
+    conversations: "Conversations", appointments: "Appointments", streak: "Active days", explored: "Topics explored",
     journey: "Your health learning journey", journeySub: "Topics you've explored", activity: "Conversations over time", top: "Top topics",
     recent: "Recent conversations", upcoming: "Upcoming appointments", tips: "Health tips for you", viewAll: "View all",
     noChats: "Your private conversations will appear here.", noAppointments: "No upcoming appointments.", book: "Book an appointment",
@@ -36,8 +38,9 @@ const COPY = {
     emergency: "In an emergency or need immediate help?", emergencyBody: "You're not alone. Reach someone you trust or contact a professional.", crisis: "View crisis resources",
   },
   RW: {
-    welcome: "Murakaza neza muri Inshuti. Turi hano ku buzima bwawe, amahitamo yawe n'ejo hazaza.", chat: "Tangira kuganira",
-    conversations: "Ibiganiro", appointments: "Gahunda", streak: "Iminsi yo kwiga", xp: "Amanota XP", explored: "Insanganyamatsiko",
+    space: "Ahantu hawe", last7: "Iminsi 7 ishize",
+    welcome: "Murakaza neza. Aha ni ahantu hawe h'ibiganiro, gahunda, n'insanganyamatsiko waba warabajije.", chat: "Ganira na Inshuti",
+    conversations: "Ibiganiro", appointments: "Gahunda", streak: "Iminsi ikora", explored: "Insanganyamatsiko",
     journey: "Urugendo rwawe rwo kwiga ubuzima", journeySub: "Insanganyamatsiko wasuzumye", activity: "Ibiganiro uko iminsi ishira", top: "Insanganyamatsiko zikuru",
     recent: "Ibiganiro bya vuba", upcoming: "Gahunda ziri imbere", tips: "Inama z'ubuzima", viewAll: "Reba byose",
     noChats: "Ibiganiro byawe by'ibanga bizagaragara hano.", noAppointments: "Nta gahunda iri imbere.", book: "Fata gahunda",
@@ -46,8 +49,9 @@ const COPY = {
     emergency: "Hari ikibazo cyihutirwa?", emergencyBody: "Nturi wenyine. Hamagara uwo wizera cyangwa umukozi w'ubuzima.", crisis: "Reba nimero z'ubutabazi",
   },
   FR: {
-    welcome: "Bienvenue sur Inshuti. Nous sommes là pour votre santé, vos choix et votre avenir.", chat: "Commencer à discuter",
-    conversations: "Conversations", appointments: "Rendez-vous", streak: "Série d'apprentissage", xp: "Points XP", explored: "Sujets explorés",
+    space: "Votre espace", last7: "7 derniers jours",
+    welcome: "Bon retour. Ici se trouvent vos conversations, vos rendez-vous et les sujets que vous avez déjà abordés.", chat: "Parler à Inshuti",
+    conversations: "Conversations", appointments: "Rendez-vous", streak: "Jours actifs", explored: "Sujets explorés",
     journey: "Votre parcours d'apprentissage santé", journeySub: "Sujets que vous avez explorés", activity: "Conversations au fil du temps", top: "Sujets principaux",
     recent: "Conversations récentes", upcoming: "Rendez-vous à venir", tips: "Conseils santé", viewAll: "Tout voir",
     noChats: "Vos conversations privées apparaîtront ici.", noAppointments: "Aucun rendez-vous à venir.", book: "Prendre rendez-vous",
@@ -56,8 +60,9 @@ const COPY = {
     emergency: "Une urgence ou besoin d'aide immédiate ?", emergencyBody: "Vous n'êtes pas seul·e. Contactez une personne de confiance ou un professionnel.", crisis: "Voir les ressources d'urgence",
   },
   SW: {
-    welcome: "Karibu tena Inshuti. Tuko hapa kwa afya yako, maamuzi yako na maisha yako ya baadaye.", chat: "Anza kuzungumza",
-    conversations: "Mazungumzo", appointments: "Miadi", streak: "Mfululizo wa kujifunza", xp: "Pointi za XP", explored: "Mada ulizochunguza",
+    space: "Nafasi yako", last7: "Siku 7 zilizopita",
+    welcome: "Karibu tena. Hapa pana mazungumzo yako, miadi, na mada ambazo tayari umeuliza.", chat: "Zungumza na Inshuti",
+    conversations: "Mazungumzo", appointments: "Miadi", streak: "Siku zenye shughuli", explored: "Mada ulizochunguza",
     journey: "Safari yako ya kujifunza afya", journeySub: "Mada ulizochunguza", activity: "Mazungumzo kwa muda", top: "Mada kuu",
     recent: "Mazungumzo ya hivi karibuni", upcoming: "Miadi inayokuja", tips: "Vidokezo vya afya", viewAll: "Ona yote",
     noChats: "Mazungumzo yako ya siri yataonekana hapa.", noAppointments: "Hakuna miadi inayokuja.", book: "Weka miadi",
@@ -66,10 +71,6 @@ const COPY = {
     emergency: "Dharura au unahitaji msaada sasa?", emergencyBody: "Hauko peke yako. Wasiliana na mtu unayemwamini au mhudumu wa afya.", crisis: "Ona rasilimali za dharura",
   },
 };
-
-function initials(name: string) {
-  return name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
-}
 
 function relativeTime(iso: string) {
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
@@ -118,7 +119,7 @@ export default function TeenDashboardPage() {
       }).length };
     });
     const activeDays = new Set(conversations.map((item) => new Date(item.createdAt).toDateString())).size;
-    return { counts, explored, lastSeven, activeDays, xp: conversations.length * 20 + explored * 15 };
+    return { counts, explored, lastSeven, activeDays };
   }, [conversations]);
 
   if (authLoading || !user) return <FullPageLoading />;
@@ -127,46 +128,44 @@ export default function TeenDashboardPage() {
 
   return (
     <AppShell active="/dashboard" session={{ kind: "user", user }}>
-      <div className="mx-auto max-w-[1240px] space-y-4 pb-8">
-        <section className="grid gap-4 xl:grid-cols-[1.45fr_0.95fr]">
-          <div className="flex items-center justify-between rounded-2xl bg-[radial-gradient(circle_at_top_right,#fff1ec,transparent_45%)] px-1 py-2">
-            <div>
-              <h1 className="font-display text-[30px] font-bold text-ink sm:text-[34px]">Hi, {user.name.split(" ")[0]}! <span aria-hidden="true">👋</span></h1>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-ink-soft">{t.welcome}</p>
-              <Link href="/chat" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-coral px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:-translate-y-0.5 hover:bg-coral-dark">
-                <svg width="17" height="17"><use href="#i-chat" /></svg>{t.chat}
-              </Link>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 rounded-2xl border border-[#F0E2DE] bg-gradient-to-r from-[#FFF5F2] to-white p-4 shadow-sm">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-[#FBE4E3] text-2xl font-bold text-coral-dark">{initials(user.name)}</div>
-            <div><p className="text-[15px] font-bold leading-6 text-ink">“You’re doing great taking care of yourself.”</p><p className="mt-1 text-xs text-ink-soft">Small steps today, a healthier tomorrow.</p><span className="mt-2 block text-coral">♥</span></div>
-          </div>
-        </section>
+      <div className="mx-auto max-w-[1160px] pb-8">
+        <DashboardHeader
+          eyebrow={t.space}
+          title={`${user.name.split(" ")[0]}`}
+          body={t.welcome}
+          actions={
+            <>
+              <Link href="/chat" className="inline-flex min-h-11 items-center justify-center rounded-full bg-coral px-5 text-[14px] font-semibold text-white hover:bg-coral-dark">{t.chat}</Link>
+              <Link href="/facility-locator" className="inline-flex min-h-11 items-center justify-center rounded-full border border-teal-700 px-5 text-[14px] font-semibold text-teal-700 hover:bg-teal-100">{t.findCare}</Link>
+            </>
+          }
+        />
 
         {loading ? <PageLoading /> : <>
-          <section className="grid overflow-hidden rounded-2xl border border-line/70 bg-white shadow-sm sm:grid-cols-2 lg:grid-cols-5">
-            <StatCard bare icon="i-chat" iconColor="#28A76F" value={conversations.length} label={t.conversations} helper="Private history" />
-            <StatCard bare icon="i-calendar" iconColor="#9561D8" value={upcoming.length} label={t.appointments} helper="Upcoming" />
-            <StatCard bare icon="i-activity" iconColor="#F5A623" value={dashboard.activeDays} label={t.streak} helper="Active days" />
-            <StatCard bare icon="i-star" iconColor="#3888E8" value={dashboard.xp} label={t.xp} helper={`Level ${Math.max(1, Math.floor(dashboard.xp / 200) + 1)}`} />
-            <StatCard bare icon="i-heart" iconColor="#E95668" value={dashboard.explored} label={t.explored} helper="Keep learning" />
+          <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard icon="i-chat" iconColor="#146661" value={conversations.length} label={t.conversations} helper="On this account" />
+            <StatCard icon="i-calendar" iconColor="#146661" value={upcoming.length} label={t.appointments} helper="Still ahead" />
+            <StatCard icon="i-activity" iconColor="#146661" value={dashboard.activeDays} label={t.streak} helper="Days with a conversation" />
+            <StatCard icon="i-book" iconColor="#146661" value={dashboard.explored} label={t.explored} helper={`${exploredPercent}% of the main topics`} />
           </section>
 
-          <section className="grid gap-4 xl:grid-cols-[0.92fr_1.06fr_0.98fr]">
+          <section className="mt-4 grid gap-4 xl:grid-cols-[0.92fr_1.06fr_0.98fr]">
             <Panel title={t.journey} subtitle={t.journeySub}>
               <div className="px-5 pb-5 pt-2">
-                <DonutChart
-                  mode="equal"
-                  size={128}
-                  centerValue={`${exploredPercent}%`}
-                  centerLabel="Explored"
-                  data={TOPICS.map((topic) => ({ label: topic.name, value: dashboard.counts.get(topic.slug) ?? 0, color: topic.color }))}
-                />
+                {dashboard.explored === 0 ? (
+                  <p className="py-8 text-[14px] leading-6 text-ink-soft">{t.noChats}</p>
+                ) : (
+                  <DonutChart
+                    size={128}
+                    centerValue={`${exploredPercent}%`}
+                    centerLabel={t.explored}
+                    data={TOPICS.map((topic) => ({ label: topic.name, value: dashboard.counts.get(topic.slug) ?? 0, color: topic.color })).filter((item) => item.value > 0)}
+                  />
+                )}
               </div>
             </Panel>
 
-            <Panel title={t.activity} action={<span className="rounded-lg border border-line px-3 py-1.5 text-[11px] text-ink-soft">Last 7 days</span>}>
+              <Panel title={t.activity} action={<span className="rounded-lg border border-line px-3 py-1.5 text-[11px] text-ink-soft">{t.last7}</span>}>
               <div className="px-5 pb-4">
                 <LineChart ariaLabel={t.activity} data={dashboard.lastSeven.map((day) => ({ label: day.label, value: day.count }))} />
               </div>
@@ -184,7 +183,7 @@ export default function TeenDashboardPage() {
             </Panel>
           </section>
 
-          <section className="grid gap-4 xl:grid-cols-[1fr_1.15fr_1fr]">
+          <section className="mt-4 grid gap-4 xl:grid-cols-[1fr_1.15fr_1fr]">
             <Panel title={t.recent} action={<Link href="/my-space" className="text-[11px] font-semibold text-teal-700">{t.viewAll}</Link>}>
               <div className="pb-2">{conversations.length === 0 ? <p className="px-5 pb-5 text-xs text-ink-soft">{t.noChats}</p> : conversations.slice(0, 4).map((conversation) => {
                 const topic = topicFor(conversation); return <Link key={conversation.id} href="/chat" className="flex items-center gap-3 border-t border-line/70 px-4 py-3 transition hover:bg-paper-2"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: `${topic.color}15`, color: topic.color }}><svg width="15" height="15"><use href={`#${topic.icon}`} /></svg></span><span className="min-w-0 flex-1"><span className="block truncate text-[11.5px] font-medium text-ink">{conversation.firstUserMessage ?? "Private conversation"}</span><span className="mt-0.5 block text-[10px] text-ink-soft">{topic.name} · {relativeTime(conversation.createdAt)}</span></span><span className="text-ink-soft">›</span></Link>;
@@ -205,7 +204,7 @@ export default function TeenDashboardPage() {
 
           <section className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-[#CDE5DF] bg-gradient-to-r from-[#EFF9F6] to-white p-5 sm:flex-row sm:items-center">
             <div className="flex items-center gap-4"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#D9F2E8] text-success"><svg width="21" height="21"><use href="#i-shield" /></svg></span><div><h2 className="text-[14px] font-bold">{t.emergency}</h2><p className="mt-1 text-[11px] text-ink-soft">{t.emergencyBody}</p></div></div>
-            <Link href="/chat" className="rounded-xl bg-teal-700 px-5 py-2.5 text-[11px] font-semibold text-white">{t.crisis}</Link>
+            <Link href="/help-resources#crisis" className="inline-flex min-h-11 items-center rounded-full bg-coral px-5 text-[14px] font-semibold text-white">{t.crisis}</Link>
           </section>
         </>}
       </div>

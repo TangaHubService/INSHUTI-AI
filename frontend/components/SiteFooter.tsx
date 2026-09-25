@@ -30,7 +30,7 @@ export function SiteFooter({ disclaimer }: { disclaimer?: string }) {
               </h4>
               <ul className="flex flex-col gap-2.5">
                 {col.items.map((item) => (
-                  <li key={item.href}>
+                  <li key={item.label}>
                     <Link
                       href={item.href}
                       className="text-[13px] font-medium text-ink-soft transition-colors duration-150 hover:text-teal-700"

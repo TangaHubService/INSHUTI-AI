@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { ResourceCard } from "@/components/healthEducation/ResourceCard";
 import { useLanguage } from "@/lib/LanguageContext";
-import { NAV } from "@/lib/i18nCommon";
+import { publicNav } from "@/lib/i18nCommon";
 import {
   getPublicLibraryTopics,
   getPublicLibraryArticles,
@@ -61,7 +61,6 @@ type Tab = "articles" | "resources";
 
 export default function LibraryPage() {
   const { language } = useLanguage();
-  const nav = NAV[language];
   const searchParams = useSearchParams();
   const [tab, setTab] = useState<Tab>(searchParams.get("tab") === "resources" ? "resources" : "articles");
 
@@ -172,13 +171,7 @@ export default function LibraryPage() {
   return (
     <PageLayout
       activeHref="/library"
-      navItems={[
-        { href: "/chat", label: nav.chat },
-        { href: "/about", label: "About" },
-        { href: "/services", label: "Services" },
-        { href: "/library", label: "Library" },
-        { href: "/faq", label: "FAQ" },
-      ]}
+      navItems={publicNav(language)}
     >
       <section className="animate-slide-up py-[76px]">
         <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">Library</span>

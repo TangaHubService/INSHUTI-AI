@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useLanguage } from "@/lib/LanguageContext";
-import { NAV } from "@/lib/i18nCommon";
+import { publicNav } from "@/lib/i18nCommon";
 import type { Language } from "@/lib/apiClient";
 
 type Copy = {
@@ -70,19 +70,12 @@ const COPY: Record<Language, Copy> = {
 
 export default function ServicesPage() {
   const { language } = useLanguage();
-  const nav = NAV[language];
   const t = COPY[language];
 
   return (
     <PageLayout
       activeHref="/services"
-      navItems={[
-        { href: "/chat", label: nav.chat },
-        { href: "/about", label: "About" },
-        { href: "/services", label: "Services" },
-        { href: "/library", label: "Library" },
-        { href: "/faq", label: "FAQ" },
-      ]}
+      navItems={publicNav(language)}
     >
       <section className="animate-slide-up py-[76px]">
         <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">{t.eyebrow}</span>

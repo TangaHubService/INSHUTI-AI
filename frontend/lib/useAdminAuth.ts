@@ -2,6 +2,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { getCurrentAdmin, UnauthorizedError, type AdminRole, type AdminUser } from "./adminApiClient";
+import { getCachedAdmin, setCachedAdmin } from "./sessionCache";
 
 const ROLE_RANK: Record<AdminRole, number> = {
   MODERATOR: 0,
@@ -14,18 +15,22 @@ const ROLE_RANK: Record<AdminRole, number> = {
 // of what this hook decides to render.
 export function useRequireAdmin(minRole?: AdminRole) {
   const router = useRouter();
-  const [admin, setAdmin] = useState<AdminUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cached = getCachedAdmin();
+  const [admin, setAdmin] = useState<AdminUser | null>(cached);
+  const [loading, setLoading] = useState(!cached);
 
   useEffect(() => {
     let cancelled = false;
     getCurrentAdmin()
       .then((result) => {
-        if (!cancelled) setAdmin(result);
+        if (cancelled) return;
+        setCachedAdmin(result);
+        setAdmin(result);
       })
       .catch((error) => {
         if (cancelled) return;
         if (error instanceof UnauthorizedError) {
+          setCachedAdmin(null);
           router.replace("/admin/login");
         }
       })

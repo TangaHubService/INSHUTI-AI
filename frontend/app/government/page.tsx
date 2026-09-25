@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { PageLoading, FullPageLoading } from "@/components/Spinner";
 import { StatCard } from "@/components/ui/StatCard";
 import { Panel } from "@/components/layout/Panel";
 import { BarChart } from "@/components/charts/BarChart";
+import { ShareBars } from "@/components/charts/ShareBars";
 import { useRequireUser } from "@/lib/useUserAuth";
 import { getGovernmentStats, type GovernmentStats } from "@/lib/userApiClient";
 import { useLanguage } from "@/lib/LanguageContext";
@@ -32,21 +34,15 @@ export default function GovernmentPortalPage() {
   if (authLoading || !user) return <FullPageLoading />;
 
   const langSplit = stats?.languageSplit ?? {};
-  const totalLanguage = Object.values(langSplit).reduce((a, b) => a + b, 0);
 
   return (
     <AppShell active="/government" session={{ kind: "user", user }}>
       <div className="mx-auto max-w-[1160px]">
-        <section className="pb-3">
-          <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">
-            {t.governmentPortal}
-          </span>
-          <h1 className="mt-3 font-display text-[34px] text-teal-900">{t.aggregateTitle}</h1>
-          <p className="mt-[10px] max-w-[620px] text-[14.5px] leading-[1.6] text-ink-soft">
-            {t.aggregateIntro}
-            {stats?.scope.level && stats.scope.level !== "NATIONAL" && <> Scope: {stats.scope.level.toLowerCase()} — {stats.scope.regionName}.</>}
-          </p>
-        </section>
+        <DashboardHeader
+          eyebrow={t.governmentPortal}
+          title={t.aggregateTitle}
+          body={`${t.aggregateIntro}${stats?.scope.level && stats.scope.level !== "NATIONAL" ? ` ${stats.scope.regionName}.` : ""}${language === "EN" && stats ? ` Groups smaller than ${stats.privacyThreshold} are not shown.` : ""}`}
+        />
 
         {loading ? (
           <PageLoading />
@@ -72,14 +68,13 @@ export default function GovernmentPortalPage() {
                 />
               </Panel>
               <Panel title={t.languageSplit} bodyClassName="px-5 pb-5">
-                <div className="flex flex-col gap-2">
-                  {Object.entries(langSplit).map(([lang, count]) => (
-                    <div key={lang} className="flex items-center justify-between text-[13px] font-semibold text-ink-soft">
-                      <span>{lang}</span>
-                      <span>{totalLanguage > 0 ? Math.round((count / totalLanguage) * 100) : 0}%</span>
-                    </div>
-                  ))}
-                </div>
+                <ShareBars
+                  items={Object.entries(langSplit).map(([lang, count]) => ({
+                    label: lang,
+                    value: count,
+                    color: lang === "EN" ? "#146661" : lang === "RW" ? "#C4A15A" : lang === "FR" ? "#C5573F" : "#8AA39C",
+                  }))}
+                />
               </Panel>
             </div>
 

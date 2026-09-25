@@ -1,7 +1,15 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
 /** @type {import('next').NextConfig} */
 const developmentConnections = process.env.NODE_ENV === "development" ? " http://localhost:4000 ws://localhost:4000" : "";
 
 const nextConfig = {
+  outputFileTracingRoot: path.dirname(fileURLToPath(import.meta.url)),
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
+  experimental: {
+    optimizePackageImports: ["framer-motion", "react-markdown", "react-syntax-highlighter"],
+  },
   async headers() {
     return [
       {

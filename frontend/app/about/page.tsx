@@ -2,7 +2,7 @@
 
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useLanguage } from "@/lib/LanguageContext";
-import { NAV } from "@/lib/i18nCommon";
+import { publicNav } from "@/lib/i18nCommon";
 import type { Language } from "@/lib/apiClient";
 
 type Copy = {
@@ -15,8 +15,8 @@ type Copy = {
 const COPY: Record<Language, Copy> = {
   EN: {
     eyebrow: "About", title: "About Inshuti",
-    lead: "Inshuti means 'friend' in Kinyarwanda — and that's exactly what we aim to be: a trusted, judgment-free companion for young people navigating questions about their health.",
-    story: "Inshuti was built to address a critical gap in sexual and reproductive health education for young people in Rwanda. Many young people lack access to accurate, age-appropriate information about their bodies, relationships, and health. Inshuti provides a free, anonymous AI assistant in four languages that anyone can use from their phone.",
+    lead: "Inshuti means 'friend' in Kinyarwanda. It is a trusted, judgment-free place for young people to ask health questions and, when they want, reach an approved health professional.",
+    story: "Inshuti was built for a real gap in sexual and reproductive health information for young people in Rwanda. You can start privately, read reviewed explanations in four languages, and ask to be connected with a nurse, midwife, psychologist, doctor, or community health worker. The assistant helps you find information. It does not replace a person.",
     missionTitle: "Our Mission",
     mission: "To empower every young person in Rwanda with honest, evidence-based health information — in their own language, on their own terms, without fear or judgment.",
     valuesTitle: "Our Values",
@@ -81,19 +81,12 @@ const COPY: Record<Language, Copy> = {
 
 export default function AboutPage() {
   const { language } = useLanguage();
-  const nav = NAV[language];
   const t = COPY[language];
 
   return (
     <PageLayout
       activeHref="/about"
-      navItems={[
-        { href: "/chat", label: nav.chat },
-        { href: "/about", label: "About" },
-        { href: "/services", label: "Services" },
-        { href: "/library", label: "Library" },
-        { href: "/faq", label: "FAQ" },
-      ]}
+      navItems={publicNav(language)}
     >
       <section className="animate-slide-up py-[76px]">
         <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">{t.eyebrow}</span>

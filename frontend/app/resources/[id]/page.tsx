@@ -7,12 +7,11 @@ import { useEffect, useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { AttachmentPreview } from "@/components/healthEducation/AttachmentPreview";
 import { useLanguage } from "@/lib/LanguageContext";
-import { NAV } from "@/lib/i18nCommon";
+import { publicNav } from "@/lib/i18nCommon";
 import { getPublicHealthEducationResource, type HealthEducationResourceDetail } from "@/lib/apiClient";
 
 export default function HealthEducationResourceDetailPage() {
   const { language } = useLanguage();
-  const nav = NAV[language];
   const params = useParams();
   const id = params.id as string;
 
@@ -32,11 +31,7 @@ export default function HealthEducationResourceDetailPage() {
   return (
     <PageLayout
       activeHref="/library"
-      navItems={[
-        { href: "/chat", label: nav.chat },
-        { href: "/library", label: "Library" },
-        { href: "/faq", label: "FAQ" },
-      ]}
+      navItems={publicNav(language)}
     >
       {loading ? (
         <div className="flex items-center justify-center py-40">

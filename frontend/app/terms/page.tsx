@@ -2,7 +2,7 @@
 
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useLanguage } from "@/lib/LanguageContext";
-import { NAV } from "@/lib/i18nCommon";
+import { publicNav } from "@/lib/i18nCommon";
 import type { Language } from "@/lib/apiClient";
 
 type Copy = { eyebrow: string; title: string; updated: string; sections: { heading: string; body: string }[] };
@@ -68,19 +68,12 @@ const COPY: Record<Language, Copy> = {
 
 export default function TermsPage() {
   const { language } = useLanguage();
-  const nav = NAV[language];
   const t = COPY[language];
 
   return (
     <PageLayout
       activeHref="/terms"
-      navItems={[
-        { href: "/chat", label: nav.chat },
-        { href: "/about", label: "About" },
-        { href: "/services", label: "Services" },
-        { href: "/library", label: "Library" },
-        { href: "/faq", label: "FAQ" },
-      ]}
+      navItems={publicNav(language)}
     >
       <section className="animate-slide-up mx-auto max-w-[760px] py-[76px]">
         <span className="block font-mono text-[12.5px] font-medium uppercase tracking-[0.12em] text-coral-dark">{t.eyebrow}</span>
